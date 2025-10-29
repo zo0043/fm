@@ -1,0 +1,205 @@
+<div class="enhanced-table-container">
+  <!-- 表格工具栏 -->
+  <div class="table-toolbar" *ngIf="showToolbar">
+    <div class="toolbar-left">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>搜索基金</mat-label>
+        <input matInput
+               [(ngModel)]="filterOptions.search"
+               (keyup)="applyFilters()"
+               placeholder="输入基金名称或代码">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>基金类型</mat-label>
+        <mat-select [(ngModel)]="filterOptions.type" (selectionChange)="applyFilters()">
+          <mat-option value="all">全部类型</mat-option>
+          <mat-option value="stock">股票型</mat-option>
+          <mat-option value="bond">债券型</mat-option>
+          <mat-option value="hybrid">混合型</mat-option>
+          <mat-option value="index">指数型</mat-option>
+          <mat-option value="etf">ETF</mat-option>
+          <mat-option value="qdii">QDII</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="sort-field">
+        <mat-label>排序</mat-label>
+        <mat-select [(value)]="filterOptions.sortBy" (selectionChange)="applyFilters()">
+          <mat-option value="name">按名称</mat-option>
+          <mat-option value="code">按代码</mat-option>
+          <mat-option value="currentNav">按净值</mat-option>
+          <mat-option value="changePercent">按涨跌幅</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="sort-order">
+        <mat-label>排序方式</mat-label>
+        <mat-select [(value)]="filterOptions.sortOrder" (selectionChange)="applyFilters()">
+          <mat-option value="asc">升序</mat-option>
+          <mat-option value="desc">降序</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="toolbar-right">
+      <button mat-icon-button
+              [matMenuTriggerFor]="columnMenu"
+              matTooltip="列设置">
+        <mat-icon>view_column</mat-icon>
+      </button>
+
+      <button mat-icon-button
+              [matMenuTriggerFor="exportMenu"
+              matTooltip="导出数据">
+        <mat-icon>download</mat-icon>
+      </button>
+
+      <button mat-icon-button
+              (click)="refreshData()"
+              matTooltip="刷新">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- 列设置菜单 -->
+  <div class="column-menu" #columnMenu="matMenu" xPosition="before">
+    <div class="menu-header">列设置</div>
+    <mat-divider></mat-div>
+    <div class="menu-content">
+      <mat-checkbox *ngFor="let column of columns" [checked]="column.type !== 'action'">
+        {{ column.label }}
+      </mat-checkbox>
+    </div>
+  </div>
+
+  <!-- 导出菜单 -->
+  <div class="export-menu" #exportMenu="matMenu" xPosition="before">
+    <div class="menu-header">导出格式</div>
+    <mat-divider></mat-divider>
+    <div class="menu-content">
+      <button mat-menu-item (click)="exportData('excel')">
+        <mat-icon>description</mat-icon>
+        导出Excel
+      </button>
+      <button mat-menu-item (click)="exportData('csv')">
+        <mat-icon>table_chart</mat-icon>
+        导出CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- 统计信息 -->
+  <div class="stats-bar" *ngIf="totalFunds > 0">
+    <div class="stats-item">
+      <span class="stat-label">总计:</span>
+      <span class="stat-value">{{ totalFunds }}</span>
+    </div>
+    <div class="stats-item">
+      <span class="stat-label">筛选结果:</span>
+      <span class="stat-value">{{ filteredFunds }}</span>
+    </div>
+    <div class="stats-item">
+      <span class="stat-label">上涨:</span>
+      <span class="stat-value trend-up">{{ upCount }}</span>
+    </div>
+    <div class="stats-item">
+      <span class="stat-label">下跌:</span>
+      <span class="stat-value trend-down">{{ downCount }}</span>
+    </div>
+    <div class="stats-item">
+      <span class="stat-label">平盘:</span>
+      <span class="stat-value">{{ flatCount }}</span>
+    </div>
+  </div>
+
+  <!-- 数据表格 -->
+  <div class="table-container">
+    <table mat-table [dataSource]="dataSource" matSort>
+      <ng-container matColumnDef="select" *ngIf="showSelection">
+        <th mat-header-cell *matHeaderCellDef>
+          <mat-checkbox (change)="$event.checked ? toggleSelectAll() : null"
+                     [checked]="isAllSelected()"
+                     [indeterminate]="selection.hasValue() && !isAllSelected()"
+                     [aria-label]="checkbox for all rows">
+          </mat-checkbox>
+        </th>
+        <th mat-header-cell *matHeaderCellDef>选择</th>
+      </ng-container>
+
+      <ng-container matColumnDef="actions" *ngIf="showSelection">
+        <td mat-cell *matCellDef="let row">
+          <mat-checkbox (click)="toggleRowSelection(row)"
+                     [checked]="isRowSelected(row)"
+                     [aria-label]="选择 {{ row.name }}">
+          </mat-checkbox>
+        </td>
+      </ng-container>
+
+      <!-- 动态列 -->
+      <ng-container *ngFor="let column of columns; let colIndex = index">
+        <ng-container *ngIf="column.type !== 'action'" [matColumnDef]="column.key">
+          <th mat-header-cell mat-sort-header *matHeaderCellDef>
+            {{ column.label }}
+            <button mat-icon-button
+                    *ngIf="column.sortable"
+                    (click)="filterOptions.sortBy = column.key; applyFilters()"
+                    [matTooltip]="'升序/降序切换'">
+              <mat-icon>{{ filterOptions.sortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+            </button>
+          </th>
+
+          <td mat-cell *matCellDef="let row">
+            <span class="table-cell-content {{ formatValue(row[column.key], row, column) }}"></span>
+          </td>
+        </ng-container>
+
+        <ng-container *ngIf="column.type === 'action'" [matColumnDef]="column.key">
+          <th mat-header-cell mat-header-cell>{{ column.label }}</th>
+
+          <td mat-cell *matCellDef="let row">
+            <div class="action-buttons">
+              <button mat-icon-button
+                      *ngFor="let action of actions"
+                      [color]="action.color"
+                      [disabled]="action.condition && !action.condition(row)"
+                      [matTooltip]="action.label"
+                      (click)="executeAction(action, row)">
+                <mat-icon>{{ action.icon }}</mat-icon>
+              </button>
+            </div>
+          </td>
+        </ng-container>
+      </ng-container>
+    </table>
+
+    <!-- 分页器 -->
+    <div class="pagination-container" *ngIf="showPagination">
+      <mat-paginator
+        [length]="totalFunds"
+        [pageSize]="filterOptions.pageSize"
+        [pageSizeOptions]="[10, 25, 50, 100]"
+        (page)="onPageEvent($event)"
+        showFirstLastButtons>
+      </mat-paginator>
+    </div>
+  </div>
+
+  <!-- 加载状态 -->
+  <div class="loading-overlay" *ngIf="loading">
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    <div class="loading-text">
+      <mat-spinner diameter="30"></mat-spinner>
+      <p>正在加载数据...</p>
+    </div>
+  </div>
+
+  <!-- 空状态 -->
+  <div class="empty-state" *ngIf="!loading && filteredFunds === 0">
+    <mat-icon class="empty-icon">table_chart</mat-icon>
+    <h3>暂无数据</h3>
+    <p>没有找到匹配的基金数据</p>
+  </div>
+</div>

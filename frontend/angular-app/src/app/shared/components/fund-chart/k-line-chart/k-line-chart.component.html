@@ -1,0 +1,70 @@
+<mat-card class="k-line-chart-container">
+  <mat-card-header class="chart-header">
+    <mat-card-title class="chart-title">
+      <mat-icon>trending_up</mat-icon>
+      <span *ngIf="fundInfo">{{ fundInfo.name }} ({{ fundInfo.code }})</span>
+      <span *ngIf="!fundInfo">基金净值走势</span>
+    </mat-card-title>
+    <mat-card-subtitle class="chart-subtitle">
+      <span *ngIf="fundInfo" class="current-nav">
+        当前净值: {{ fundInfo.currentNav | number:'1.0-4' }}
+      </span>
+      <span *ngIf="fundInfo" class="update-time">
+        更新时间: {{ fundInfo.lastUpdate | date:'yyyy-MM-dd HH:mm' }}
+      </span>
+    </mat-card-subtitle>
+  </mat-card-header>
+
+  <mat-card-content class="chart-content">
+    <div class="chart-wrapper" [style.height.px]="height">
+      <canvas
+        baseChart
+        [data]="lineChartData"
+        [options]="lineChartOptions"
+        [type]="lineChartType"
+        (chartReady)="onChartReady($event)">
+      </canvas>
+    </div>
+
+    <!-- 图表控制按钮 -->
+    <div class="chart-controls" *ngIf="fundData.length > 0">
+      <button mat-stroked-button (click)="refreshChart()" class="control-btn">
+        <mat-icon>refresh</mat-icon>
+        刷新
+      </button>
+
+      <button mat-stroked-button (click)="exportData()" class="control-btn">
+        <mat-icon>download</mat-icon>
+        导出数据
+      </button>
+
+      <button mat-stroked-button (click)="showMA = !showMA" class="control-btn">
+        <mat-icon>{{ showMA ? 'visibility_off' : 'visibility' }}</mat-icon>
+        {{ showMA ? '隐藏均线' : '显示均线' }}
+      </button>
+    </div>
+
+    <!-- 数据为空提示 -->
+    <div class="no-data" *ngIf="fundData.length === 0">
+      <mat-icon class="no-data-icon">show_chart</mat-icon>
+      <p class="no-data-text">暂无净值数据</p>
+    </div>
+  </mat-card-content>
+
+  <mat-card-actions class="chart-actions" *ngIf="fundData.length > 0">
+    <div class="stats-info">
+      <div class="stat-item">
+        <span class="stat-label">最高:</span>
+        <span class="stat-value">{{ getMaxNav() | number:'1.0-4' }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">最低:</span>
+        <span class="stat-value">{{ getMinNav() | number:'1.0-4' }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">平均:</span>
+        <span class="stat-value">{{ getAvgNav() | number:'1.0-4' }}</span>
+      </div>
+    </div>
+  </mat-card-actions>
+</mat-card>

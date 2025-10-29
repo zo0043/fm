@@ -1,0 +1,363 @@
+@import '../../../theme/_variables';
+
+.fund-card {
+  height: 100%;
+  width: 100%;
+  transition: all 0.3s ease;
+  border-radius: 12px;
+  overflow: hidden;
+
+  &:hover {
+    box-shadow: $mat-elevation-z4;
+    transform: translateY(-2px);
+  }
+
+  &.compact {
+    .fund-content {
+      padding: 16px;
+    }
+
+    .current-nav-section {
+      .nav-value {
+        font-size: 24px;
+      }
+    }
+
+    .additional-info {
+      display: none;
+    }
+  }
+
+  .fund-header {
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #f5f5f5, #e8e8e8);
+    border-bottom: 1px solid #e0e0e0;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+
+    .fund-title-section {
+      flex: 1;
+
+      .fund-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #212121;
+        margin: 0 0 4px 0;
+        line-height: 1.3;
+      }
+
+      .fund-code {
+        font-size: 14px;
+        color: #616161;
+        margin: 0;
+
+        .fund-type {
+          display: inline-block;
+          margin-left: 8px;
+          padding: 2px 8px;
+          background-color: $mat-primary;
+          color: white;
+          border-radius: 12px;
+          font-size: 11px;
+          font-weight: 500;
+        }
+      }
+    }
+
+    .fund-actions {
+      display: flex;
+      gap: 4px;
+
+      button[mat-icon-button] {
+        width: 36px;
+        height: 36px;
+
+        mat-icon {
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+        }
+      }
+    }
+  }
+
+  .fund-content {
+    padding: 20px;
+    position: relative;
+
+    .current-nav-section {
+      text-align: center;
+      margin-bottom: 16px;
+
+      .nav-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #212121;
+        line-height: 1;
+      }
+
+      .nav-label {
+        font-size: 12px;
+        color: #757575;
+        margin-top: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+    }
+
+    .trend-section {
+      text-align: center;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+
+      &.trend-up {
+        background-color: rgba(76, 175, 80, 0.1);
+        border: 1px solid rgba(76, 175, 80, 0.3);
+        color: #2e7d32;
+      }
+
+      &.trend-down {
+        background-color: rgba(244, 67, 54, 0.1);
+        border: 1px solid rgba(244, 67, 54, 0.3);
+        color: #c62828;
+      }
+
+      &.trend-flat {
+        background-color: rgba(158, 158, 158, 0.1);
+        border: 1px solid rgba(158, 158, 158, 0.3);
+        color: #616161;
+      }
+
+      .trend-amount {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+
+      .trend-detail {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        font-size: 14px;
+        font-weight: 500;
+
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
+      }
+    }
+
+    .additional-info {
+      margin-bottom: 16px;
+
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .info-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          flex: 1;
+
+          .info-label {
+            font-size: 11px;
+            color: #757575;
+            margin-bottom: 2px;
+            text-transform: uppercase;
+          }
+
+          .info-value {
+            font-size: 13px;
+            font-weight: 500;
+            color: #424242;
+          }
+        }
+      }
+    }
+
+    .update-time {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-size: 12px;
+      color: #9e9e9e;
+      border-top: 1px solid #f0f0f0;
+      padding-top: 12px;
+      margin-top: 12px;
+
+      .time-icon {
+        font-size: 14px;
+        width: 14px;
+        height: 14px;
+      }
+    }
+
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+
+      .loading-text {
+        margin-top: 12px;
+        font-size: 14px;
+        color: #757575;
+        margin: 0;
+      }
+    }
+  }
+
+  .fund-actions-bar {
+    padding: 8px 16px;
+    background-color: #fafafa;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+
+    button[mat-button] {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      min-width: 80px;
+
+      mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+    }
+  }
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+  .fund-card {
+    .fund-header {
+      padding: 12px 16px;
+
+      .fund-title-section {
+        .fund-title {
+          font-size: 16px;
+        }
+
+        .fund-code {
+          font-size: 13px;
+
+          .fund-type {
+            font-size: 10px;
+            padding: 1px 6px;
+          }
+        }
+      }
+    }
+
+    .fund-content {
+      padding: 16px;
+
+      .current-nav-section {
+        .nav-value {
+          font-size: 24px;
+        }
+      }
+
+      .trend-section {
+        .trend-amount {
+          font-size: 18px;
+        }
+
+        .trend-detail {
+          font-size: 13px;
+        }
+      }
+
+      .additional-info {
+        .info-row {
+          .info-item {
+            .info-label {
+              font-size: 10px;
+            }
+
+            .info-value {
+              font-size: 12px;
+            }
+          }
+        }
+      }
+    }
+
+    .fund-actions-bar {
+      padding: 6px 12px;
+      flex-wrap: wrap;
+
+      button[mat-button] {
+        font-size: 12px;
+        min-width: 70px;
+        padding: 6px 8px;
+      }
+    }
+  }
+}
+
+// 暗黑主题支持
+@media (prefers-color-scheme: dark) {
+  .fund-card {
+    .fund-header {
+      background: linear-gradient(135deg, #424242, #303030);
+      border-bottom-color: #616161;
+
+      .fund-title-section {
+        .fund-title {
+          color: #ffffff;
+        }
+
+        .fund-code {
+          color: #b0b0b0;
+        }
+      }
+    }
+
+    .fund-content {
+      .current-nav-section {
+        .nav-value {
+          color: #ffffff;
+        }
+
+        .nav-label {
+          color: #b0b0b0;
+        }
+      }
+
+      .update-time {
+        color: #757575;
+        border-top-color: #424242;
+      }
+    }
+
+    .fund-actions-bar {
+      background-color: #303030;
+      border-top-color: #424242;
+    }
+  }
+}

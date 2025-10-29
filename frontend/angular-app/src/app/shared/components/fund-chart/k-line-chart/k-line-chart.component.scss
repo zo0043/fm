@@ -1,0 +1,205 @@
+@import '../../../../theme/_variables';
+
+.k-line-chart-container {
+  height: 100%;
+  width: 100%;
+  box-shadow: $mat-elevation-z2;
+  border-radius: 8px;
+  overflow: hidden;
+
+  .chart-header {
+    background: linear-gradient(135deg, $mat-primary, $mat-primary-light);
+    color: white;
+    padding: 16px 20px;
+
+    .chart-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 4px;
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+    }
+
+    .chart-subtitle {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      opacity: 0.9;
+
+      .current-nav {
+        font-weight: 500;
+        color: #4CAF50;
+      }
+
+      .update-time {
+        opacity: 0.8;
+      }
+    }
+  }
+
+  .chart-content {
+    padding: 20px;
+    background: white;
+
+    .chart-wrapper {
+      position: relative;
+      width: 100%;
+      margin-bottom: 16px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      overflow: hidden;
+
+      canvas {
+        width: 100% !important;
+        height: 100% !important;
+      }
+    }
+
+    .chart-controls {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+
+      .control-btn {
+        min-width: 120px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+      }
+    }
+
+    .no-data {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 300px;
+      color: rgba(0, 0, 0, 0.54);
+
+      .no-data-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+      }
+
+      .no-data-text {
+        font-size: 16px;
+        margin: 0;
+      }
+    }
+  }
+
+  .chart-actions {
+    padding: 12px 20px;
+    background: #f5f5f5;
+    border-top: 1px solid #e0e0e0;
+
+    .stats-info {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+
+      .stat-item {
+        text-align: center;
+
+        .stat-label {
+          display: block;
+          font-size: 12px;
+          color: rgba(0, 0, 0, 0.6);
+          margin-bottom: 4px;
+        }
+
+        .stat-value {
+          display: block;
+          font-size: 14px;
+          font-weight: 500;
+          color: rgba(0, 0, 0, 0.87);
+        }
+      }
+    }
+  }
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+  .k-line-chart-container {
+    .chart-header {
+      padding: 12px 16px;
+
+      .chart-title {
+        font-size: 16px;
+      }
+
+      .chart-subtitle {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+
+        .current-nav {
+          font-size: 13px;
+        }
+
+        .update-time {
+          font-size: 12px;
+        }
+      }
+    }
+
+    .chart-content {
+      padding: 16px;
+
+      .chart-controls {
+        .control-btn {
+          min-width: 100px;
+          font-size: 13px;
+        }
+      }
+    }
+
+    .chart-actions {
+      .stats-info {
+        flex-direction: column;
+        gap: 8px;
+
+        .stat-item {
+          display: flex;
+          justify-content: space-between;
+          width: 100%;
+        }
+      }
+    }
+  }
+}
+
+// Material Design 主题适配
+.mat-card {
+  background: white;
+  border-radius: 8px;
+}
+
+.mat-stroked-button {
+  border-color: $mat-primary;
+  color: $mat-primary;
+
+  &:hover {
+    background-color: rgba($mat-primary, 0.04);
+  }
+}

@@ -1,0 +1,39 @@
+<div
+  class="trend-indicator"
+  [class]="[trendClass, getSizeClass(), compact ? 'compact' : '']"
+  [matTooltip]="getTooltipText()"
+  [style]="getIndicatorStyles()">
+
+  <!-- 趋势图标 -->
+  <mat-icon
+    *ngIf="showIcon"
+    class="trend-icon"
+    [ngClass]="trendClass">
+    {{ trendIcon }}
+  </mat-icon>
+
+  <!-- 涨跌信息 -->
+  <div class="trend-content" *ngIf="showValue || showPercentage">
+    <!-- 涨跌百分比 -->
+    <div class="trend-percent" *ngIf="showPercentage && trendInfo">
+      {{ formatChangePercent(trendInfo.changePercent) }}
+    </div>
+
+    <!-- 涨跌金额（非紧凑模式） -->
+    <div class="trend-amount" *ngIf="!compact && showValue && trendInfo">
+      {{ formatChangeAmount(trendInfo.changeAmount) }}
+    </div>
+  </div>
+
+  <!-- 紧凑模式显示 -->
+  <div class="compact-display" *ngIf="compact && trendInfo">
+    <span class="compact-percent">{{ formatChangePercent(trendInfo.changePercent) }}</span>
+    <span class="compact-amount" *ngIf="showValue">({{ formatChangeAmount(trendInfo.changeAmount) }})</span>
+  </div>
+
+  <!-- 空状态 -->
+  <div class="empty-state" *ngIf="!trendInfo">
+    <mat-icon class="empty-icon">help_outline</mat-icon>
+    <span class="empty-text">暂无数据</span>
+  </div>
+</div>

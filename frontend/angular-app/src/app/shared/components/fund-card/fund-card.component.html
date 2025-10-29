@@ -1,0 +1,100 @@
+<mat-card class="fund-card" [class.compact]="compact">
+  <mat-card-header class="fund-header">
+    <div class="fund-title-section">
+      <mat-card-title class="fund-title">
+        {{ fund?.name || '未知基金' }}
+      </mat-card-title>
+      <mat-card-subtitle class="fund-code">
+        {{ fund?.code || '' }}
+        <span class="fund-type">{{ getFundTypeDisplay() }}</span>
+      </mat-card-subtitle>
+    </div>
+
+    <div class="fund-actions" *ngIf="showActions">
+      <button
+        mat-icon-button
+        (click)="onAddToWatchlist()"
+        *ngIf="!isInWatchlist"
+        matTooltip="添加到监控">
+        <mat-icon>star_border</mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        (click)="onRemoveFromWatchlist()"
+        *ngIf="isInWatchlist"
+        matTooltip="移除监控">
+        <mat-icon color="warn">star</mat-icon>
+      </button>
+    </div>
+  </mat-card-header>
+
+  <mat-card-content class="fund-content">
+    <!-- 当前净值显示 -->
+    <div class="current-nav-section">
+      <div class="nav-value">
+        {{ formatNav(fund?.currentNav || 0) }}
+      </div>
+      <div class="nav-label">单位净值</div>
+    </div>
+
+    <!-- 涨跌信息显示 -->
+    <div class="trend-section" *ngIf="trendInfo" [ngClass]="getTrendColorClass()">
+      <div class="trend-amount">
+        {{ formatChangePercent(trendInfo.changePercent) }}
+      </div>
+      <div class="trend-detail">
+        <mat-icon>{{ getTrendIcon() }}</mat-icon>
+        <span>{{ trendInfo.changeAmount >= 0 ? '+' : '' }}{{ trendInfo.changeAmount.toFixed(4) }}</span>
+      </div>
+    </div>
+
+    <!-- 附加信息（非紧凑模式） -->
+    <div class="additional-info" *ngIf="!compact">
+      <div class="info-row">
+        <div class="info-item">
+          <span class="info-label">昨日净值:</span>
+          <span class="info-value">{{ formatNav(fund?.yesterdayNav || 0) }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">周净值:</span>
+          <span class="info-value">{{ formatNav(fund?.weekNav || 0) }}</span>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-item">
+          <span class="info-label">月净值:</span>
+          <span class="info-value">{{ formatNav(fund?.monthNav || 0) }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">年净值:</span>
+          <span class="info-value">{{ formatNav(fund?.yearNav || 0) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 更新时间 -->
+    <div class="update-time">
+      <mat-icon class="time-icon">schedule</mat-icon>
+      <span>{{ fund?.lastUpdate | date:'MM-dd HH:mm' }}</span>
+    </div>
+  </mat-card-content>
+
+  <mat-card-actions class="fund-actions-bar" *ngIf="showActions">
+    <button mat-button (click)="onViewDetailsClick()">
+      <mat-icon>info</mat-icon>
+      查看详情
+    </button>
+
+    <button mat-button>
+      <mat-icon>show_chart</mat-icon>
+      查看图表
+    </button>
+  </mat-card-actions>
+
+  <!-- 数据加载状态 -->
+  <div class="loading-overlay" *ngIf="!fund">
+    <mat-spinner diameter="30"></mat-spinner>
+    <p class="loading-text">加载中...</p>
+  </div>
+</mat-card>

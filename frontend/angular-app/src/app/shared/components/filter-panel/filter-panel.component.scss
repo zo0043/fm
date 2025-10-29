@@ -1,0 +1,349 @@
+@import '../../../theme/_variables';
+
+.filter-panel-container {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+// 快捷筛选
+.quick-filters {
+  margin-bottom: $spacing-lg;
+
+  .quick-filter-card {
+    border-radius: $border-radius-lg;
+    box-shadow: $mat-elevation-z2;
+
+    ::ng-deep .mat-card-header {
+      background: linear-gradient(135deg, $mat-primary, $mat-primary-light);
+      color: white;
+      padding: $spacing-md $spacing-lg;
+      border-radius: $border-radius-lg $border-radius-lg 0 0;
+
+      .mat-card-title {
+        font-size: $font-size-md;
+          font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: $spacing-sm;
+      }
+    }
+
+    ::ng-deep .mat-card-content {
+      padding: $spacing-md;
+    }
+
+    .quick-filter-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr));
+      gap: $spacing-sm;
+
+      button[mat-stroked-button] {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 80px;
+        padding: $spacing-sm $spacing-md;
+        border-radius: $border-radius-md;
+        border: 1px solid #e0e0e0;
+        transition: all 0.3s ease;
+
+        mat-icon {
+          font-size: 24px;
+          margin-bottom: $spacing-xs;
+          color: $mat-primary;
+        }
+
+        &:hover {
+          background: rgba($mat-primary, 0.05);
+          border-color: $mat-primary;
+          transform: translateY(-2px);
+          box-shadow: $mat-elevation-z1;
+        }
+      }
+    }
+  }
+}
+
+// 筛选统计
+.filter-stats {
+  margin-bottom: $spacing-lg;
+
+  .stats-card {
+    border-radius: $border-radius-lg;
+    box-shadow: $mat-elevation-z1;
+    background: linear-gradient(135deg, #e8f5e8, #f5f5f5);
+
+    ::ng-deep .mat-card-content {
+      padding: $spacing-md;
+    }
+
+    .stats-content {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      text-align: center;
+
+      .stat-item {
+        .stat-value {
+          display: block;
+          font-size: $font-size-lg;
+          font-weight: 600;
+          color: #333;
+          margin-bottom: $spacing-xs;
+
+          &.highlighted {
+            color: $mat-primary;
+            font-size: $font-size-xl;
+          }
+        }
+
+        .stat-label {
+          font-size: $font-size-xs;
+          color: #666;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+      }
+    }
+  }
+}
+
+// 筛选组
+.filter-groups {
+  margin-bottom: $spacing-lg;
+
+  ::ng-deep .mat-expansion-panel {
+    border-radius: $border-radius-md;
+    margin-bottom: $spacing-sm;
+    box-shadow: $mat-elevation-z1;
+
+    &.mat-expansion-panel-spacing {
+      margin: 0;
+    }
+
+    ::ng-deep .mat-expansion-panel-header {
+      padding: $spacing-md;
+      height: auto;
+      min-height: 48px;
+      border-radius: $border-radius-md;
+
+      &:hover {
+        background: #fafafa;
+      }
+
+      &.mat-expanded {
+        background: #f5f5f5;
+      }
+
+      .mat-panel-title {
+        display: flex;
+        align-items: center;
+        gap: $spacing-sm;
+        font-size: $font-size-md;
+        font-weight: 600;
+        color: #333;
+      }
+
+      .mat-panel-description {
+        font-size: $font-size-sm;
+        color: #666;
+
+        .filter-count {
+          display: inline-flex;
+          align-items: center;
+          gap: $spacing-xs;
+          padding: $spacing-xxs $spacing-xs;
+          background: $mat-primary;
+          color: white;
+          border-radius: 12px;
+          font-size: 11px;
+        }
+      }
+    }
+
+    ::ng-deep .mat-expansion-panel-content {
+      padding: 0;
+    }
+
+    .filter-group-content {
+      padding: $spacing-lg;
+    }
+
+    .filter-search {
+      margin-bottom: $spacing-md;
+
+      ::ng-deep .mat-form-field-outline {
+        .mat-form-field-flex {
+          align-items: center;
+        }
+      }
+    }
+
+    // 范围滑块
+    .range-filter {
+      .range-display {
+        margin-bottom: $spacing-md;
+        padding: $spacing-sm $spacing-md;
+        background: #f8f9fa;
+        border-radius: $border-radius-sm;
+        font-size: $font-size-sm;
+        color: #666;
+        text-align: center;
+      }
+    }
+
+    // 复选框筛选
+    .checkbox-filters {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr));
+      gap: $spacing-sm;
+      margin-bottom: $spacing-md;
+
+      mat-checkbox {
+        margin-bottom: $spacing-xs;
+      }
+    }
+
+    .selected-tags {
+      margin-top: $spacing-md;
+
+      ::ng-deep .mat-chip-list-wrapper {
+        .mat-chip-list {
+          display: flex;
+          flex-wrap: wrap;
+          gap: $spacing-xs;
+        }
+
+        .mat-standard-chip {
+          background: $mat-primary-light;
+          color: $mat-primary-dark;
+        }
+      }
+    }
+
+    // 日期筛选
+    .date-filter {
+      // 日期选择器样式已由Material处理
+    }
+
+    // 筛选操作按钮
+    .filter-actions {
+      display: flex;
+      gap: $spacing-sm;
+      margin-top: $spacing-lg;
+      justify-content: center;
+
+      button[mat-stroked-button] {
+        display: flex;
+        align-items: center;
+        gap: $spacing-xs;
+        min-width: 100px;
+      }
+    }
+  }
+}
+
+// 筛选操作栏
+.filter-actions-bar {
+  background: white;
+  border-radius: $border-radius-lg;
+  padding: $spacing-md;
+  box-shadow: $mat-elevation-z2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $spacing-md;
+
+  .action-buttons {
+    display: flex;
+    gap: $spacing-sm;
+  }
+
+  .save-presets {
+    display: flex;
+    gap: $spacing-xs;
+  }
+}
+
+// 紧凑模式样式
+:host(.compact) {
+  .filter-panel-container {
+    padding: $spacing-sm;
+  }
+
+  .quick-filters {
+    margin-bottom: $spacing-md;
+
+    .quick-filter-card .quick-filter-buttons {
+      grid-template-columns: repeat(2, 1fr));
+      gap: $spacing-xs;
+
+      button[mat-stroked-button] {
+        height: 60px;
+        padding: $spacing-xs $spacing-sm;
+
+        mat-icon {
+          font-size: 18px;
+        margin-bottom: $spacing-xxs;
+        }
+      }
+    }
+  }
+
+  .filter-groups {
+    .filter-group-content {
+      padding: $spacing-md;
+    }
+
+    .filter-actions-bar {
+      flex-direction: column;
+      gap: $spacing-sm;
+
+      .action-buttons {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .save-presets {
+        justify-content: center;
+        width: 100%;
+      }
+    }
+  }
+}
+
+// 响应式设计
+@media (max-width: 480px) {
+  .filter-panel-container {
+    max-width: 100%;
+  }
+
+  .quick-filters .quick-filter-card .quick-filter-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-groups .filter-group-content {
+    .checkbox-filters {
+      grid-template-columns: 1fr;
+    }
+
+    .filter-actions-bar {
+      flex-direction: column;
+
+      .action-buttons {
+        width: 100%;
+        flex-direction: column;
+        gap: $spacing-xs;
+      }
+
+      .save-presets {
+        justify-content: center;
+        width: 100%;
+        margin-top: $spacing-sm;
+      }
+    }
+  }
+}

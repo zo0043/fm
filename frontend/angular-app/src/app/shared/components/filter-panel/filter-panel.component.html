@@ -1,0 +1,262 @@
+<div class="filter-panel-container" [class.compact]="compact">
+  <!-- 快捷筛选 -->
+  <div class="quick-filters">
+    <mat-card class="quick-filter-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>tune</mat-icon>
+          快捷筛选
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="quick-filter-buttons">
+          <button mat-stroked-button (click)="quickFilter('low-risk')">
+            <mat-icon>trending_down</mat-icon>
+            低风险
+          </button>
+          <button mat-stroked-button (click)="quickFilter('high-performance')">
+            <mat-icon>trending_up</mat-icon>
+            高收益
+          </button>
+          <button mat-stroked-button (click)="quickFilter('large-value')">
+            <mat-icon>show_chart</mat-icon>
+            大额净值
+          </button>
+          <button mat-stroked-button (click)="quickFilter('recent-active')">
+            <mat-icon>update</mat-icon>
+            近期活跃
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- 筛选统计 -->
+    <mat-card class="stats-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>filter_list</mat-icon>
+          筛选统计
+        </mat-card-title>
+        <mat-chip-list-wrapper>
+          <mat-chip-list>
+            <mat-chip selected class="mat-standard-chip" (click)="clearFilter('all')">
+              清除所有筛选
+            </mat-chip>
+            <mat-chip
+              *ngFor="let type of filterState.fundType"
+              [selected]="filterState.fundType.includes(type)"
+              (click)="removeFromChips(type, 'fundType')"
+              (removed)="onChipRemoved($event)">
+              {{ getFundTypeDisplay(type) }}
+            </mat-chip>
+          </mat-chip-list>
+        </mat-chip-wrapper>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="stats-content">
+          <div class="stat-item">
+            <span class="stat-value highlighted">{{ getFilteredCount() }}</span>
+            <span class="stat-label">个基金</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- 筛选组 -->
+  <div class="filter-groups">
+    <!-- 基础筛选 -->
+    <mat-accordion>
+      <mat-expansion-panel
+        [expanded]="filterGroups[0].expanded"
+        (opened)="toggleExpanded('basic')">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            {{ filterGroups[0].title }}
+            <span class="filter-count" *ngIf="getActiveFilterCount() > 0">
+              ({{ getActiveFilterCount() }}个活跃筛选)
+            </span>
+          </mat-panel-title>
+        </mat-expansion-header>
+        <mat-expansion-panel-content>
+          <div class="filter-group-content">
+            <!-- 搜索框 -->
+            <div class="filter-search">
+              <mat-form-field appearance="outline">
+                <mat-label>搜索</mat-label>
+                <input matInput
+                       [(ngModel)]="filterState.search"
+                       (keyup)="applyFilters()"
+                       placeholder="搜索基金名称或代码">
+                <mat-icon matPrefix>search</mat-icon>
+              </mat-form-field>
+            </div>
+
+            <!-- 基金类型复选框 -->
+            <div class="checkbox-filters">
+              <mat-checkbox
+                *ngFor="let option of filterGroups[0].filters[1].options"
+                [(ngModel)]="filterState.fundType"
+                (change)="applyFilters()">
+                <span class="checkbox-label">{{ option.label }}</span>
+              </mat-checkbox>
+            </div>
+
+            <!-- 选中标签显示 -->
+            <div class="selected-tags" *ngIf="filterState.fundType.length > 0">
+              <mat-chip-list-wrapper>
+                <mat-chip
+                  *ngFor="let type of filterState.fundType"
+                  [removable]="true"
+                  (removed)="onChipRemoved($event)"
+                  [color]="'primary'"
+                  (click)="toggleExpanded('basic')">
+                  {{ getFundTypeDisplay(type) }}
+                </mat-chip>
+              </mat-chip-list>
+            </div>
+          </div>
+        </mat-expansion-panel>
+      </mat-expansion-panel>
+
+      <!-- 高级筛选 -->
+      <mat-accordion>
+        <mat-expansion-panel
+          [expanded]="filterGroups[1].expanded"
+          (opened)="toggleExpanded('advanced')">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              {{ filterGroups[1].title }}
+              <span class="filter-count" *ngIf="getActiveFilterCount() > 0">
+                ({{ getActiveFilterCount() }}个活跃筛选)
+              </span>
+            </mat-panel-title>
+          </mat-expansion-header>
+          <mat-expansion-panel-content>
+            <div class="filter-group-content">
+              <!-- 净值范围滑块 -->
+              <div class="range-filter">
+                <div class="range-display">
+                  净值范围: {{ formatPriceRange() }}
+                </div>
+                <mat-slider
+                  [(ngModel)]="filterState.priceRange.min"
+                  [min]="priceRange.min"
+                  [max]="priceRange.max"
+                  [step]="0.01"
+                  [thumbLabel]="true">
+                </mat-slider>
+                <div class="range-display">
+                  <span>¥{{ filterState.priceRange.min.toFixed(2) }} - ¥{{ filterState.priceRange.max.toFixed(2) }}</span>
+                </div>
+              </div>
+
+              <!-- 风险等级复选框 -->
+              <div class="checkbox-filters">
+                <mat-checkbox
+                  *ngFor="let option of filterGroups[1].filters[2].options"
+                  [(ngModel)]="filterState.riskLevel"
+                  (change)="applyFilters()">
+                  <span class="checkbox-label">{{ option.label }}</span>
+                </mat-checkbox>
+              </div>
+
+              <!-- 收益范围滑块 -->
+              <div class="range-filter">
+                <div class="range-display">
+                  收益范围: {{ formatPerformanceRange() }}
+                </div>
+                <mat-slider
+                  [(ngModel)]="filterState.performanceRange.min"
+                  [min]="performanceRange.min"
+                  [max]="performanceRange.max"
+                  [step]="1"
+                  [thumbLabel]="true">
+                </mat-slider>
+                <div class="range-display">
+                  <span>{{ filterState.performanceRange.min.toFixed(1) }}% - {{ filterState.performanceRange.max.toFixed(1) }}%</span>
+                </div>
+              </div>
+            </div>
+          </mat-expansion-panel>
+      </mat-accordion>
+
+      <!-- 时间筛选 -->
+      <mat-accordion>
+        <mat-expansion-panel
+          [expanded]="filterGroups[2].expanded"
+          (opened)="toggleExpanded('time')">
+          <mat-expansion-header>
+            <mat-panel-title>
+              {{ filterGroups[2].title }}
+              <span class="filter-count" *ngIf="getActiveFilterCount() > 0">
+                ({{ getActiveFilterCount() }}个活跃筛选)
+              </span>
+            </mat-panel-title>
+          </mat-expansion-header>
+          <mat-expansion-panel-content>
+            <div class="filter-group-content">
+              <!-- 日期范围选择器 -->
+              <div class="date-filter">
+                <mat-form-field appearance="outline">
+                  <mat-label>日期范围</mat-label>
+                  <input matInput
+                         [matDatepicker]="true"
+                         [(ngModel)]="filterState.dateRange.start"
+                         [matDatepicker]="true"
+                         (dateChange)="applyFilters()">
+                         placeholder="开始日期">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>至</mat-label>
+                  <input matInput
+                         [matDatepicker]="true"
+                         [(ngModel)]="filterState.dateRange.end"
+                         [matDatepicker]="true"
+                         (dateChange)="applyFilters()">
+                         placeholder="结束日期">
+                </mat-form-field>
+
+                <div class="range-display">
+                  日期范围: {{ formatDateRange() }}
+                </div>
+              </div>
+
+              <!-- 仅显示活跃基金 -->
+              <div class="checkbox-filters">
+                <mat-checkbox
+                  [(ngModel)]="filterState.showInactive"
+                  (change)="applyFilters()">
+                  <span class="checkbox-label">仅显示最近30天有更新的基金</span>
+                </mat-checkbox>
+            </div>
+            </div>
+          </mat-expansion-panel>
+      </mat-accordion>
+    </div>
+
+  <!-- 筛选操作栏 -->
+  <div class="filter-actions-bar">
+    <div class="action-buttons">
+      <button mat-stroked-button (click)="applyFilters()">
+        <mat-icon>filter_list</mat-icon>
+        应用筛选
+      </button>
+      <button mat-stroked-button (click)="resetFilters()">
+        <mat-icon>refresh</mat-icon>
+        重置筛选
+      </button>
+    </div>
+
+    <div class="save-presets">
+      <span>快速选择：</span>
+      <button mat-stroked-button (click)="quickFilter('low-risk')">
+        低风险基金
+      </button>
+      <button mat-stroked-button (click)="quickFilter('high-performance')">
+        高收益基金
+      </button>
+    </div>
+  </div>
+</div>

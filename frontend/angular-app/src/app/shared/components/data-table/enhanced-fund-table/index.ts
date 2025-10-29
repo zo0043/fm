@@ -1,0 +1,1 @@
+export * from './enhanced-fund-table.component';
