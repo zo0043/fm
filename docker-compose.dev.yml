@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  # 开发环境前端应用
+  frontend-dev:
+    build:
+      context: ./frontend/angular-app
+      dockerfile: Dockerfile
+      target: development
+    container_name: fund-monitor-frontend-dev
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-4200}:4200"
+    volumes:
+      # 挂载源码以支持热重载
+      - ./frontend/angular-app:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - API_BASE_URL=http://backend:8000
+      - WS_URL=ws://backend:8000
+    networks:
+      - fund-monitor-network
+    profiles:
+      - dev
+
+  # 开发环境后端服务
+  backend-dev:
+    image: nginx:alpine
+    container_name: fund-monitor-backend-dev
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-8000}:80"
+    volumes:
+      - ./infrastructure/nginx/dev.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - fund-monitor-network
+    profiles:
+      - dev
+
+  # 开发环境数据库
+  postgres-dev:
+    image: postgres:15-alpine
+    container_name: fund-monitor-postgres-dev
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      - POSTGRES_DB=fund_monitor
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./infrastructure/postgres/init-dev.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - fund-monitor-network
+    profiles:
+      - dev
+
+  # 开发环境 Redis
+  redis-dev:
+    image: redis:7-alpine
+    container_name: fund-monitor-redis-dev
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_dev_data:/data
+    networks:
+      - fund-monitor-network
+    profiles:
+      - dev
+
+  # 开发环境 InfluxDB
+  influxdb-dev:
+    image: influxdb:2.7-alpine
+    container_name: fund-monitor-influxdb-dev
+    restart: unless-stopped
+    ports:
+      - "${INFLUX_PORT:-8086}:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=admin123
+      - DOCKER_INFLUXDB_INIT_ORG=fund-monitor
+      - DOCKER_INFLUXDB_INIT_BUCKET=fund_data
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=fund-monitor-token-123456789012345678901234567890
+    volumes:
+      - influxdb_dev_data:/var/lib/influxdb2
+      - influxdb_dev_config:/etc/influxdb2
+    networks:
+      - fund-monitor-network
+    profiles:
+      - dev
+
+volumes:
+  postgres_dev_data:
+    driver: local
+  redis_dev_data:
+    driver: local
+  influxdb_dev_data:
+    driver: local
+  influxdb_dev_config:
+    driver: local
+
+networks:
+  fund-monitor-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16

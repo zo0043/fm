@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  # 简化的前端应用服务
+  frontend-test:
+    build:
+      context: ./frontend/angular-app
+      dockerfile: Dockerfile
+      target: production
+    container_name: fund-monitor-frontend-test
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-4201}:80"
+    environment:
+      - NODE_ENV=production
+      - API_BASE_URL=http://backend:8000
+      - WS_URL=ws://backend:8000
+    volumes:
+      # 只复制构建产物，不挂载源码
+      - ./frontend/angular-app/dist:/usr/share/nginx/html:ro
+    networks:
+      - fund-monitor-test
+
+networks:
+  fund-monitor-test:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.22.0.0/16

@@ -1,0 +1,191 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 主数据库
+  postgres:
+    image: postgres:15
+    container_name: fund_monitor_postgres
+    environment:
+      POSTGRES_DB: fund_monitor
+      POSTGRES_USER: fund_user
+      POSTGRES_PASSWORD: fund_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - fund_monitor_network
+
+  # Redis 缓存和消息队列
+  redis:
+    image: redis:7-alpine
+    container_name: fund_monitor_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - fund_monitor_network
+
+  # InfluxDB 时序数据库
+  influxdb:
+    image: influxdb:2.7
+    container_name: fund_monitor_influxdb
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: admin123456
+      DOCKER_INFLUXDB_INIT_ORG: fund_monitor
+      DOCKER_INFLUXDB_INIT_BUCKET: fund_data
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    networks:
+      - fund_monitor_network
+
+  # Nginx API网关
+  nginx:
+    image: nginx:alpine
+    container_name: fund_monitor_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ../nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ../nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - data_collector
+      - monitor_engine
+      - notification
+      - backtest
+      - frontend
+    networks:
+      - fund_monitor_network
+
+  # 数据收集服务
+  data_collector:
+    build:
+      context: ../../backend/services/data_collector
+      dockerfile: Dockerfile
+    container_name: fund_data_collector
+    environment:
+      - DATABASE_URL=postgresql://fund_user:fund_password@postgres:5432/fund_monitor
+      - REDIS_URL=redis://redis:6379/0
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=fund_monitor_token
+      - INFLUXDB_ORG=fund_monitor
+      - INFLUXDB_BUCKET=fund_data
+    depends_on:
+      - postgres
+      - redis
+      - influxdb
+    networks:
+      - fund_monitor_network
+    volumes:
+      - ../../backend:/app
+
+  # 监控引擎服务
+  monitor_engine:
+    build:
+      context: ../../backend/services/monitor_engine
+      dockerfile: Dockerfile
+    container_name: fund_monitor_engine
+    environment:
+      - DATABASE_URL=postgresql://fund_user:fund_password@postgres:5432/fund_monitor
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - fund_monitor_network
+    volumes:
+      - ../../backend:/app
+
+  # 通知服务
+  notification:
+    build:
+      context: ../../backend/services/notification
+      dockerfile: Dockerfile
+    container_name: fund_notification
+    environment:
+      - DATABASE_URL=postgresql://fund_user:fund_password@postgres:5432/fund_monitor
+      - REDIS_URL=redis://redis:6379/1
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - fund_monitor_network
+    volumes:
+      - ../../backend:/app
+
+  # 回测服务
+  backtest:
+    build:
+      context: ../../backend/services/backtest
+      dockerfile: Dockerfile
+    container_name: fund_backtest
+    environment:
+      - DATABASE_URL=postgresql://fund_user:fund_password@postgres:5432/fund_monitor
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=fund_monitor_token
+      - INFLUXDB_ORG=fund_monitor
+      - INFLUXDB_BUCKET=fund_data
+    depends_on:
+      - postgres
+      - influxdb
+    networks:
+      - fund_monitor_network
+    volumes:
+      - ../../backend:/app
+
+  # Celery Worker (异步任务处理)
+  celery_worker:
+    build:
+      context: ../../backend/services/notification
+      dockerfile: Dockerfile.celery
+    container_name: fund_celery_worker
+    environment:
+      - DATABASE_URL=postgresql://fund_user:fund_password@postgres:5432/fund_monitor
+      - REDIS_URL=redis://redis:6379/1
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - fund_monitor_network
+    volumes:
+      - ../../backend:/app
+
+  # NestJS 前端后端API
+  frontend:
+    build:
+      context: ../../frontend
+      dockerfile: Dockerfile
+    container_name: fund_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://fund_user:fund_password@postgres:5432/fund_monitor
+      - DATA_COLLECTOR_URL=http://data_collector:8000
+      - MONITOR_ENGINE_URL=http://monitor_engine:8001
+      - NOTIFICATION_URL=http://notification:8002
+      - BACKTEST_URL=http://backtest:8003
+    depends_on:
+      - data_collector
+      - monitor_engine
+      - notification
+      - backtest
+    networks:
+      - fund_monitor_network
+    volumes:
+      - ../../frontend:/app
+
+volumes:
+  postgres_data:
+  redis_data:
+  influxdb_data:
+
+networks:
+  fund_monitor_network:
+    driver: bridge

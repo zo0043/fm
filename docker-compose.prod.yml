@@ -1,0 +1,316 @@
+version: '3.8'
+
+services:
+  # 生产环境前端应用
+  frontend-prod:
+    build:
+      context: ./frontend/angular-app
+      dockerfile: Dockerfile
+      target: production
+    container_name: fund-monitor-frontend-prod
+    restart: always
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    environment:
+      - NODE_ENV=production
+      - API_BASE_URL=https://api.fund-monitor.com
+      - WS_URL=wss://api.fund-monitor.com
+    volumes:
+      # 只挂载必要的配置文件
+      - ./infrastructure/nginx/prod.conf:/etc/nginx/nginx.conf:ro
+      - ./infrastructure/ssl:/etc/nginx/ssl:ro
+    networks:
+      - fund-monitor-network
+    depends_on:
+      - backend-prod
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`fund-monitor.com`,`www.fund-monitor.com`)"
+      - "traefik.http.routers.frontend.tls=true"
+      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+    profiles:
+      - prod
+
+  # 生产环境后端 API 网关
+  backend-prod:
+    image: nginx:alpine
+    container_name: fund-monitor-backend-prod
+    restart: always
+    volumes:
+      - ./infrastructure/nginx/prod.conf:/etc/nginx/nginx.conf:ro
+      - ./infrastructure/ssl:/etc/nginx/ssl:ro
+    networks:
+      - fund-monitor-network
+    depends_on:
+      - postgres-prod
+      - redis-prod
+      - influxdb-prod
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    profiles:
+      - prod
+
+  # 生产环境数据库
+  postgres-prod:
+    image: postgres:15-alpine
+    container_name: fund-monitor-postgres-prod
+    restart: always
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+      - ./infrastructure/postgres/init-prod.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./infrastructure/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    networks:
+      - fund-monitor-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    profiles:
+      - prod
+
+  # 生产环境 Redis
+  redis-prod:
+    image: redis:7-alpine
+    container_name: fund-monitor-redis-prod
+    restart: always
+    command: redis-server /usr/local/etc/redis/redis.conf --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_prod_data:/data
+      - ./infrastructure/redis/redis-prod.conf:/usr/local/etc/redis/redis.conf:ro
+    networks:
+      - fund-monitor-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    profiles:
+      - prod
+
+  # 生产环境 InfluxDB
+  influxdb-prod:
+    image: influxdb:2.7-alpine
+    container_name: fund-monitor-influxdb-prod
+    restart: always
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUX_USER}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUX_PASSWORD}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUX_ORG}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUX_BUCKET}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUX_TOKEN}
+      - DOCKER_INFLUXDB_INIT_RETENTION=365d
+      - DOCKER_INFLUXDB_INIT_LOG_LEVEL=info
+    volumes:
+      - influxdb_prod_data:/var/lib/influxdb2
+      - influxdb_prod_config:/etc/influxdb2
+      - ./infrastructure/influxdb/influxdb.conf:/etc/influxdb2/influxdb.conf:ro
+    networks:
+      - fund-monitor-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    profiles:
+      - prod
+
+  # 容器编排和负载均衡
+  traefik:
+    image: traefik:v3.0
+    container_name: fund-monitor-traefik
+    restart: always
+    command:
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=fund-monitor-network"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--accesslog=true"
+      - "--accesslog.filepath=/var/log/traefik/access.log"
+      - "--global.checknewversion=false"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--metrics.prometheus=true"
+      "--metrics.prometheus.addinternalservices=false"
+      "--tracing.jaeger=true"
+      "--tracing.jaeger.localagenthostport=16686"
+      "--ping=true"
+      "--global.sendanonymoususage=false"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./infrastructure/traefik/acme.json:/letsencrypt/acme.json
+      - ./infrastructure/traefik/traefik.toml:/etc/traefik/traefik.toml:ro
+    networks:
+      - fund-monitor-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    profiles:
+      - prod
+
+  # 日志收集
+  fluentd:
+    image: fluent/fluent-bit:v2.0
+    container_name: fund-monitor-fluentd
+    restart: always
+    volumes:
+      - /var/log:/var/log:ro
+      - ./infrastructure/fluentd/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+    networks:
+      - fund-monitor-network
+    depends_on:
+      - frontend-prod
+      - backend-prod
+    profiles:
+      - prod
+
+  # 监控
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: fund-monitor-prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    networks:
+      - fund-monitor-network
+    profiles:
+      - prod
+
+  # 可视化
+  grafana:
+    image: grafana/grafana:latest
+    container_name: fund-monitor-grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infrastructure/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./infrastructure/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - fund-monitor-network
+    depends_on:
+      - prometheus
+    profiles:
+      - prod
+
+volumes:
+  postgres_prod_data:
+    driver: local
+  redis_prod_data:
+    driver: local
+  influxdb_prod_data:
+    driver: local
+  influxdb_prod_config:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  fund-monitor-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

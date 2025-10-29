@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  # 极简前端服务
+  frontend:
+    image: nginx:alpine
+    container_name: fund-monitor-frontend
+    restart: unless-stopped
+    ports:
+      - "4200:80"
+    volumes:
+      - ./frontend/angular-app/dist:/usr/share/nginx/html:ro
+    environment:
+      - NGINX_HOST=localhost
+      - NGINX_PORT=4200
+    networks:
+      - fund-monitor
+    command: >
+      sh -c "echo 'Fund Monitor Frontend App is running...' && nginx -g 'daemon off;'"
+
+networks:
+  fund-monitor:
+    driver: bridge
