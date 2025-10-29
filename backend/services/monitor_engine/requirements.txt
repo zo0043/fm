@@ -1,0 +1,25 @@
+# 监控引擎服务依赖
+# 基础依赖继承自共享库
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+sqlalchemy==2.0.23
+asyncpg==0.29.0
+redis==5.0.1
+httpx==0.25.2
+pydantic==2.5.0
+loguru==0.7.2
+
+# 监控和调度
+apscheduler==3.10.4
+celery==5.3.4
+
+# 数据处理
+pandas==2.1.4
+numpy==1.25.2
+
+# 规则引擎
+jsonpath-ng==1.6.1
+
+# 工具库
+python-dateutil==2.8.2
+pytz==2023.3
