@@ -1,0 +1,64 @@
+{
+  "name": "fund-monitor-web",
+  "version": "1.0.0",
+  "description": "基金涨跌幅监控应用前端",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
+    "lint": "ng lint",
+    "e2e": "ng e2e",
+    "analyze": "ng build --stats-json"
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/animations": "^17.0.0",
+    "@angular/common": "^17.0.0",
+    "@angular/compiler": "^17.0.0",
+    "@angular/core": "^17.0.0",
+    "@angular/forms": "^17.0.0",
+    "@angular/platform-browser": "^17.0.0",
+    "@angular/platform-browser-dynamic": "^17.0.0",
+    "@angular/router": "^17.0.0",
+    "@angular/service-worker": "^17.0.0",
+    "@angular/material": "^17.0.0",
+    "@angular/cdk": "^17.0.0",
+    "@angular/flex-layout": "^14.0.0-beta.41",
+    "rxjs": "~7.8.1",
+    "tslib": "^2.3.0",
+    "zone.js": "~0.14.3",
+    "chart.js": "^4.4.0",
+    "ng2-charts": "^6.0.0",
+    "ngx-toastr": "^18.0.0",
+    "moment": "^2.29.4",
+    "lodash-es": "^4.17.21",
+    "@ngx-translate/http-loader": "^8.0.0",
+    "socket.io-client": "^4.7.4"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^17.0.0",
+    "@angular/cli": "~17.0.0",
+    "@angular/compiler-cli": "^17.0.0",
+    "@types/jasmine": "~5.1.0",
+    "@types/node": "^18.18.0",
+    "typescript": "~5.2.0",
+    "ts-node": "~10.9.0",
+    "tslint": "~6.1.0",
+    "jasmine-core": "~5.1.0",
+    "karma": "~6.4.0",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage-istanbul-reporter": "~3.0.3",
+    "ng-packagr": "^17.0.0",
+    "protractor": "~7.0.0",
+    "ts-node": "~10.9.0",
+    "tslint": "~6.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "browser": {
+    "chrome": ">=120.0.0"
+  }
+}
