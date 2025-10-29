@@ -1,0 +1,273 @@
+<div class="monitor-settings-container">
+  <!-- 页面标题 -->
+  <header class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        <mat-icon>notifications</mat-icon>
+        监控设置
+      </h1>
+      <div class="header-actions">
+        <button mat-stroked-button (click)="resetSettings()">
+          <mat-icon>restore</mat-icon>
+          重置设置
+        </button>
+        <button mat-raised-button color="primary" (click)="saveSettings()">
+          <mat-icon>save</mat-icon>
+          保存设置
+        </button>
+      </div>
+    </div>
+    <div class="header-subtitle">
+      <span>配置基金监控规则和通知方式</span>
+    </div>
+  </header>
+
+  <!-- 主要内容 -->
+  <main class="main-content">
+    <mat-tab-group>
+      <!-- 监控规则 -->
+      <mat-tab label="监控规则">
+        <div class="tab-content">
+          <div class="rules-section">
+            <mat-card *ngFor="let rule of monitorRules; let i = index">
+              <mat-card-header>
+                <mat-card-title>
+                  <mat-checkbox [(ngModel)]="rule.enabled"></mat-checkbox>
+                  {{ rule.name }}
+                </mat-card-title>
+                <mat-card-subtitle>{{ rule.description }}</mat-card-subtitle>
+                <button mat-icon-button (click)="deleteMonitorRule(rule.id)" matTooltip="删除规则">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="rule-config">
+                  <div class="config-row">
+                    <mat-form-field appearance="outline">
+                      <mat-label>阈值类型</mat-label>
+                      <mat-select [(ngModel)]="rule.thresholdType">
+                        <mat-option value="percent">百分比</mat-option>
+                        <mat-option value="value">绝对值</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>上涨阈值</mat-label>
+                      <input matInput type="number" [(ngModel)]="rule.upThreshold" step="0.1">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>下跌阈值</mat-label>
+                      <input matInput type="number" [(ngModel)]="rule.downThreshold" step="0.1">
+                    </mat-form-field>
+                  </div>
+
+                  <div class="config-row">
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>通知方式</mat-label>
+                      <mat-select multiple [(ngModel)]="rule.notificationType">
+                        <mat-option value="wechat">微信通知</mat-option>
+                        <mat-option value="email">邮件通知</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <!-- 添加规则按钮 -->
+            <div class="add-rule-section">
+              <button mat-stroked-button (click)="addMonitorRule()" class="add-button">
+                <mat-icon>add</mat-icon>
+                添加监控规则
+              </button>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- 通知配置 -->
+      <mat-tab label="通知配置">
+        <div class="tab-content">
+          <div class="notification-section">
+            <!-- 微信通知配置 -->
+            <mat-card class="notification-card">
+              <mat-card-header>
+                <mat-card-title>
+                  <mat-checkbox [(ngModel)]="notificationSettings.wechat.enabled"></mat-checkbox>
+                  微信通知
+                </mat-card-title>
+                <mat-icon color="success">chat</mat-icon>
+              </mat-card-header>
+              <mat-card-content *ngIf="notificationSettings.wechat.enabled">
+                <div class="notification-config">
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Webhook URL</mat-label>
+                    <input matInput [(ngModel)]="notificationSettings.wechat.webhookUrl">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Secret</mat-label>
+                    <input matInput type="password" [(ngModel)]="notificationSettings.wechat.secret">
+                  </mat-form-field>
+
+                  <div class="action-buttons">
+                    <button mat-stroked-button (click)="testNotification('wechat')">
+                      <mat-icon>send</mat-icon>
+                      测试微信通知
+                    </button>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <!-- 邮件通知配置 -->
+            <mat-card class="notification-card">
+              <mat-card-header>
+                <mat-card-title>
+                  <mat-checkbox [(ngModel)]="notificationSettings.email.enabled"></mat-checkbox>
+                  邮件通知
+                </mat-card-title>
+                <mat-icon color="primary">email</mat-icon>
+              </mat-card-header>
+              <mat-card-content *ngIf="notificationSettings.email.enabled">
+                <div class="notification-config">
+                  <div class="config-row">
+                    <mat-form-field appearance="outline">
+                      <mat-label>SMTP主机</mat-label>
+                      <input matInput [(ngModel)]="notificationSettings.email.smtpHost">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>SMTP端口</mat-label>
+                      <input matInput type="number" [(ngModel)]="notificationSettings.email.smtpPort">
+                    </mat-form-field>
+                  </div>
+
+                  <div class="config-row">
+                    <mat-form-field appearance="outline">
+                      <mat-label>用户名</mat-label>
+                      <input matInput [(ngModel)]="notificationSettings.email.username">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>密码</mat-label>
+                      <input matInput type="password" [(ngModel)]="notificationSettings.email.password">
+                    </mat-form-field>
+                  </div>
+
+                  <div class="action-buttons">
+                    <button mat-stroked-button (click)="testNotification('email')">
+                      <mat-icon>send</mat-icon>
+                      测试邮件通知
+                    </button>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- 监控频率 -->
+      <mat-tab label="监控频率">
+        <div class="tab-content">
+          <div class="frequency-section">
+            <mat-card>
+              <mat-card-header>
+                <mat-card-title>监控配置</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="frequency-config">
+                  <div class="config-item">
+                    <mat-slide-toggle [(ngModel)]="monitoringFrequency.realtime">
+                      实时监控
+                    </mat-slide-toggle>
+                    <span class="config-description">开启后将持续监控基金数据变化</span>
+                  </div>
+
+                  <div class="config-item" *ngIf="!monitoringFrequency.realtime">
+                    <mat-form-field appearance="outline">
+                      <mat-label>检查间隔</mat-label>
+                      <mat-slider
+                        [(ngModel)]="monitoringFrequency.interval"
+                        min="60"
+                        max="3600"
+                        step="60"
+                        thumbLabel="true">
+                      </mat-slider>
+                      <div class="slider-label">
+                        每 {{ formatInterval(monitoringFrequency.interval) }} 检查一次
+                      </div>
+                    </mat-form-field>
+                  </div>
+
+                  <div class="config-item">
+                    <mat-slide-toggle [(ngModel)]="monitoringFrequency.marketHoursOnly">
+                      仅在交易时间监控
+                    </mat-slide-toggle>
+                    <span class="config-description">只在工作日的9:00-15:00进行监控</span>
+                  </div>
+
+                  <div class="config-item">
+                    <mat-slide-toggle [(ngModel)]="monitoringFrequency.weekdaysOnly">
+                      仅在交易日监控
+                    </mat-slide-toggle>
+                    <span class="config-description">跳过周末和节假日</span>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- 高级设置 -->
+      <mat-tab label="高级设置">
+        <div class="tab-content">
+          <div class="advanced-section">
+            <mat-accordion>
+              <mat-expansion-panel>
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <mat-icon>settings</mat-icon>
+                    全局设置
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                <mat-expansion-panel-content>
+                  <div class="global-config">
+                    <div class="config-item">
+                      <mat-slide-toggle [(ngModel)]="globalSettings.enableSound">
+                        启用声音提醒
+                      </mat-slide-toggle>
+                    </div>
+
+                    <div class="config-item">
+                      <mat-slide-toggle [(ngModel)]="globalSettings.enableNotification">
+                        启用系统通知
+                      </mat-slide-toggle>
+                    </div>
+
+                    <div class="config-item">
+                      <mat-slide-toggle [(ngModel)]="globalSettings.enableAutoRefresh">
+                        自动刷新数据
+                      </mat-slide-toggle>
+                    </div>
+
+                    <div class="config-item">
+                      <mat-form-field appearance="outline">
+                        <mat-label>数据保留天数</mat-label>
+                        <input matInput type="number" [(ngModel)]="globalSettings.dataRetention">
+                        <span class="suffix">天</span>
+                      </mat-form-field>
+                    </div>
+                  </div>
+                </mat-expansion-panel-content>
+              </mat-expansion-panel>
+            </mat-accordion>
+          </div>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </main>
+</div>

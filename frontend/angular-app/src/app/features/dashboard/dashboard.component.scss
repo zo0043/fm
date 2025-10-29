@@ -1,0 +1,439 @@
+@import '../../theme/_variables';
+
+.dashboard-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: $spacing-lg;
+}
+
+// 头部样式
+.dashboard-header {
+  margin-bottom: $spacing-xl;
+  background: white;
+  padding: $spacing-lg;
+  border-radius: $border-radius-lg;
+  box-shadow: $mat-elevation-z2;
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-sm;
+
+    .page-title {
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+      font-size: $font-size-xxl;
+      font-weight: 600;
+      color: #333;
+      margin: 0;
+
+      mat-icon {
+        color: $mat-primary;
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+      }
+    }
+
+    .header-actions {
+      button[mat-icon-button] {
+        mat-icon.spinning {
+          animation: spin 1s linear infinite;
+        }
+      }
+    }
+  }
+
+  .header-subtitle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: $font-size-md;
+    color: #666;
+
+    .fund-count {
+      background: $mat-primary;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-weight: 500;
+    }
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// 加载状态
+.loading-container {
+  background: white;
+  border-radius: $border-radius-lg;
+  padding: $spacing-xl;
+  text-align: center;
+  box-shadow: $mat-elevation-z2;
+
+  .loading-text {
+    margin-top: $spacing-lg;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $spacing-md;
+
+    p {
+      margin: 0;
+      color: #666;
+      font-size: $font-size-md;
+    }
+  }
+}
+
+// 主要内容区域
+.dashboard-content {
+  .stats-section {
+    margin-bottom: $spacing-xl;
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: $spacing-lg;
+
+      .stat-card {
+        border-radius: $border-radius-lg;
+        box-shadow: $mat-elevation-z2;
+        border: none;
+
+        ::ng-deep .mat-card-header {
+          background: linear-gradient(135deg, $mat-primary, $mat-primary-light);
+          color: white;
+          padding: $spacing-md $spacing-lg;
+          border-radius: $border-radius-lg $border-radius-lg 0 0;
+
+          .mat-card-title {
+            font-size: $font-size-lg;
+            font-weight: 600;
+          }
+
+          mat-icon {
+            color: white;
+          }
+        }
+
+        ::ng-deep .mat-card-content {
+          padding: $spacing-lg;
+        }
+
+        .trend-stats {
+          display: flex;
+          justify-content: space-around;
+          align-items: center;
+
+          .trend-item {
+            text-align: center;
+
+            .trend-number {
+              display: block;
+              font-size: $font-size-xxl;
+              font-weight: 700;
+              margin-bottom: $spacing-xs;
+            }
+
+            .trend-label {
+              font-size: $font-size-sm;
+              color: #666;
+              font-weight: 500;
+            }
+
+            &.up .trend-number {
+              color: $mat-success;
+            }
+
+            &.down .trend-number {
+              color: $mat-warn;
+            }
+
+            &.flat .trend-number {
+              color: #666;
+            }
+          }
+        }
+
+        .selected-fund-info {
+          h3 {
+            margin: 0 0 $spacing-sm 0;
+            font-size: $font-size-lg;
+            color: #333;
+          }
+
+          .fund-code {
+            margin: 0 0 $spacing-md 0;
+            color: #666;
+            font-size: $font-size-md;
+          }
+        }
+      }
+    }
+  }
+}
+
+// 标签页样式
+.tabs-section {
+  background: white;
+  border-radius: $border-radius-lg;
+  box-shadow: $mat-elevation-z2;
+  overflow: hidden;
+
+  ::ng-deep .mat-tab-header {
+    background: #fafafa;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  ::ng-deep .mat-tab-label {
+    font-weight: 500;
+    font-size: $font-size-md;
+  }
+
+  .tab-content {
+    padding: $spacing-lg;
+    min-height: 500px;
+  }
+}
+
+// 基金网格
+.fund-tile {
+  padding: $spacing-sm;
+  height: 100%;
+  width: 100%;
+
+  app-fund-card {
+    height: 100%;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+  }
+}
+
+// 空状态
+.empty-state, .no-selection {
+  text-align: center;
+  padding: $spacing-xxl;
+  color: #666;
+
+  .empty-icon, .no-selection-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    margin-bottom: $spacing-lg;
+    opacity: 0.5;
+  }
+
+  h3 {
+    font-size: $font-size-xl;
+    margin: 0 0 $spacing-sm 0;
+    color: #333;
+  }
+
+  p {
+    font-size: $font-size-md;
+    margin: 0 0 $spacing-lg 0;
+  }
+
+  button[mat-raised-button] {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    margin: 0 auto;
+  }
+}
+
+// 图表区域
+.chart-section {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: $spacing-lg;
+  margin-bottom: $spacing-lg;
+
+  .chart-container {
+    min-height: 400px;
+  }
+
+  .fund-details-section {
+    mat-card {
+      height: 100%;
+
+      .fund-detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: $spacing-md;
+
+        .detail-item {
+          display: flex;
+          flex-direction: column;
+
+          .detail-label {
+            font-size: $font-size-sm;
+            color: #666;
+            margin-bottom: $spacing-xs;
+          }
+
+          .detail-value {
+            font-size: $font-size-md;
+            font-weight: 500;
+            color: #333;
+          }
+        }
+      }
+    }
+  }
+}
+
+// 统计页面
+.statistics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: $spacing-lg;
+
+  .stats-card {
+    border-radius: $border-radius-lg;
+    box-shadow: $mat-elevation-z1;
+    border: none;
+
+    ::ng-deep .mat-card-header {
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      padding: $spacing-md $spacing-lg;
+
+      .mat-card-title {
+        font-size: $font-size-lg;
+        font-weight: 600;
+        color: #333;
+      }
+    }
+
+    ::ng-deep .mat-card-content {
+      padding: $spacing-lg;
+    }
+
+    .performance-stats, .fund-type-stats {
+      .perf-item, .type-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: $spacing-sm 0;
+        border-bottom: 1px solid #f0f0f0;
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        .perf-label, .type-label {
+          font-size: $font-size-md;
+          color: #666;
+        }
+
+        .perf-value, .type-value {
+          font-size: $font-size-md;
+          font-weight: 600;
+
+          &.positive {
+            color: $mat-success;
+          }
+
+          &.negative {
+            color: $mat-warn;
+          }
+        }
+      }
+    }
+  }
+}
+
+// 刷新指示器
+.refresh-indicator {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: white;
+  padding: $spacing-md;
+  border-radius: $border-radius-lg;
+  box-shadow: $mat-elevation-z4;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  z-index: 1000;
+
+  span {
+    font-size: $font-size-sm;
+    font-weight: 500;
+  }
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: $spacing-md;
+  }
+
+  .dashboard-header {
+    padding: $spacing-md;
+
+    .header-content {
+      flex-direction: column;
+      gap: $spacing-md;
+      text-align: center;
+
+      .page-title {
+        font-size: $font-size-xl;
+
+        mat-icon {
+          font-size: 24px;
+          width: 24px;
+          height: 24px;
+        }
+      }
+    }
+
+    .header-subtitle {
+      flex-direction: column;
+      gap: $spacing-sm;
+      text-align: center;
+    }
+  }
+
+  .stats-section .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-section {
+    grid-template-columns: 1fr;
+  }
+
+  .statistics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fund-detail-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: $spacing-sm;
+  }
+
+  .tab-content {
+    padding: $spacing-md;
+  }
+
+  .dashboard-header {
+    .page-title {
+      font-size: $font-size-lg;
+    }
+  }
+}

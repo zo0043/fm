@@ -1,0 +1,242 @@
+<div class="dashboard-container">
+  <!-- 页面标题栏 -->
+  <header class="dashboard-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        <mat-icon>dashboard</mat-icon>
+        {{ getPageTitle() }}
+      </h1>
+      <div class="header-actions">
+        <app-simple-export-button
+          [options]="quickExportOptions"
+          [showQuickActions]="true"
+          (exportClick)="onExportClick($event)">
+        </app-simple-export-button>
+        <button mat-icon-button (click)="refreshData()" [disabled]="refreshing" matTooltip="刷新数据">
+          <mat-icon [class.spinning]="refreshing">refresh</mat-icon>
+        </button>
+      </div>
+    </div>
+    <div class="header-subtitle">
+      <span>监控您的基金投资表现</span>
+      <span class="fund-count">{{ funds.length }} 只基金</span>
+    </div>
+  </header>
+
+  <!-- 加载状态 -->
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    <div class="loading-text">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>正在加载基金数据...</p>
+    </div>
+  </div>
+
+  <!-- 主要内容区域 -->
+  <main class="dashboard-content" *ngIf="!isLoading">
+    <!-- 统计概览 -->
+    <section class="stats-section">
+      <div class="stats-grid">
+        <mat-card class="stat-card">
+          <mat-card-header>
+            <mat-card-title>涨跌统计</mat-card-title>
+            <mat-icon color="primary">trending_up</mat-icon>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="trend-stats">
+              <div class="trend-item up">
+                <span class="trend-number">{{ getTrendStats().up }}</span>
+                <span class="trend-label">上涨</span>
+              </div>
+              <div class="trend-item down">
+                <span class="trend-number">{{ getTrendStats().down }}</span>
+                <span class="trend-label">下跌</span>
+              </div>
+              <div class="trend-item flat">
+                <span class="trend-number">{{ getTrendStats().flat }}</span>
+                <span class="trend-label">平盘</span>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card" *ngIf="selectedFund">
+          <mat-card-header>
+            <mat-card-title>当前选中</mat-card-title>
+            <mat-icon color="accent">info</mat-icon>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="selected-fund-info">
+              <h3>{{ selectedFund.name }}</h3>
+              <p class="fund-code">{{ selectedFund.code }}</p>
+              <app-trend-indicator
+                [trendInfo]="trendInfo"
+                size="large"
+                [showValue]="true">
+              </app-trend-indicator>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </section>
+
+    <!-- 标签页导航 -->
+    <section class="tabs-section">
+      <mat-tab-group [(selectedIndex)]="selectedTab" (selectedTabChange)="onTabChange($event.index)">
+        <!-- 基金列表标签页 -->
+        <mat-tab label="基金监控">
+          <div class="tab-content">
+            <!-- 基金网格列表 -->
+            <mat-grid-list [cols]="getGridCols()" rowHeight="1:1.2" gutterSize="16px">
+              <mat-grid-tile *ngFor="let fund of funds">
+                <div class="fund-tile">
+                  <app-fund-card
+                    [fund]="fund"
+                    [compact]="true"
+                    [showActions]="true"
+                    (viewDetails)="onViewFundDetails($event)"
+                    (addToWatchlist)="onAddToWatchlist($event)"
+                    (removeFromWatchlist)="onRemoveFromWatchlist($event)"
+                    (click)="selectFund(fund)">
+                  </app-fund-card>
+                </div>
+              </mat-grid-tile>
+            </mat-grid-list>
+
+            <!-- 空状态 -->
+            <div class="empty-state" *ngIf="funds.length === 0">
+              <mat-icon class="empty-icon">account_balance</mat-icon>
+              <h3>暂无基金数据</h3>
+              <p>请添加基金到您的监控列表</p>
+              <button mat-raised-button color="primary">
+                <mat-icon>add</mat-icon>
+                添加基金
+              </button>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- 图表分析标签页 -->
+        <mat-tab label="图表分析">
+          <div class="tab-content">
+            <div class="chart-section" *ngIf="selectedFund">
+              <!-- K线图 -->
+              <div class="chart-container">
+                <app-k-line-chart
+                  [fundData]="kLineData"
+                  [fundInfo]="selectedFund"
+                  [height]="400">
+                </app-k-line-chart>
+              </div>
+
+              <!-- 基金详情 -->
+              <div class="fund-details-section">
+                <mat-card>
+                  <mat-card-header>
+                    <mat-card-title>{{ selectedFund.name }} 详细信息</mat-card-title>
+                  </mat-card-header>
+                  <mat-card-content>
+                    <div class="fund-detail-grid">
+                      <div class="detail-item">
+                        <span class="detail-label">基金代码:</span>
+                        <span class="detail-value">{{ selectedFund.code }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">基金类型:</span>
+                        <span class="detail-value">{{ selectedFund.type }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">当前净值:</span>
+                        <span class="detail-value">{{ selectedFund.currentNav.toFixed(4) }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">昨日净值:</span>
+                        <span class="detail-value">{{ selectedFund.yesterdayNav.toFixed(4) }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">周净值:</span>
+                        <span class="detail-value">{{ selectedFund.weekNav.toFixed(4) }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">月净值:</span>
+                        <span class="detail-value">{{ selectedFund.monthNav.toFixed(4) }}</span>
+                      </div>
+                    </div>
+                  </mat-card-content>
+                </mat-card>
+              </div>
+            </div>
+
+            <!-- 未选择基金提示 -->
+            <div class="no-selection" *ngIf="!selectedFund">
+              <mat-icon class="no-selection-icon">show_chart</mat-icon>
+              <h3>请选择一只基金查看图表</h3>
+              <p>在基金监控标签页中点击任意基金卡片</p>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- 数据统计标签页 -->
+        <mat-tab label="数据统计">
+          <div class="tab-content">
+            <div class="statistics-grid">
+              <!-- 收益表现 -->
+              <mat-card class="stats-card">
+                <mat-card-header>
+                  <mat-card-title>收益表现</mat-card-title>
+                  <mat-icon color="success">trending_up</mat-icon>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="performance-stats">
+                    <div class="perf-item">
+                      <span class="perf-label">今日平均收益:</span>
+                      <span class="perf-value positive">+1.25%</span>
+                    </div>
+                    <div class="perf-item">
+                      <span class="perf-label">本周平均收益:</span>
+                      <span class="perf-value negative">-0.82%</span>
+                    </div>
+                    <div class="perf-item">
+                      <span class="perf-label">本月平均收益:</span>
+                      <span class="perf-value positive">+3.45%</span>
+                    </div>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+
+              <!-- 基金分布 -->
+              <mat-card class="stats-card">
+                <mat-card-header>
+                  <mat-card-title>基金类型分布</mat-card-title>
+                  <mat-icon color="info">pie_chart</mat-icon>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="fund-type-stats">
+                    <div class="type-item">
+                      <span class="type-label">股票型:</span>
+                      <span class="type-value">3只</span>
+                    </div>
+                    <div class="type-item">
+                      <span class="type-label">债券型:</span>
+                      <span class="type-value">2只</span>
+                    </div>
+                    <div class="type-item">
+                      <span class="type-label">混合型:</span>
+                      <span class="type-value">1只</span>
+                    </div>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </section>
+  </main>
+</div>
+
+<!-- 刷新指示器 -->
+<div class="refresh-indicator" *ngIf="refreshing">
+  <mat-spinner diameter="24"></mat-spinner>
+  <span>更新中...</span>
+</div>

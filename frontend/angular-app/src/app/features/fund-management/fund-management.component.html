@@ -1,0 +1,200 @@
+<div class="fund-management-container">
+  <!-- 页面标题 -->
+  <header class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        <mat-icon>account_balance</mat-icon>
+        基金管理
+      </h1>
+      <div class="header-actions">
+        <app-simple-export-button
+          [options]="exportOptions"
+          (exportClick)="onExportClick($event)">
+        </app-simple-export-button>
+        <button mat-raised-button color="primary" (click)="onBatchAction('addMultiple')">
+          <mat-icon>add</mat-icon>
+          批量添加
+        </button>
+      </div>
+    </div>
+    <div class="header-subtitle">
+      <span>管理您的基金投资组合</span>
+    </div>
+  </header>
+
+  <!-- 加载状态 -->
+  <div class="loading-overlay" *ngIf="loading">
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    <div class="loading-text">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>正在加载基金数据...</p>
+    </div>
+  </div>
+
+  <!-- 主要内容 -->
+  <main class="main-content" *ngIf="!loading">
+    <!-- 统计概览 -->
+    <section class="stats-section">
+      <div class="stats-grid">
+        <mat-card class="stat-card">
+          <mat-card-header>
+            <mat-card-title>关注基金</mat-card-title>
+            <mat-icon color="primary">star</mat-icon>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="stat-number">{{ totalFunds }}</div>
+            <div class="stat-label">只基金</div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-header>
+            <mat-card-title>今日涨跌</mat-card-title>
+            <mat-icon color="success">trending_up</mat-icon>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="trend-stats">
+              <div class="trend-item up">
+                <span class="trend-number">{{ upCount }}</span>
+                <span class="trend-label">上涨</span>
+              </div>
+              <div class="trend-item down">
+                <span class="trend-number">{{ downCount }}</span>
+                <span class="trend-label">下跌</span>
+              </div>
+              <div class="trend-item flat">
+                <span class="trend-number">{{ flatCount }}</span>
+                <span class="trend-label">平盘</span>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </section>
+
+    <!-- 筛选和搜索 -->
+    <section class="filter-section">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>筛选和搜索</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="filter-controls">
+            <mat-form-field appearance="outline" class="search-field">
+              <mat-label>搜索基金</mat-label>
+              <mat-icon matPrefix>search</mat-icon>
+              <input matInput (keyup)="onSearch($event)" placeholder="输入基金代码或名称">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="type-filter">
+              <mat-label>基金类型</mat-label>
+              <mat-select (selectionChange)="onTypeFilterChange($event)">
+                <mat-option value="all">全部类型</mat-option>
+                <mat-option value="stock">股票型</mat-option>
+                <mat-option value="bond">债券型</mat-option>
+                <mat-option value="hybrid">混合型</mat-option>
+                <mat-option value="index">指数型</mat-option>
+                <mat-option value="etf">ETF</mat-option>
+                <mat-option value="qdii">QDII</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </section>
+
+    <!-- 基金列表标签页 -->
+    <section class="funds-section">
+      <mat-card>
+        <mat-tab-group [(selectedIndex)]="selectedTab" (selectedTabChange)="onTabChange($event.index)">
+          <!-- 关注列表标签页 -->
+          <mat-tab label="关注列表">
+            <div class="tab-content">
+              <div class="fund-grid" *ngIf="watchlistFunds.length > 0">
+                <app-fund-card
+                  *ngFor="let fund of watchlistFunds"
+                  [fund]="fund"
+                  [showActions]="true"
+                  (viewDetails)="onViewDetails($event)"
+                  (removeFromWatchlist)="onRemoveFromWatchlist($event)">
+                </app-fund-card>
+              </div>
+
+              <!-- 空状态 -->
+              <div class="empty-state" *ngIf="watchlistFunds.length === 0">
+                <mat-icon class="empty-icon">star_border</mat-icon>
+                <h3>暂无关注基金</h3>
+                <p>请在"可添加基金"页面添加您关注的基金</p>
+                <button mat-raised-button color="primary" (click)="selectedTab = 1">
+                  <mat-icon>add</mat-icon>
+                  去添加基金
+                </button>
+              </div>
+            </div>
+          </mat-tab>
+
+          <!-- 可添加基金标签页 -->
+          <mat-tab label="可添加基金">
+            <div class="tab-content">
+              <div class="fund-grid" *ngIf="availableFunds.length > 0">
+                <app-fund-card
+                  *ngFor="let fund of availableFunds"
+                  [fund]="fund"
+                  [showActions]="true"
+                  (viewDetails)="onViewDetails($event)"
+                  (addToWatchlist)="onAddToWatchlist($event)">
+                </app-fund-card>
+              </div>
+
+              <!-- 空状态 -->
+              <div class="empty-state" *ngIf="availableFunds.length === 0">
+                <mat-icon class="empty-icon">search_off</mat-icon>
+                <h3>没有可添加的基金</h3>
+                <p>所有基金都已在您的关注列表中</p>
+              </div>
+            </div>
+          </mat-tab>
+
+          <!-- 全部基金标签页 -->
+          <mat-tab label="全部基金">
+            <div class="tab-content">
+              <div class="fund-grid" *ngIf="allFunds.length > 0">
+                <app-fund-card
+                  *ngFor="let fund of allFunds"
+                  [fund]="fund"
+                  [showActions]="false"
+                  (viewDetails)="onViewDetails($event)">
+                </app-fund-card>
+              </div>
+            </div>
+          </mat-tab>
+        </mat-tab-group>
+      </mat-card>
+    </section>
+
+    <!-- 快捷操作 -->
+    <section class="quick-actions-section">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>快捷操作</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="action-buttons">
+            <button mat-stroked-button (click)="onBatchAction('import')">
+              <mat-icon>upload_file</mat-icon>
+              导入基金列表
+            </button>
+            <button mat-stroked-button (click)="onBatchAction('export')">
+              <mat-icon>download</mat-icon>
+              导出关注列表
+            </button>
+            <button mat-stroked-button (click)="onBatchAction('refresh')">
+              <mat-icon>refresh</mat-icon>
+              刷新数据
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </section>
+  </main>
+</div>

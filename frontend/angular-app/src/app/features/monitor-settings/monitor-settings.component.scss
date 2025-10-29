@@ -1,0 +1,233 @@
+@import '../../../theme/_variables';
+
+.monitor-settings-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: $spacing-lg;
+}
+
+// 页面头部
+.page-header {
+  margin-bottom: $spacing-xl;
+  background: white;
+  padding: $spacing-lg;
+  border-radius: $border-radius-lg;
+  box-shadow: $mat-elevation-z2;
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-sm;
+
+    .page-title {
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+      font-size: $font-size-xxl;
+      font-weight: 600;
+      color: #333;
+      margin: 0;
+
+      mat-icon {
+        color: $mat-primary;
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      gap: $spacing-md;
+    }
+  }
+
+  .header-subtitle {
+    font-size: $font-size-md;
+    color: #666;
+  }
+}
+
+// 主要内容
+.main-content {
+  background: white;
+  border-radius: $border-radius-lg;
+  box-shadow: $mat-elevation-z2;
+  overflow: hidden;
+
+  ::ng-deep .mat-tab-header {
+    background: #fafafa;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .tab-content {
+    padding: $spacing-lg;
+  }
+}
+
+// 监控规则部分
+.rules-section {
+  .rule-config {
+    .config-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: $spacing-md;
+      margin-bottom: $spacing-md;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .add-rule-section {
+    margin-top: $spacing-lg;
+    text-align: center;
+
+    .add-button {
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+      margin: 0 auto;
+      padding: $spacing-md $spacing-xl;
+      border: 2px dashed $mat-primary;
+      border-radius: $border-radius-lg;
+      background: transparent;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: rgba($mat-primary, 0.05);
+        border-color: $mat-primary-dark;
+      }
+    }
+  }
+}
+
+// 通知配置部分
+.notification-section {
+  .notification-card {
+    margin-bottom: $spacing-lg;
+    border-radius: $border-radius-lg;
+    overflow: hidden;
+
+    ::ng-deep .mat-card-header {
+      background: linear-gradient(135deg, #4caf50, #45a049);
+      color: white;
+    }
+
+    ::ng-deep .mat-card-header:nth-child(2n) {
+      background: linear-gradient(135deg, #2196f3, #1976d2);
+    }
+
+    .notification-config {
+      .config-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: $spacing-md;
+        margin-bottom: $spacing-md;
+      }
+
+      .full-width {
+        grid-column: 1 / -1;
+      }
+
+      .action-buttons {
+        margin-top: $spacing-md;
+        display: flex;
+        gap: $spacing-sm;
+      }
+    }
+  }
+}
+
+// 监控频率部分
+.frequency-section {
+  .frequency-config {
+    .config-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: $spacing-lg;
+
+      .config-description {
+        flex: 1;
+        margin-left: $spacing-md;
+        color: #666;
+        font-size: $font-size-sm;
+      }
+    }
+
+    .slider-label {
+      margin-top: $spacing-sm;
+      color: #666;
+      font-size: $font-size-sm;
+    }
+  }
+}
+
+// 高级设置部分
+.advanced-section {
+  .global-config {
+    .config-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: $spacing-lg;
+
+      .suffix {
+        color: #666;
+        margin-left: $spacing-sm;
+        font-size: $font-size-sm;
+      }
+    }
+  }
+
+// 响应式设计
+@media (max-width: 768px) {
+  .monitor-settings-container {
+    padding: $spacing-md;
+  }
+
+  .page-header {
+    padding: $spacing-md;
+
+    .header-content {
+      flex-direction: column;
+      gap: $spacing-md;
+      text-align: center;
+
+      .page-title {
+        font-size: $font-size-xl;
+
+        mat-icon {
+          font-size: 24px;
+          width: 24px;
+          height: 24px;
+        }
+      }
+
+      .header-actions {
+        justify-content: center;
+      }
+    }
+
+    .header-subtitle {
+      text-align: center;
+    }
+  }
+
+  .rules-section .rule-config .config-row {
+    grid-template-columns: 1fr;
+    gap: $spacing-sm;
+  }
+
+  .notification-section .notification-card .notification-config .config-row {
+    grid-template-columns: 1fr;
+    gap: $spacing-sm;
+  }
+
+  .main-content .tab-content {
+    padding: $spacing-md;
+  }
+}
