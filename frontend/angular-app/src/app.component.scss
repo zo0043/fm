@@ -1,0 +1,349 @@
+.app-container {
+  display: flex;
+  height: 100vh;
+  font-family: 'Roboto', 'Helvetica Neue', sans-serif;
+}
+
+.sidenav {
+  width: 280px;
+  background: #2c3e50;
+  color: #fff;
+}
+
+.sidenav-header {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidenav-icon {
+  margin-right: 12px;
+  font-size: 24px;
+}
+
+.sidenav-title {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.sidenav-nav {
+  flex: 1;
+  padding: 8px 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: 0;
+  margin: 2px 0;
+  transition: all 0.3s ease;
+
+  &.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+  }
+}
+
+.nav-icon {
+  margin-right: 12px;
+  font-size: 20px;
+}
+
+.nav-text {
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.sidenav-user {
+  padding: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.user-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+}
+
+.user-info {
+  margin-bottom: 8px;
+}
+
+.user-name {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.user-role {
+  display: block;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.logout-btn {
+  color: rgba(255, 255, 255, 0.8);
+  padding: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.3s ease;
+
+  &:hover {
+    color: #fff;
+  }
+}
+
+.app-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.menu-toggle {
+  margin-right: 16px;
+}
+
+.toolbar-title {
+  font-size: 20px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.toolbar-spacer {
+  flex: 1;
+}
+
+.quick-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.quick-action-btn {
+  color: rgba(255, 255, 255, 0.8);
+  background: transparent;
+  border: none;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+
+  &:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.toolbar-notifications {
+  margin-left: 16px;
+}
+
+.notification-btn {
+  color: rgba(255, 255, 255, 0.8);
+  background: transparent;
+  border: none;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+
+  &:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.main-content {
+  flex: 1;
+  background: #f5f5f5;
+  overflow: auto;
+}
+
+.content-container {
+  padding: 24px;
+  min-height: calc(100vh - 64px);
+}
+
+.notification-container {
+  position: fixed;
+  top: 80px;
+  right: 24px;
+  z-index: 2000;
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+  .sidenav {
+    width: 240px;
+  }
+
+  .sidenav-title {
+    font-size: 16px;
+  }
+
+  .toolbar-title {
+    font-size: 18px;
+  }
+
+  .quick-actions {
+    display: none;
+  }
+
+  .content-container {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 576px) {
+  .sidenav {
+    width: 200px;
+  }
+
+  .sidenav-user {
+    padding: 12px;
+  }
+
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .content-container {
+    padding: 12px;
+  }
+}
+
+// 主题色彩
+@import '~@angular/material/prebuilt-themes/indigo-pink.css';
+
+// 自定义主题颜色
+:root {
+  --primary-color: #3f51b5;
+  --accent-color: #ff4081;
+  --warn-color: #ff9800;
+  --success-color: #4caf50;
+  --error-color: #f44336;
+  --background-color: #fafafa;
+  --surface-color: #fff;
+  --text-color: #333;
+}
+
+// 材质色彩
+.mat-mdc-button-toggle {
+  --mdc-theme-primary: #1976d2;
+  --mdc-theme-secondary: #424242;
+  --mdc-theme-tertiary: #2196f3;
+}
+
+// 图表样式
+.chart-container {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.chart-title {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  color: var(--text-color);
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.chart-actions {
+  display: flex;
+  gap: 8px;
+}
+
+// 状态指示器
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+
+  &.healthy {
+    background: #e8f5e8;
+    color: #2e7d32;
+  }
+
+  &.warning {
+    background: #fff3e0;
+    color: #f57c00;
+  }
+
+  &.error {
+    background: #ffebee;
+    color: #f44336;
+  }
+}
+
+// 加载状态
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+}
+
+// 错误状态
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  padding: 24px;
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 48px;
+  color: var(--error-color);
+  margin-bottom: 16px;
+}
+
+.error-message {
+  font-size: 16px;
+  color: var(--text-color);
+  margin-bottom: 16px;
+}
+
+.error-actions {
+  display: flex;
+  gap: 8px;
+}

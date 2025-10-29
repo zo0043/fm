@@ -1,0 +1,118 @@
+<mat-sidenav-container class="app-container">
+  <mat-sidenav
+    class="sidenav"
+    [opened]="true"
+    [mode]="side"
+    [fixedInViewport]="true"
+    [fixedTopGap]="64">
+
+    <!-- 侧边栏头部 -->
+    <div class="sidenav-header">
+      <mat-icon class="sidenav-icon">analytics</mat-icon>
+      <span class="sidenav-title">基金监控</span>
+    </div>
+
+    <!-- 侧边栏导航 -->
+    <nav class="sidenav-nav">
+      <mat-nav-list>
+        <mat-list-item routerLink="/dashboard" routerLinkActive="active" class="nav-item">
+          <mat-icon class="nav-icon">dashboard</mat-icon>
+          <span class="nav-text">仪表板</span>
+        </mat-list-item>
+
+        <mat-divider></mat-divider>
+
+        <mat-list-item routerLink="/funds" routerLinkActive="active" class="nav-item">
+          <mat-icon class="nav-icon">account_balance</mat-icon>
+          <span class="nav-text">基金管理</span>
+        </mat-list-item>
+
+        <mat-list-item routerLink="/monitor" routerLinkActive="active" class="nav-item">
+          <mat-icon class="nav-icon">notifications</mat-icon>
+          <span class="nav-text">监控管理</span>
+        </mat-list-item>
+
+        <mat-list-item routerLink="/notifications" routerLinkActive="active" class="nav-item">
+          <mat-icon class="nav-icon">email</mat-icon>
+          <span class="nav-text">通知管理</span>
+        </mat-list-item>
+
+        <mat-list-item routerLink="/backtest" routerLinkActive="active" class="nav-item">
+          <mat-icon class="nav-icon">trending_up</mat-icon>
+          <span class="nav-text">回测管理</span>
+        </mat-list-item>
+
+        <mat-divider></mat-divider>
+
+        <mat-list-item routerLink="/settings" routerLinkActive="active" class="nav-item">
+          <mat-icon class="nav-icon">settings</mat-icon>
+          <span class="nav-text">系统设置</span>
+        </mat-list-item>
+      </mat-nav>
+    </nav>
+
+    <!-- 用户信息 -->
+    <div class="sidenav-user">
+      <div class="user-avatar">
+        <mat-icon>person</mat-icon>
+      </div>
+      <div class="user-info">
+        <span class="user-name">管理员</span>
+        <span class="user-role">超级用户</span>
+      </div>
+      <button mat-icon-button class="logout-btn">
+        <mat-icon>logout</mat-icon>
+      </button>
+    </div>
+  </mat-sidenav>
+
+  <!-- 顶部工具栏 -->
+  <mat-toolbar class="app-toolbar" color="primary">
+    <button
+      type="button"
+      aria-label="Toggle sidenav"
+      mat-icon-button
+      (click)="sidenav.toggle()"
+      class="menu-toggle">
+      <mat-icon>menu</mat-icon>
+    </button>
+
+    <h1 class="toolbar-title">{{ pageTitle$ | async }}</h1>
+
+    <div class="toolbar-spacer"></div>
+
+    <!-- 快速操作 -->
+    <div class="quick-actions">
+      <button mat-icon-button class="quick-action-btn" [matTooltip]="实时数据同步">
+        <mat-icon>refresh</mat-icon>
+      </button>
+
+      <button mat-icon-button class="quick-action-btn" [matTooltip]="系统设置">
+        <mat-icon>settings</mat-icon>
+      </button>
+
+      <button mat-icon-button class="quick-action-btn" [matTooltip]="帮助文档">
+        <mat-icon>help</mat-icon>
+      </button>
+    </div>
+
+    <!-- 通知 -->
+    <div class="toolbar-notifications">
+      <button mat-icon-button class="notification-btn" [matBadge]="notificationCount" [matBadgeHidden]="notificationCount === 0">
+        <mat-icon>notifications</mat-icon>
+      </button>
+    </div>
+  </mat-toolbar>
+
+  <!-- 主要内容区域 -->
+  <main class="main-content">
+    <div class="content-container">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+
+  <!-- 通知提示 -->
+  <div class="notification-container">
+    <ngx-toastr position="top-right" [preventDuplicates]="true"></ngx-toastr>
+  </div>
+</mat-sidenav-container>

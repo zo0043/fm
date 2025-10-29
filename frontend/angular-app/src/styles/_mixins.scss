@@ -1,0 +1,415 @@
+// 基金监控应用 - 样式混入
+
+// 响应式断点混入
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == xs {
+    @media (max-width: 479px) {
+      @content;
+    }
+  } @else if $breakpoint == sm {
+    @media (min-width: 480px) and (max-width: 767px) {
+      @content;
+    }
+  } @else if $breakpoint == md {
+    @media (min-width: 768px) and (max-width: 1023px) {
+      @content;
+    }
+  } @else if $breakpoint == lg {
+    @media (min-width: 1024px) and (max-width: 1279px) {
+      @content;
+    }
+  } @else if $breakpoint == xl {
+    @media (min-width: 1280px) {
+      @content;
+    }
+  }
+}
+
+// 最大宽度断点
+@mixin max-width($breakpoint) {
+  @if $breakpoint == xs {
+    @media (max-width: 479px) {
+      @content;
+    }
+  } @else if $breakpoint == sm {
+    @media (max-width: 767px) {
+      @content;
+    }
+  } @else if $breakpoint == md {
+    @media (max-width: 1023px) {
+      @content;
+    }
+  } @else if $breakpoint == lg {
+    @media (max-width: 1279px) {
+      @content;
+    }
+  }
+}
+
+// 最小宽度断点
+@mixin min-width($breakpoint) {
+  @if $breakpoint == sm {
+    @media (min-width: 480px) {
+      @content;
+    }
+  } @else if $breakpoint == md {
+    @media (min-width: 768px) {
+      @content;
+    }
+  } @else if $breakpoint == lg {
+    @media (min-width: 1024px) {
+      @content;
+    }
+  } @else if $breakpoint == xl {
+    @media (min-width: 1280px) {
+      @content;
+    }
+  }
+}
+
+// Flexbox混入
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin flex-column-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-start {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+@mixin flex-end {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+// 文本截断混入
+@mixin text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin text-truncate-lines($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// 卡片样式混入
+@mixin card-styles {
+  background: $background-card;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow;
+  border: 1px solid $border-color;
+  overflow: hidden;
+  transition: all $transition-normal ease;
+}
+
+@mixin card-hover {
+  &:hover {
+    box-shadow: $shadow-lg;
+    transform: translateY(-2px);
+  }
+}
+
+// 按钮样式混入
+@mixin button-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-xs;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $border-radius;
+  font-weight: $font-weight-medium;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all $transition-fast ease;
+  border: none;
+  min-height: $height-md;
+  user-select: none;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  .mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
+}
+
+@mixin button-variant($bg-color, $text-color: white) {
+  background-color: $bg-color;
+  color: $text-color;
+
+  &:hover:not(:disabled) {
+    background-color: darken($bg-color, 10%);
+  }
+
+  &:active:not(:disabled) {
+    background-color: darken($bg-color, 15%);
+    transform: translateY(1px);
+  }
+}
+
+// 输入框样式混入
+@mixin input-base {
+  width: 100%;
+  padding: $spacing-sm $spacing-md;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  font-size: $font-size-base;
+  transition: border-color $transition-fast ease;
+  background-color: $background-secondary;
+
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+    box-shadow: 0 0 0 2px rgba($color-primary, 0.2);
+  }
+
+  &::placeholder {
+    color: $text-muted;
+  }
+
+  &:disabled {
+    background-color: $background-light;
+    color: $text-muted;
+    cursor: not-allowed;
+  }
+}
+
+// 表格样式混入
+@mixin table-base {
+  width: 100%;
+  border-collapse: collapse;
+  background: $background-secondary;
+  border-radius: $border-radius-lg;
+  overflow: hidden;
+  box-shadow: $shadow;
+
+  th {
+    background: $background-light;
+    font-weight: $font-weight-medium;
+    text-align: left;
+    padding: $spacing-md;
+    border-bottom: 2px solid $border-color;
+    color: $text-primary;
+  }
+
+  td {
+    padding: $spacing-md;
+    border-bottom: 1px solid $border-light;
+    color: $text-primary;
+  }
+
+  tr {
+    transition: background-color $transition-fast ease;
+
+    &:hover {
+      background-color: $background-light;
+    }
+
+    &:last-child td {
+      border-bottom: none;
+    }
+  }
+}
+
+// 模态框样式混入
+@mixin modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: $z-index-modal;
+  padding: $spacing-md;
+}
+
+@mixin modal-content {
+  background: $background-secondary;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-xl;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
+  position: relative;
+}
+
+// 加载动画混入
+@mixin loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid $border-light;
+  border-top: 2px solid $color-primary;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// 淡入动画混入
+@mixin fade-in($duration: $transition-normal) {
+  animation: fadeIn $duration ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+// 滑入动画混入
+@mixin slide-in-up($duration: $transition-normal) {
+  animation: slideInUp $duration ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// 脉冲动画混入
+@mixin pulse($duration: 2s) {
+  animation: pulse $duration infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// 悬停效果混入
+@mixin hover-lift($amount: 2px) {
+  transition: transform $transition-fast ease, box-shadow $transition-fast ease;
+
+  &:hover {
+    transform: translateY(-$amount);
+    box-shadow: $shadow-lg;
+  }
+}
+
+// 状态样式混入
+@mixin status-variant($color, $bg-color) {
+  color: $color;
+  background-color: $bg-color;
+
+  &.badge {
+    background-color: $bg-color;
+    color: $color;
+  }
+}
+
+// 隐藏滚动条但保持功能
+@mixin hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+// 清除浮动
+@mixin clearfix {
+  &::after {
+    content: '';
+    display: table;
+    clear: both;
+  }
+}
+
+// 居中对齐
+@mixin absolute-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+// 全屏覆盖
+@mixin full-cover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+// 渐变背景
+@mixin gradient-bg($start-color, $end-color, $direction: to right) {
+  background: linear-gradient($direction, $start-color, $end-color);
+}
+
+// 安全区域适配（刘海屏等）
+@mixin safe-area-inset {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+// 高对比度模式支持
+@media (prefers-contrast: high) {
+  @mixin high-contrast {
+    border-width: 2px;
+    font-weight: $font-weight-bold;
+  }
+}
+
+// 减少动画模式支持
+@media (prefers-reduced-motion: reduce) {
+  @mixin reduced-motion {
+    animation: none !important;
+    transition: none !important;
+  }
+}

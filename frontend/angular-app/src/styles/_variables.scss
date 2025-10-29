@@ -1,0 +1,169 @@
+// 基金监控应用 - 样式变量
+
+// 颜色系统
+$color-primary: #1976d2;
+$color-primary-light: #e3f2fd;
+$color-primary-dark: #0d47a1;
+
+$color-secondary: #dc004e;
+$color-secondary-light: #fce4ec;
+$color-secondary-dark: #880e4f;
+
+$color-success: #4caf50;
+$color-success-light: #e8f5e8;
+$color-success-dark: #1b5e20;
+
+$color-warning: #ff9800;
+$color-warning-light: #fff8e1;
+$color-warning-dark: #e65100;
+
+$color-error: #f44336;
+$color-error-light: #ffebee;
+$color-error-dark: #b71c1c;
+
+$color-info: #2196f3;
+$color-info-light: #e3f2fd;
+$color-info-dark: #0d47a1;
+
+// 文本颜色
+$text-primary: #333333;
+$text-secondary: #666666;
+$text-muted: #999999;
+$text-light: #cccccc;
+$text-white: #ffffff;
+
+// 背景颜色
+$background-primary: #f5f5f5;
+$background-secondary: #ffffff;
+$background-light: #fafafa;
+$background-dark: #212121;
+$background-card: #ffffff;
+
+// 边框颜色
+$border-color: #e0e0e0;
+$border-light: #f0f0f0;
+$border-dark: #cccccc;
+
+// 阴影
+$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+$shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.15);
+$shadow-xl: 0 8px 32px rgba(0, 0, 0, 0.2);
+
+// 间距
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+$spacing-2xl: 48px;
+$spacing-3xl: 64px;
+
+// 字体大小
+$font-size-xs: 12px;
+$font-size-sm: 14px;
+$font-size-base: 16px;
+$font-size-lg: 18px;
+$font-size-xl: 20px;
+$font-size-2xl: 24px;
+$font-size-3xl: 32px;
+$font-size-4xl: 48px;
+
+// 字体权重
+$font-weight-light: 300;
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+// 行高
+$line-height-tight: 1.25;
+$line-height-normal: 1.5;
+$line-height-relaxed: 1.75;
+
+// 边框圆角
+$border-radius: 8px;
+$border-radius-sm: 4px;
+$border-radius-lg: 12px;
+$border-radius-full: 50%;
+
+// 组件高度
+$height-sm: 32px;
+$height-md: 40px;
+$height-lg: 48px;
+$height-xl: 56px;
+
+// 最小宽度
+$min-width-sm: 120px;
+$min-width-md: 200px;
+$min-width-lg: 320px;
+
+// 容器最大宽度
+$container-max-width: 1400px;
+$container-md: 1024px;
+$container-sm: 768px;
+$container-xs: 480px;
+
+// Z-index层级
+$z-index-dropdown: 1000;
+$z-index-sticky: 1020;
+$z-index-fixed: 1030;
+$z-index-modal-backdrop: 1040;
+$z-index-modal: 1050;
+$z-index-popover: 1060;
+$z-index-tooltip: 1070;
+$z-index-toast: 1080;
+
+// 动画时间
+$transition-fast: 0.15s;
+$transition-normal: 0.3s;
+$transition-slow: 0.5s;
+
+// 断点
+$breakpoint-xs: 480px;
+$breakpoint-sm: 768px;
+$breakpoint-md: 1024px;
+$breakpoint-lg: 1280px;
+$breakpoint-xl: 1440px;
+
+// 特定用途变量
+$header-height: 64px;
+$sidebar-width: 280px;
+$sidebar-collapsed-width: 80px;
+
+// 图表颜色
+$chart-colors: (
+  'blue': #1976d2,
+  'red': #dc004e,
+  'green': #4caf50,
+  'orange': #ff9800,
+  'purple': #9c27b0,
+  'teal': #009688,
+  'indigo': #3f51b5,
+  'pink': #e91e63,
+  'amber': #ffc107,
+  'cyan': #00bcd4
+);
+
+// 状态颜色映射
+$status-colors: (
+  'success': $color-success,
+  'warning': $color-warning,
+  'error': $color-error,
+  'info': $color-info,
+  'default': $text-muted
+);
+
+// 风险等级颜色
+$risk-colors: (
+  'low': #4caf50,
+  'medium': #ff9800,
+  'high': #f44336
+);
+
+// 趋势颜色
+$trend-colors: (
+  'up': #4caf50,
+  'down': #f44336,
+  'flat': #999999
+);
