@@ -1,4 +1,5 @@
 import { enableProdMode } from '@angular/platform-browser/enable-prod';
+import { bootstrapApplication } from '@angular/platform-browser';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 import { AppComponent } from './app.component';
@@ -22,4 +23,4 @@ bootstrapApplication(AppComponent).catch(err => {
       console.log('开发模式启动:', err);
       console.log('继续使用开发模式...');
     });
-}
+});

@@ -1,0 +1,154 @@
+.nav-container {
+  height: 100vh;
+}
+
+.sidenav {
+  width: 280px;
+  background: #2c3e50;
+  color: #fff;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+.sidenav-header {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidenav-icon {
+  margin-right: 12px;
+  font-size: 24px;
+  color: #fff;
+}
+
+.sidenav-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.sidenav-nav {
+  flex: 1;
+  padding: 8px 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: 0;
+  margin: 2px 0;
+  transition: all 0.3s ease;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+  }
+
+  &.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border-left: 4px solid #3f51b5;
+  }
+}
+
+.nav-icon {
+  margin-right: 12px;
+  font-size: 20px;
+}
+
+.nav-text {
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.sidenav-user {
+  padding: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.user-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #3f51b5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.user-info {
+  margin-bottom: 8px;
+}
+
+.user-name {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.user-role {
+  display: block;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.logout-btn {
+  color: rgba(255, 255, 255, 0.8);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.3s ease;
+
+  &:hover {
+    color: #fff;
+  }
+}
+
+.login-btn {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.main-content {
+  background: #f5f5f5;
+  min-height: 100vh;
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+  .sidenav {
+    width: 240px;
+  }
+
+  .sidenav-title {
+    font-size: 16px;
+  }
+
+  .nav-text {
+    font-size: 13px;
+  }
+
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 14px;
+  }
+}

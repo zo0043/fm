@@ -1,0 +1,206 @@
+<div class="fund-management-container">
+  <!-- 页面标题和操作 -->
+  <div class="page-header">
+    <div class="page-title">
+      <h1>基金管理</h1>
+      <p>管理和查看所有基金信息</p>
+    </div>
+    <div class="page-actions">
+      <button mat-raised-button color="primary" (click)="performBatchOperation('addToMonitor')">
+        <mat-icon>add_alert</mat-icon>
+        添加监控
+      </button>
+      <button mat-stroked-button (click)="performBatchOperation('export')">
+        <mat-icon>download</mat-icon>
+        导出数据
+      </button>
+    </div>
+  </div>
+
+  <!-- 搜索和筛选 -->
+  <mat-card class="search-filter-card">
+    <mat-card-content>
+      <div class="search-filter-row">
+        <!-- 搜索框 -->
+        <div class="search-box">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>搜索基金</mat-label>
+            <input matInput
+                   placeholder="输入基金代码或名称..."
+                   [(ngModel)]="searchKeyword"
+                   (keyup.enter)="searchFunds()">
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+          <button mat-raised-button color="primary" (click)="searchFunds()">搜索</button>
+        </div>
+
+        <!-- 筛选条件 -->
+        <div class="filter-controls">
+          <mat-form-field appearance="outline">
+            <mat-label>基金类型</mat-label>
+            <mat-select [(ngModel)]="filter.type" (selectionChange)="applyFilter()">
+              <mat-option value="">全部类型</mat-option>
+              <mat-option *ngFor="let type of fundTypes" [value]="type">{{ type }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>基金公司</mat-label>
+            <mat-select [(ngModel)]="filter.company" (selectionChange)="applyFilter()">
+              <mat-option value="">全部公司</mat-option>
+              <mat-option *ngFor="let company of fundCompanies" [value]="company">{{ company }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>状态</mat-label>
+            <mat-select [(ngModel)]="filter.status" (selectionChange)="applyFilter()">
+              <mat-option value="">全部状态</mat-option>
+              <mat-option value="active">正常</mat-option>
+              <mat-option value="suspended">暂停</mat-option>
+              <mat-option value="liquidating">清算</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <button mat-stroked-button (click)="clearFilter()" class="clear-filter-btn">
+            <mat-icon>clear</mat-icon>
+            清除筛选
+          </button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- 批量操作栏 -->
+  <div class="batch-actions" *ngIf="selectedFunds.size > 0">
+    <span class="selected-count">已选择 {{ selectedFunds.size }} 个基金</span>
+    <div class="batch-buttons">
+      <button mat-stroked-button (click)="toggleSelectAll()">
+        {{ selectedFunds.size === funds.length ? '取消全选' : '全选' }}
+      </button>
+      <button mat-stroked-button (click)="performBatchOperation('refresh')">
+        <mat-icon>refresh</mat-icon>
+        刷新数据
+      </button>
+    </div>
+  </div>
+
+  <!-- 基金列表 -->
+  <mat-card class="fund-list-card">
+    <mat-card-content>
+      <div class="fund-table-container">
+        <table class="fund-table" mat-table [dataSource]="funds">
+          <!-- 选择列 -->
+          <ng-container matColumnDef="select">
+            <th mat-header-cell *matHeaderCellDef>
+              <mat-checkbox (change)="toggleSelectAll()"
+                            [checked]="selectedFunds.size === funds.length && funds.length > 0"
+                            [indeterminate]="selectedFunds.size > 0 && selectedFunds.size < funds.length">
+              </mat-checkbox>
+            </th>
+            <td mat-cell *matCellDef="let fund">
+              <mat-checkbox (change)="toggleSelection(fund.code)"
+                            [checked]="selectedFunds.has(fund.code)">
+              </mat-checkbox>
+            </td>
+          </ng-container>
+
+          <!-- 基金代码 -->
+          <ng-container matColumnDef="code">
+            <th mat-header-cell *matHeaderCellDef>基金代码</th>
+            <td mat-cell *matCellDef="let fund">
+              <a class="fund-link" (click)="viewFundDetail(fund)">{{ fund.code }}</a>
+            </td>
+          </ng-container>
+
+          <!-- 基金名称 -->
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>基金名称</th>
+            <td mat-cell *matCellDef="let fund">
+              <div class="fund-name">
+                {{ fund.name }}
+                <span class="fund-type">{{ fund.type }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- 基金公司 -->
+          <ng-container matColumnDef="company">
+            <th mat-header-cell *matHeaderCellDef>基金公司</th>
+            <td mat-cell *matCellDef="let fund">{{ fund.company || '--' }}</td>
+          </ng-container>
+
+          <!-- 基金经理 -->
+          <ng-container matColumnDef="manager">
+            <th mat-header-cell *matHeaderCellDef>基金经理</th>
+            <td mat-cell *matCellDef="let fund">{{ fund.manager || '--' }}</td>
+          </ng-container>
+
+          <!-- 基金规模 -->
+          <ng-container matColumnDef="size">
+            <th mat-header-cell *matHeaderCellDef>基金规模</th>
+            <td mat-cell *matCellDef="let fund">{{ formatFundSize(fund.size) }}</td>
+          </ng-container>
+
+          <!-- 成立日期 -->
+          <ng-container matColumnDef="establishDate">
+            <th mat-header-cell *matHeaderCellDef>成立日期</th>
+            <td mat-cell *matCellDef="let fund">{{ formatDate(fund.establishDate) }}</td>
+          </ng-container>
+
+          <!-- 状态 -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>状态</th>
+            <td mat-cell *matCellDef="let fund">
+              <span class="status-badge" [ngClass]="getStatusClass(fund.status)">
+                {{ getStatusText(fund.status) }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- 操作 -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>操作</th>
+            <td mat-cell *matCellDef="let fund">
+              <button mat-icon-button [matTooltip]="查看详情" (click)="viewFundDetail(fund)">
+                <mat-icon>visibility</mat-icon>
+              </button>
+              <button mat-icon-button [matTooltip]="添加到收藏" (click)="addToFavorites(fund)">
+                <mat-icon>favorite_border</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="[
+            'select', 'code', 'name', 'company', 'manager', 'size', 'establishDate', 'status', 'actions'
+          ]"></tr>
+          <tr mat-row *matRowDef="let row; columns: [
+            'select', 'code', 'name', 'company', 'manager', 'size', 'establishDate', 'status', 'actions'
+          ]"></tr>
+        </table>
+
+        <!-- 加载状态 -->
+        <div class="loading-container" *ngIf="loading">
+          <mat-spinner></mat-spinner>
+          <p>加载中...</p>
+        </div>
+
+        <!-- 空状态 -->
+        <div class="empty-state" *ngIf="!loading && funds.length === 0">
+          <mat-icon class="empty-icon">inbox</mat-icon>
+          <p>暂无基金数据</p>
+          <button mat-raised-button color="primary" (click)="loadFunds()">重新加载</button>
+        </div>
+      </div>
+
+      <!-- 分页 -->
+      <mat-paginator
+        [length]="totalFunds"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[10, 20, 50, 100]"
+        (page)="onPageChange($event)"
+        showFirstLastButtons>
+      </mat-paginator>
+    </mat-card-content>
+  </mat-card>
+</div>

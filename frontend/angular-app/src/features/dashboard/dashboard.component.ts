@@ -3,11 +3,10 @@ import { Router } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { Subscription, interval } from 'rxjs';
 
 import { DashboardService } from '../../core/services/dashboard.service';
 import { Fund, NavData, Alert, Activity, MarketSummary, Recommendation } from '../models/dashboard.model';
-import { FundPerformanceDialogComponent } from '../dialogs/fund-performance-dialog.component';
-import { AlertDialogComponent } from '../dialogs/alert-dialog.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -25,7 +24,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   performanceData: any = {};
   recentAlerts: Alert[] = [];
   recentActivities: Activity[] = [];
-  marketSummary: MarketSummary;
+  marketSummary: MarketSummary | undefined;
   recommendations: Recommendation[] = [];
 
   loading = true;
@@ -138,7 +137,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private updateStatistics(): void {
     if (this.overviewData?.data) {
-      this.totalFunds = this.outerviewData.data.totalFunds || 0;
+      this.totalFunds = this.overviewData.data.totalFunds || 0;
       this.activeRules = this.overviewData.data.activeRules || 0;
       this.todayNotifications = this.overviewData.data.todayNotifications || 0;
     }
@@ -146,16 +145,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private startRealTimeUpdates(): void {
     // 每30秒刷新一次数据
-    const refreshInterval = setInterval(() => {
+    const refreshSubscription = interval(30000).subscribe(() => {
       this.loadDashboardData();
-    }, 30000);
-
-    this.subscriptions.push(
-      from(ref => clearInterval(refreshInterval)
-    );
+    });
+    this.subscriptions.push(refreshSubscription);
 
     // 每5分钟刷新市场数据
-    const marketRefreshInterval = setInterval(() => {
+    const marketRefreshSubscription = interval(300000).subscribe(() => {
       this.dashboardService.getMarketSummary().subscribe({
         next: (data) => {
           this.marketSummary = data.data;
@@ -164,11 +160,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
           console.error('刷新市场数据失败:', error);
         }
       });
-    }, 300000);
-
-    this.subscriptions.push(
-      from(ref => clearInterval(marketRefreshInterval)
-    );
+    });
+    this.subscriptions.push(marketRefreshSubscription);
   }
 
   // 查看基金详情
@@ -178,32 +171,30 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // 查看基金性能
   viewFundPerformance(fund: Fund): void {
-    const dialogRef = this.dialog.open(FundPerformanceDialogComponent, {
-      width: '80vw',
-      maxWidth: '1000px',
-      data: { fund }
+    // TODO: 实现基金性能对话框组件
+    console.log('查看基金性能:', fund);
+    this.snackBar.open(`基金性能功能待实现: ${fund.name}`, '关闭', {
+      duration: 3000
     });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        console.log('基金性能分析结果:', result);
-      }
-    });
+    // const dialogRef = this.dialog.open(FundPerformanceDialogComponent, {
+    //   width: '80vw',
+    //   maxWidth: '1000px',
+    //   data: { fund }
+    // });
   }
 
   // 查看告警详情
   viewAlertDetails(alert: Alert): void {
-    const dialogRef = this.dialog.open(AlertDialogComponent, {
-      width: '60vw',
-      maxWidth: '600px',
-      data: { alert }
+    // TODO: 实现告警详情对话框组件
+    console.log('查看告警详情:', alert);
+    this.snackBar.open(`告警详情功能待实现: ${alert.ruleName}`, '关闭', {
+      duration: 3000
     });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        console.log('告警处理结果:', result);
-      }
-    });
+    // const dialogRef = this.dialog.open(AlertDialogComponent, {
+    //   width: '60vw',
+    //   maxWidth: '600px',
+    //   data: { alert }
+    // });
   }
 
   // 确认告警
@@ -232,7 +223,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   // 获取页面标题
-  get pageTitle$(): Promise<string> {
+  get pageTitle$(): string {
     return this.titleService.getTitle();
   }
 }

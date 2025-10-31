@@ -207,7 +207,7 @@ export class FilterPanelComponent implements OnInit, OnChanges {
     const types = [...new Set(this.funds.map(f => f.type))];
     this.availableTypes = types;
 
-    const riskLevels = [...new Set(this.funds.map(f => this.getRiskLevel(f))];
+    const riskLevels = [...new Set(this.funds.map(f => this.getRiskLevel(f)))];
     this.availableRiskLevels = riskLevels;
 
     // 自动计算价格范围

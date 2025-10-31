@@ -1,0 +1,48 @@
+<mat-sidenav-container class="nav-container">
+  <mat-sidenav mode="side" opened class="sidenav">
+    <!-- Logo区域 -->
+    <div class="sidenav-header">
+      <mat-icon class="sidenav-icon">trending_up</mat-icon>
+      <div class="sidenav-title">基金监控</div>
+    </div>
+
+    <!-- 导航菜单 -->
+    <nav class="sidenav-nav">
+      <a
+        *ngFor="let item of navigationItems"
+        class="nav-item"
+        [class.active]="isActiveRoute(item.path)"
+        (click)="navigateTo(item.path)"
+      >
+        <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+        <span class="nav-text">{{ item.label }}</span>
+      </a>
+    </nav>
+
+    <!-- 用户信息 -->
+    <div class="sidenav-user" *ngIf="isAuthenticated">
+      <div class="user-avatar">
+        {{ getUserInitials() }}
+      </div>
+      <div class="user-info">
+        <span class="user-name">{{ formatUserName() }}</span>
+        <span class="user-role">{{ currentUser?.email }}</span>
+      </div>
+      <button mat-icon-button class="logout-btn" (click)="logout()" matTooltip="退出登录">
+        <mat-icon>logout</mat-icon>
+      </button>
+    </div>
+
+    <!-- 未登录状态 -->
+    <div class="sidenav-user" *ngIf="!isAuthenticated">
+      <button mat-raised-button color="primary" (click)="navigateTo('/login')" class="login-btn">
+        登录
+      </button>
+    </div>
+  </mat-sidenav>
+
+  <!-- 主内容区域 -->
+  <mat-sidenav-content class="main-content">
+    <ng-content></ng-content>
+  </mat-sidenav-content>
+</mat-sidenav-container>

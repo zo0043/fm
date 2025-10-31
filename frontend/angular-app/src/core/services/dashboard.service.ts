@@ -1,18 +1,18 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of, throwError } from 'rxjs';
+import { Observable, of, throwError, forkJoin } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 import {
-  DashboardOverview,
+  OverviewData,
   PortfolioOverview,
   PerformanceData,
   Alert,
   Activity,
   MarketSummary,
   Recommendation
-} from '../models/dashboard.model';
+} from '../../features/models/dashboard.model';
 
 @Injectable({
   providedIn: 'root'
@@ -22,8 +22,8 @@ export class DashboardService {
 
   constructor(private http: HttpClient) {}
 
-  getOverview(): Observable<{ success: boolean; data: DashboardOverview }> {
-    return this.http.get<{ success: boolean; data: DashboardOverview }>(`${this.baseUrl}/dashboard/overview`).pipe(
+  getOverview(): Observable<{ success: boolean; data: OverviewData }> {
+    return this.http.get<{ success: boolean; data: OverviewData }>(`${this.baseUrl}/dashboard/overview`).pipe(
       catchError(this.handleError)
     );
   }
@@ -41,8 +41,8 @@ export class DashboardService {
   }
 
   getAlerts(
-    status?: string = 'pending',
-    severity?: string = 'all',
+    status: string = 'pending',
+    severity: string = 'all',
     limit: number = 10
   ): Observable<{ success: boolean; data: Alert[] }> {
     const params = new URLSearchParams();
@@ -80,8 +80,8 @@ export class DashboardService {
     );
   }
 
-  acknowledgeAlert(alertId: string): Observable<{ success: boolean; message: string }> {
-    return this.http.post(`${this.baseUrl}/dashboard/alerts/${alertId}/acknowledge`).pipe(
+  acknowledgeAlert(alertId: number): Observable<{ success: boolean; message: string }> {
+    return this.http.post<{ success: boolean; message: string }>(`${this.baseUrl}/dashboard/alerts/${alertId}/acknowledge`, {}).pipe(
       catchError(this.handleError)
     );
   }
@@ -99,7 +99,7 @@ export class DashboardService {
 
   refreshData(): Observable<any> {
     // 并行刷新所有数据
-    return fork({
+    return forkJoin({
       overview: this.getOverview(),
       portfolio: this.getPortfolioOverview(),
       performance: this.getPerformance(),
@@ -108,9 +108,9 @@ export class DashboardService {
       market: this.getMarketSummary(),
       recommendations: this.getRecommendations()
     }).pipe(
-      map(results => {
+      map((results: any) => {
         return {
-          success: results.every(result => result.success),
+          success: Object.values(results).every((result: any) => result.success),
           data: {
             overview: results.overview.data,
             portfolio: results.portfolio.data,
