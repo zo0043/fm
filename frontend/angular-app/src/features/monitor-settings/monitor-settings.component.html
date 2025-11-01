@@ -1,162 +1,39 @@
 <div class="monitor-settings-container">
-  <!-- 页面标题 -->
-  <div class="page-header">
+  <div class="header">
     <h1>监控设置</h1>
-    <p>配置和管理基金监控规则</p>
+    <p>基金监控规则配置界面</p>
   </div>
 
-  <div class="content-grid">
-    <!-- 左侧：新建规则表单 -->
-    <mat-card class="create-rule-card">
+  <div class="content">
+    <mat-card class="info-card">
       <mat-card-header>
-        <mat-card-title>创建监控规则</mat-card-title>
+        <mat-card-title>系统状态</mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        <form class="rule-form">
-          <!-- 规则名称 -->
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>规则名称</mat-label>
-            <input matInput [(ngModel)]="newRule.name" placeholder="输入规则名称">
-          </mat-form-field>
-
-          <!-- 规则描述 -->
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>规则描述</mat-label>
-            <textarea matInput [(ngModel)]="newRule.description" placeholder="描述这个规则的用途"></textarea>
-          </mat-form-field>
-
-          <!-- 规则类型 -->
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>规则类型</mat-label>
-            <mat-select [(ngModel)]="newRule.ruleType">
-              <mat-option *ngFor="let type of ruleTypes" [value]="type.type">
-                {{ type.name }}
-                <small *ngIf="type.description">{{ type.description }}</small>
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <!-- 条件操作符和阈值 -->
-          <div class="condition-row">
-            <mat-form-field appearance="outline" class="operator-field">
-              <mat-label>条件</mat-label>
-              <mat-select [(ngModel)]="newRule.conditionOperator">
-                <mat-option *ngFor="let op of operators" [value]="op.value">{{ op.label }}</mat-option>
-              </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="threshold-field">
-              <mat-label>阈值{{ getRuleTypeUnit(newRule.ruleType) }}</mat-label>
-              <input matInput type="number" [(ngModel)]="newRule.thresholdValue">
-            </mat-form-field>
-          </div>
-
-          <!-- 通知渠道 -->
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>通知渠道</mat-label>
-            <mat-select [(ngModel)]="newRule.notificationChannels" multiple>
-              <mat-option *ngFor="let channel of notificationChannels" [value]="channel.value">
-                {{ channel.label }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <!-- 操作按钮 -->
-          <div class="form-actions">
-            <button mat-raised-button color="primary" (click)="createRule()" [disabled]="loading">
-              创建规则
-            </button>
-            <button mat-stroked-button (click)="resetForm()">重置</button>
-          </div>
-        </form>
+        <p>监控设置功能正在开发中...</p>
+        <p>当前显示临时页面</p>
+        <div class="status-info">
+          <p><strong>前端服务:</strong> <span class="status-active">运行中</span></p>
+          <p><strong>Angular应用:</strong> <span class="status-building">编译中</span></p>
+          <p><strong>后端API:</strong> <span class="status-active">可用</span></p>
+        </div>
       </mat-card-content>
     </mat-card>
 
-    <!-- 右侧：规则列表 -->
-    <mat-card class="rules-list-card">
+    <mat-card class="actions-card">
       <mat-card-header>
-        <mat-card-title>监控规则列表</mat-card-title>
+        <mat-card-title>可用操作</mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        <!-- 加载状态 -->
-        <div class="loading-container" *ngIf="loading">
-          <mat-spinner></mat-spinner>
-          <p>加载中...</p>
-        </div>
-
-        <!-- 规则列表 -->
-        <div class="rules-container" *ngIf="!loading">
-          <!-- 空状态 -->
-          <div class="empty-state" *ngIf="monitorRules.length === 0">
-            <mat-icon class="empty-icon">rule</mat-icon>
-            <p>暂无监控规则</p>
-            <p class="empty-hint">创建第一个规则来开始监控基金</p>
-          </div>
-
-          <!-- 规则项 -->
-          <div class="rule-item" *ngFor="let rule of monitorRules">
-            <div class="rule-header">
-              <div class="rule-title">
-                <h3>{{ rule.name }}</h3>
-                <span class="status-badge" [ngClass]="getStatusClass(rule.isActive)">
-                  {{ getStatusText(rule.isActive) }}
-                </span>
-              </div>
-              <div class="rule-actions">
-                <button mat-icon-button [matTooltip]="rule.isActive ? '禁用' : '启用'"
-                        (click)="toggleRule(rule)">
-                  <mat-icon>{{ rule.isActive ? 'pause' : 'play_arrow' }}</mat-icon>
-                </button>
-                <button mat-icon-button [matTooltip]="执行规则"
-                        (click)="executeRule(rule.id)">
-                  <mat-icon>play_circle</mat-icon>
-                </button>
-                <button mat-icon-button [matTooltip]="删除规则"
-                        (click)="deleteRule(rule.id)"
-                        color="warn">
-                  <mat-icon>delete</mat-icon>
-                </button>
-              </div>
-            </div>
-
-            <div class="rule-content">
-              <p class="rule-description" *ngIf="rule.description">{{ rule.description }}</p>
-
-              <div class="rule-details">
-                <div class="detail-item">
-                  <span class="detail-label">类型:</span>
-                  <span class="detail-value">{{ getRuleTypeName(rule.ruleType) }}</span>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">条件:</span>
-                  <span class="detail-value">
-                    {{ getOperatorLabel(rule.conditionOperator) }} {{ formatThresholdValue(rule) }}
-                  </span>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">通知:</span>
-                  <span class="detail-value">
-                    <mat-chip-list>
-                      <mat-chip *ngFor="let channel of rule.notificationChannels" selected>
-                        {{ getChannelName(channel) }}
-                      </mat-chip>
-                    </mat-chip-list>
-                  </span>
-                </div>
-              </div>
-
-              <div class="rule-meta">
-                <span class="meta-item">
-                  <mat-icon>schedule</mat-icon>
-                  创建于 {{ formatDate(rule.createdAt) }}
-                </span>
-                <span class="meta-item" *ngIf="rule.updatedAt !== rule.createdAt">
-                  <mat-icon>update</mat-icon>
-                  更新于 {{ formatDate(rule.updatedAt) }}
-                </span>
-              </div>
-            </div>
-          </div>
+        <div class="action-buttons">
+          <button mat-raised-button color="primary" (click)="checkHealth()">
+            <mat-icon>refresh</mat-icon>
+            检查系统状态
+          </button>
+          <button mat-raised-button color="accent" (click)="testAPI()">
+            <mat-icon>api</mat-icon>
+            测试API连接
+          </button>
         </div>
       </mat-card-content>
     </mat-card>

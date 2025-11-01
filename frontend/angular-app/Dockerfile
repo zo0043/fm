@@ -10,7 +10,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # 安装依赖
-RUN npm ci --only=production --no-optional && npm cache clean --force
+RUN npm ci --legacy-peer-deps --only=production --no-optional && npm cache clean --force
 
 # 复制源代码
 COPY . .
@@ -79,7 +79,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # 安装依赖（包括开发依赖）
-RUN npm ci
+RUN npm install --legacy-peer-deps
 
 # 复制源代码
 COPY . .
@@ -87,8 +87,8 @@ COPY . .
 # 暴露开发服务器端口
 EXPOSE 4200
 
-# 启动开发服务器
-CMD ["npm", "run", "start", "--", "--host", "0.0.0.0", "--port", "4200", "--disable-host-check"]
+# 使用Angular开发服务器
+CMD ["npx", "ng", "serve", "--host", "0.0.0.0", "--port", "4200", "--disable-host-check", "--configuration=development"]
 
 # 阶段4: 测试阶段
 FROM node:18-alpine AS testing
@@ -97,7 +97,7 @@ WORKDIR /app
 
 # 复制依赖
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 # 复制源代码
 COPY . .
@@ -112,7 +112,7 @@ WORKDIR /app
 
 # 复制依赖
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 # 复制源代码
 COPY . .

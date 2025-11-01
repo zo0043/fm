@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>基金监控系统 - 开发环境</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .status-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+        }
+        .success {
+            border-left: 4px solid #4CAF50;
+        }
+        .warning {
+            border-left: 4px solid #FF9800;
+        }
+        .api-test {
+            margin: 20px 0;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        #results {
+            text-align: left;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 基金监控系统</h1>
+        <h2>开发环境状态页面</h2>
+
+        <div class="status-card success">
+            <h3>✅ 后端服务</h3>
+            <p>API服务正常运行</p>
+            <p><strong>访问地址:</strong> <a href="http://localhost:8001" style="color: #4CAF50;">http://localhost:8001</a></p>
+        </div>
+
+        <div class="status-card warning">
+            <h3>⚠️ 前端服务</h3>
+            <p>Angular应用正在编译中...</p>
+            <p><strong>访问地址:</strong> <a href="http://localhost:4200" style="color: #FF9800;">http://localhost:4200</a></p>
+        </div>
+
+        <div class="status-card success">
+            <h3>✅ 数据库服务</h3>
+            <p>PostgreSQL: localhost:5433</p>
+            <p>Redis: localhost:6380</p>
+            <p>InfluxDB: localhost:8087</p>
+        </div>
+
+        <div class="api-test">
+            <h3>🔍 API 测试</h3>
+            <button onclick="testHealthCheck()">测试健康检查</button>
+            <button onclick="testAPI()">测试API连接</button>
+            <div id="results"></div>
+        </div>
+
+        <div class="status-card">
+            <h3>📊 项目信息</h3>
+            <p><strong>技术栈:</strong> Angular 17 + NestJS + PostgreSQL + Redis + InfluxDB</p>
+            <p><strong>架构:</strong> 微服务架构</p>
+            <p><strong>状态:</strong> 开发环境运行中</p>
+        </div>
+    </div>
+
+    <script>
+        async function testHealthCheck() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<p>正在测试健康检查...</p>';
+
+            try {
+                const response = await fetch('http://localhost:8001/health');
+                const text = await response.text();
+                results.innerHTML = `
+                    <h4>✅ 健康检查成功</h4>
+                    <p><strong>状态码:</strong> ${response.status}</p>
+                    <p><strong>响应:</strong> ${text}</p>
+                    <p><strong>时间:</strong> ${new Date().toLocaleString()}</p>
+                `;
+            } catch (error) {
+                results.innerHTML = `
+                    <h4>❌ 健康检查失败</h4>
+                    <p><strong>错误:</strong> ${error.message}</p>
+                    <p><strong>时间:</strong> ${new Date().toLocaleString()}</p>
+                `;
+            }
+        }
+
+        async function testAPI() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<p>正在测试API连接...</p>';
+
+            try {
+                const response = await fetch('http://localhost:8001/api/');
+                results.innerHTML = `
+                    <h4>✅ API连接成功</h4>
+                    <p><strong>状态码:</strong> ${response.status}</p>
+                    <p><strong>响应头:</strong> ${response.headers.get('server')}</p>
+                    <p><strong>时间:</strong> ${new Date().toLocaleString()}</p>
+                `;
+            } catch (error) {
+                results.innerHTML = `
+                    <h4>❌ API连接失败</h4>
+                    <p><strong>错误:</strong> ${error.message}</p>
+                    <p><strong>时间:</strong> ${new Date().toLocaleString()}</p>
+                `;
+            }
+        }
+
+        // 页面加载时自动测试
+        window.onload = function() {
+            setTimeout(testHealthCheck, 1000);
+        };
+    </script>
+</body>
+</html>

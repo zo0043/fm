@@ -32,6 +32,37 @@ export class FundManagementComponent implements OnInit, OnDestroy {
   // 选中的基金
   selectedFunds: Set<string> = new Set();
 
+  // 模拟数据
+  mockFunds = [
+    {
+      name: '易方达蓝筹精选',
+      code: '110011',
+      currentValue: 100000,
+      changePercent: 2.5,
+      shares: 1000,
+      costPrice: 95.5,
+      marketValue: 100000
+    },
+    {
+      name: '嘉实沪深300',
+      code: '160706',
+      currentValue: 50000,
+      changePercent: -1.2,
+      shares: 500,
+      costPrice: 98.2,
+      marketValue: 49100
+    },
+    {
+      name: '华夏回报混合',
+      code: '002001',
+      currentValue: 75000,
+      changePercent: 3.8,
+      shares: 750,
+      costPrice: 92.5,
+      marketValue: 75000
+    }
+  ];
+
   constructor(
     private router: Router,
     private titleService: Title,
@@ -241,5 +272,21 @@ export class FundManagementComponent implements OnInit, OnDestroy {
       default:
         return '未知';
     }
+  }
+
+  // HTML模板中使用的方法
+  addFund(): void {
+    console.log('添加基金');
+    // 这里可以添加添加基金的逻辑
+  }
+
+  editFund(fund: any): void {
+    console.log('编辑基金:', fund);
+    // 这里可以添加编辑基金的逻辑
+  }
+
+  deleteFund(fund: any): void {
+    console.log('删除基金:', fund);
+    // 这里可以添加删除基金的逻辑
   }
 }

@@ -1,358 +1,110 @@
 <div class="dashboard-container">
-  <!-- 页面标题和操作 -->
-  <div class="page-header">
-    <div class="page-title">
-      <h1>基金监控仪表板</h1>
-      <p class="page-description">实时监控基金涨跌幅，智能告警通知</p>
-    </div>
-    <div class="page-actions">
-      <button mat-raised-button color="primary" (click)="refreshData()" [disabled]="loading">
-        <mat-icon>refresh</mat-icon>
-        刷新数据
-      </button>
-      <button mat-raised-button color="accent" (click)="exportData()">
-        <mat-icon>download</mat-icon>
-        导出报告
-      </button>
-    </div>
+  <div class="header">
+    <h1>基金监控系统仪表板</h1>
+    <p>实时监控您的投资组合</p>
   </div>
 
-  <!-- 统计卡片 -->
   <div class="stats-grid">
     <div class="stat-card">
-      <mat-card class="stat-card-content">
-        <div class="stat-header">
-          <div class="stat-icon primary">
-            <mat-icon>analytics</mat-icon>
-          </div>
-          <div class="stat-info">
-            <h3>总基金数</h3>
-            <p>{{ totalFunds }}</p>
-          </div>
-        </div>
-        <div class="stat-footer">
-          <span class="stat-label">活跃基金: {{ overviewData?.data?.activeFunds || 0 }}</span>
-        </div>
-      </mat-card>
-    </div>
-
-    <div class="stat-card">
-      <mat-card class="stat-card-content">
-        <div class="stat-header">
-          <div class="stat-icon success">
-            <mat-icon>trending_up</mat-icon>
-          </div>
-          <div class="stat-info">
-            <h3>监控规则</h3>
-            <p>{{ activeRules }}</p>
-          </div>
-        </div>
-        <div class="stat-footer">
-          <span class="stat-label">今日告警: {{ todayNotifications }}</span>
-        </div>
-      </mat-card>
-    </div>
-
-    <div class="stat-card">
-      <mat-card class="stat-card-content">
-        <div class="stat-header">
-          <mat-icon class="stat-icon warning">
-            <mat-icon>show_chart</mat-icon>
-          </div>
-          <div class="stat-info">
-            <h3>总收益率</h3>
-            <p>{{ portfolioOverview?.data?.totalReturn ? (portfolioOverview.data.totalReturn * 100).toFixed(2) : '0.00' }}%</p>
-          </div>
-        </div>
-        <div class="stat-footer">
-          <span class="stat-label">年化收益: {{ portfolioOverview?.data?.annualizedReturn ? (portfolioOverview.data.annualizedReturn * 100).toFixed(2) : '0.00' }}%</span>
-        </div>
-      </mat-card>
-    </div>
-
-    <div class="stat-card">
-      <mat-card class="stat-card-content">
-        <div class="stat-header">
-          <mat-icon class="stat-icon error">
-            <mat-icon>security</mat-icon>
-          </div>
-          <div class="stat-info">
-            <h3>最大回撤</h3>
-            <p>{{ portfolioOverview?.data?.maxDrawdown ? (portfolioOverview.data.maxDrawdown * 100).toFixed(2) : '0.00' }}%</p>
-          </div>
-        </div>
-        <div class="stat-footer">
-          <span class="stat-label">夏普比率: {{ portfolioOverview?.data?.sharpeRatio ? portfolioOverview.data.sharpeRatio.toFixed(2) : '0.00' }}</span>
-        </div>
-      </mat-card>
-    </div>
-  </div>
-
-  <!-- 主要内容区域 -->
-  <div class="main-content">
-    <!-- 市场概览 -->
-    <div class="market-overview">
       <mat-card>
         <mat-card-header>
-          <mat-card-title>
-            <h2>市场概览</h2>
-            <div class="card-actions">
-              <button mat-icon-button [matTooltip]="刷新市场数据">
-                <mat-icon>refresh</mat-icon>
-              </button>
-            </div>
-          </mat-card-title>
+          <mat-card-title>总资产</mat-card-title>
         </mat-card-header>
         <mat-card-content>
-          <div class="market-stats">
-            <div class="market-stat">
-              <div class="stat-value market-up">
-                <span class="stat-number">{{ marketSummary?.upCount || 0 }}</span>
-                <span class="stat-label">上涨</span>
-              </div>
-            </div>
-            <div class="market-stat">
-              <div class="stat-value market-down">
-                <span class="stat-number">{{ marketSummary?.downCount || 0 }}</span>
-                <span class="stat-label">下跌</span>
-              </div>
-            </div>
-            <div class="market-stat">
-              <div class="stat-value market-flat">
-                <span class="stat-number">{{ marketSummary?.flatCount || 0 }}</span>
-                <span class="stat-label">平盘</span>
-              </div>
-            </div>
+          <div class="stat-value">
+            ¥100,000.00
           </div>
-          <div class="market-change">
-            <span class="change-label">市场涨跌幅:</span>
-            <span class="change-value positive" [ngClass]="{ 'positive': marketSummary?.changePercent >= 0, 'negative': marketSummary?.changePercent < 0 }">
-              {{ marketSummary?.changePercent ? (marketSummary.changePercent * 100).toFixed(2) : '0.00' }}%
-            </span>
+          <div class="stat-label">
+            当前市值
           </div>
         </mat-card-content>
       </mat-card>
     </div>
 
-    <div class="content-grid">
-      <!-- 投资组合概览 -->
-      <div class="portfolio-overview">
-        <mat-card>
-          <mat-card-header>
-            <mat-card-title>
-              <h2>投资组合概览</h2>
-              <div class="card-actions">
-                <mat-select [(ngModel)] placeholder="时间周期" class="period-selector">
-                  <mat-option value="1m">1个月</mat-option>
-                  <mat-option value="3m">3个月</mat-option>
-                  <mat-option value="6m">6个月</mat-option>
-                  <mat-option value="1y">1年</mat-option>
-                </mat-select>
-                <button mat-icon-button [matTooltip]="重新平衡">
-                  <mat-icon>sync</mat-icon>
-                </button>
-              </div>
-            </mat-card-title>
-          </mat-header>
-          <mat-card-content>
-            <div class="portfolio-stats">
-              <div class="portfolio-stat">
-                <span class="stat-label">总投资</span>
-                <span class="stat-value">¥{{ portfolioOverview?.data?.totalInvested ? portfolioOverview.data.totalInvested.toLocaleString() : '¥0.00' }}</span>
-              </div>
-              <div class="portfolio-stat">
-                <span class="stat-label">当前价值</span>
-                <span class="stat-value">¥{{ portfolioOverview?.data?.currentValue ? portfolioOverview.data.currentValue.toLocaleString() : '¥0.00' }}</span>
-              </div>
-              <div class="portfolio-stat">
-                <span class="stat-label">总收益</span>
-                <span class="stat-value profit" [ngClass]="{ 'positive': portfolioOverview?.data?.totalReturn >= 0, 'negative': portfolioOverview?.data?.totalReturn < 0 }">
-                  ¥{{ portfolioOverview?.data?.totalProfit ? portfolioOverview.data.totalProfit.toLocaleString() : '¥0.00' }}
-                </span>
-              </div>
-              <div class="portfolio-stat">
-                <span class="stat-label">收益率</span>
-                <span class="stat-value" [ngClass="{ 'positive': portfolioOverview?.data?.totalReturn >= 0, 'negative': portfolioOverview?.data?.totalReturn < 0 }">
-                  {{ portfolioOverview?.data?.totalReturn ? (portfolioOverview.data.totalReturn * 100).toFixed(2) : '0.00' }}%
-                </span>
-              </div>
-            </div>
+    <div class="stat-card">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>今日收益</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stat-value positive">
+            +1,234.56
+          </div>
+          <div class="stat-label">
+            +1.23%
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
 
-            <!-- 资产配置饼图 -->
-            <div class="chart-container">
-              <canvas baseChart height="300"></canvas>
-            </div>
-          </mat-card-content>
-        </mat-card>
-      </div>
+    <div class="stat-card">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>总收益率</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stat-value positive">
+            +15.67%
+          </div>
+          <div class="stat-label">
+            年化收益
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
 
-      <!-- 性能趋势 -->
-      <div class="performance-trends">
-        <mat-card>
-          <mat-card-header>
-            <mat-card-title>
-              <h2>性能趋势</h2>
-              <div class="card-actions">
-                <mat-select [(ngModel)] placeholder="选择基金" class="fund-selector">
-                  <mat-option value="">所有基金</mat-option>
-                  <mat-option *ngFor="let fund of portfolioOverview?.data?.topFunds" [value]="fund.code">{{ fund.name }}</mat-option>
-                </mat-select>
-                <button mat-icon-button [matTooltip]="下载报告">
-                  <mat-icon>download</mat-icon>
-                </button>
-              </div>
-            </mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <div class="chart-container">
-              <canvas baseChart height="300"></canvas>
-            </div>
-          </mat-card-content>
-        </mat-card>
-      </div>
-
-      <!-- 最近告警 -->
-      <div class="recent-alerts">
-        <mat-card>
-          <mat-card-header>
-            <mat-card-title>
-              <h2>最近告警</h2>
-              <div class="card-actions">
-                <button mat-icon-button [matTooltip]="查看所有告警">
-                  <mat-icon>list</mat-icon>
-                </button>
-              </div>
-            </mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <div class="alerts-list" *ngIf="recentAlerts.length > 0; else noAlerts>
-              <div class="alert-item" *ngFor="let alert of recentAlerts" (click)="viewAlertDetails(alert)">
-                <div class="alert-header">
-                  <mat-icon [class]="getAlertIcon(alert.severity)">
-                    {{ getAlertIcon(alert.severity) }}
-                  </mat-icon>
-                  <div class="alert-info">
-                    <div class="alert-title">{{ alert.fundName }}</div>
-                    <div class="alert-message">{{ alert.message }}</div>
-                    <div class="alert-time">{{ alert.triggerTime | date: 'short' }}</div>
-                  </div>
-                </div>
-                <div class="alert-actions">
-                  <button mat-stroked-button
-                          [matTooltip]="'确认' + '告警'"
-                          (click)="acknowledgeAlert(alert)">
-                    <mat-icon>check_circle</mat-icon>
-                  </button>
-                </div>
-              </div>
-              <div class="no-alerts" *ngIf="!loading">
-                <div class="no-data">
-                  <mat-icon>notifications_none</mat-icon>
-                  <p>暂无告警信息</p>
-                </div>
-              </div>
-              <div class="loading-container" *ngIf="loading">
-                <mat-spinner></mat-spinner>
-                <p>加载中...</p>
-              </div>
-            </mat-card-content>
-          </mat-card>
-      </div>
-
-      <!-- 热门基金 -->
-      <div class="trending-funds">
-        <mat-card>
-          <mat-card-header>
-            <mat-card-title>
-              <h2>热门基金</h2>
-              <div class="card-actions">
-                <mat-select [(ngModel)] placeholder="排序方式" class="sort-selector">
-                  <mat-option value="gainers">涨幅榜</mat-option>
-                  <mat-option value="losers">跌幅榜</mat-option>
-                  <mat-option value="volume">成交量榜</mat-option>
-                </mat-select>
-                <button mat-icon-button [matTooltip]="查看更多">
-                  <mat-icon>more_horiz</mat-icon>
-                </button>
-              </div>
-            </mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <div class="funds-list" *ngIf="marketSummary?.trendingFunds?.length > 0; else noData">
-              <div class="fund-item" *ngFor="let fund of marketSummary?.trendingFunds" (click)="viewFundDetails(fund)">
-                <div class="fund-info">
-                  <div class="fund-name">{{ fund.name }}</div>
-                  <div class="fund-code">{{ fund.code }}</div>
-                </div>
-                <div class="fund-change" [ngClass]="{'positive': fund.changePercent >= 0, 'negative': fund.changePercent < 0}">
-                  <span>{{ fund.changePercent >= 0 ? '+' : '' }}{{ fund.changePercent.toFixed(2) }}%</span>
-                </div>
-              </div>
-              <div class="no-data" *ngIf="!loading">
-                <div class="no-data">
-                  <mat-icon>trending_up</mat-icon>
-                  <p>暂无热门基金</p>
-                </div>
-              </div>
-              <div class="loading-container" *ngIf="loading">
-                <mat-spinner></mat-spinner>
-                <p>加载中...</p>
-              </div>
-            </mat-card-content>
-        </mat-card>
-      </div>
-
-      <!-- 投资建议 -->
-      <div class="recommendations">
-        <mat-card>
-          <mat-card-header>
-            <mat-card-title>
-              <h2>投资建议</h2>
-              <div class="card-actions">
-                <button mat-icon-button [matTooltip]="刷新建议">
-                  <mat-icon>refresh</mat-icon>
-                </button>
-              </div>
-            </mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <div class="recommendations-list" *ngIf="recommendations.length > 0; else noData">
-              <div class="recommendation-item" *ngFor="let rec of recommendations" (click)="viewRecommendationDetails(rec)">
-                <div class="recommendation-header">
-                  <mat-icon [class]="getRecommendationIcon(rec.type)">
-                    {{ getRecommendationIcon(rec.type) }}
-                  </mat-icon>
-                  <div class="recommendation-info">
-                    <div class="recommendation-title">{{ rec.title }}</div>
-                    <div class="recommendation-description">{{ rec.description }}</div>
-                  </div>
-                </div>
-                <div class="recommendation-actions">
-                  <button mat-stroked-button
-                          [matTooltip]="'查看详情'"
-                          (click)="viewRecommendationDetails(rec)">
-                    <mat-icon>info</mat-icon>
-                  </button>
-                </div>
-              </div>
-              <div class="no-data" *ngIf="!loading">
-                <div class="no-data">
-                  <mat-icon>lightbulb</mat-icon>
-                  <p>暂无投资建议</p>
-                </div>
-              </div>
-              <div class="loading-container" *ngIf="loading">
-                <mat-spinner></mat-spinner>
-                <p>加载中...</p>
-              </div>
-            </mat-card-content>
-        </mat-card>
-      </div>
+    <div class="stat-card">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>基金数量</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stat-value">
+            12
+          </div>
+          <div class="stat-label">
+            持有基金
+          </div>
+        </mat-card-content>
+      </mat-card>
     </div>
   </div>
 
-  <!-- 通知提示 -->
-  <div class="notification-container">
-    <ngx-toastr position="top-right" [preventDuplicates]="true"></ngx-toastr>
+  <div class="charts-section">
+    <mat-card class="chart-card">
+      <mat-card-header>
+        <mat-card-title>资产分布</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="chart-placeholder">
+          <p>图表加载中...</p>
+          <p>实时数据将在Angular应用完全编译后显示</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div class="actions-section">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>快速操作</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="action-buttons">
+          <button mat-raised-button color="primary">
+            <mat-icon>add</mat-icon>
+            添加基金
+          </button>
+          <button mat-raised-button color="accent">
+            <mat-icon>assessment</mat-icon>
+            生成报告
+          </button>
+          <button mat-raised-button>
+            <mat-icon>settings</mat-icon>
+            监控设置
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
   </div>
 </div>

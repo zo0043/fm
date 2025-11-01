@@ -30,7 +30,8 @@
               "node_modules/@angular/material/prebuilt-themes/indigo-pink.css",
               "node_modules/ngx-toastr/toastr.css"
             ],
-            "scripts": []
+            "scripts": [],
+            "allowedCommonJsDependencies": ["crypto-js"]
           },
           "configurations": {
             "production": {
@@ -74,40 +75,24 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
+            "buildTarget": "fund-monitor:build:development",
             "port": 4200,
             "host": "0.0.0.0",
-            "ssl": false,
-            "proxyConfig": {
-              "/api": {
-                "target": "http://localhost:3000",
-                "secure": false,
-                "changeOrigin": true,
-                "logLevel": "debug"
-              }
+            "ssl": false
+          },
+          "configurations": {
+            "production": {
+              "buildTarget": "fund-monitor:build:production"
+            },
+            "development": {
+              "buildTarget": "fund-monitor:build:development"
             }
           }
         },
         "extract-i18n": {
-          "builder": "@angular-devkit/build-angular:browser",
+          "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "outputPath": "dist/fund-monitor",
-            "index": "src/index.html",
-            "main": "src/main.ts",
-            "polyfills": [
-              "zone.js"
-            ],
-            "tsConfig": "tsconfig.app.json",
-            "inlineStyleLanguage": "scss",
-            "assets": [
-              "src/favicon.ico",
-              "src/assets"
-            ],
-            "styles": [
-              "src/styles.scss",
-              "node_modules/@angular/material/prebuilt-themes/indigo-pink.css",
-              "node_modules/ngx-toastr/toastr.css"
-            ],
-            "scripts": []
+            "buildTarget": "fund-monitor:build"
           }
         },
         "test": {

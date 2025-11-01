@@ -308,4 +308,15 @@ export class MonitorSettingsComponent implements OnInit {
     };
     return channelMap[channel] || channel;
   }
+
+  // HTML模板中使用的方法
+  checkHealth(): void {
+    console.log('检查系统状态');
+    // 这里可以添加健康检查逻辑
+  }
+
+  testAPI(): void {
+    console.log('测试API连接');
+    // 这里可以添加API测试逻辑
+  }
 }
