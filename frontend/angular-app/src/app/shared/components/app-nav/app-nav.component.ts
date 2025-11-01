@@ -26,6 +26,16 @@ export class AppNavComponent implements OnInit, OnDestroy {
       label: '基金管理'
     },
     {
+      path: '/portfolio',
+      icon: 'account_balance',
+      label: '投资组合'
+    },
+    {
+      path: '/backtest',
+      icon: 'assessment',
+      label: '回测分析'
+    },
+    {
       path: '/monitor',
       icon: 'notifications_active',
       label: '监控设置'
@@ -34,11 +44,6 @@ export class AppNavComponent implements OnInit, OnDestroy {
       path: '/notifications',
       icon: 'notifications',
       label: '通知管理'
-    },
-    {
-      path: '/backtest',
-      icon: 'assessment',
-      label: '回测分析'
     }
   ];
 

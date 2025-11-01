@@ -1,0 +1,246 @@
+<mat-card class="asset-allocation">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>pie_chart</mat-icon>
+      资产配置分析
+    </mat-card-title>
+    <mat-card-subtitle>
+      投资组合的资产配置和收益分布
+    </mat-card-subtitle>
+    <div class="header-actions">
+      <button mat-icon-button (click)="onToggleDetails()" [matTooltip]="showDetails ? '收起详情' : '展开详情'">
+        <mat-icon>{{ showDetails ? 'expand_less' : 'expand_more' }}</mat-icon>
+      </button>
+      <button mat-icon-button (click)="onRebalance()" matTooltip="再平衡">
+        <mat-icon>balance</mat-icon>
+      </button>
+    </div>
+  </mat-card-header>
+
+  <mat-card-content>
+    <!-- 概览统计 -->
+    <div class="overview-stats">
+      <div class="stat-card primary">
+        <div class="stat-title">总资产</div>
+        <div class="stat-value">{{ formatCurrency(totalValue) }}</div>
+        <div class="stat-change" [class]="getReturnClass(totalReturnRate)">
+          {{ formatPercent(totalReturnRate) }}
+        </div>
+      </div>
+
+      <div class="stat-card accent">
+        <div class="stat-title">总投入</div>
+        <div class="stat-value">{{ formatCurrency(totalInvested) }}</div>
+        <div class="stat-subtitle">{{ allocation.length }} 只基金</div>
+      </div>
+
+      <div class="stat-card success">
+        <div class="stat-title">总收益</div>
+        <div class="stat-value" [class]="getReturnClass(totalReturn)">
+          {{ formatCurrency(totalReturn) }}
+        </div>
+        <div class="stat-change" [class]="getReturnClass(totalReturnRate)">
+          {{ formatPercent(totalReturnRate) }}
+        </div>
+      </div>
+
+      <div class="stat-card info">
+        <div class="stat-title">最佳表现</div>
+        <div class="stat-value" *ngIf="bestPerformer">
+          <span class="fund-name">{{ bestPerformer.fundName }}</span>
+        </div>
+        <div class="stat-change" [class]="getReturnClass(bestPerformer?.returnRate || 0)">
+          {{ bestPerformer ? formatPercent(bestPerformer.returnRate) : '--' }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 视图选择器 -->
+    <div class="view-selector">
+      <mat-button-toggle-group [(value)]="selectedView" (change)="onViewChange($event.value)">
+        <mat-button-toggle value="pie">
+          <mat-icon>pie_chart</mat-icon>
+          饼图
+        </mat-button-toggle>
+        <mat-button-toggle value="bar">
+          <mat-icon>bar_chart</mat-icon>
+          柱状图
+        </mat-button-toggle>
+        <mat-button-toggle value="table">
+          <mat-icon>table_chart</mat-icon>
+          表格
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+
+    <!-- 图表显示 -->
+    <div class="chart-container" *ngIf="selectedView !== 'table'">
+      <div class="chart-wrapper" style="height: 400px;">
+        <!-- 饼图 -->
+        <div class="chart-view" *ngIf="selectedView === 'pie'">
+          <canvas baseChart [config]="pieChartConfig"></canvas>
+        </div>
+
+        <!-- 柱状图 -->
+        <div class="chart-view" *ngIf="selectedView === 'bar'">
+          <canvas baseChart [config]="barChartConfig"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- 表格视图 -->
+    <div class="table-view" *ngIf="selectedView === 'table' || showDetails">
+      <mat-table [dataSource]="allocation" class="allocation-table">
+        <!-- 基金代码列 -->
+        <ng-container matColumnDef="fundCode">
+          <mat-header-cell *matHeaderCellDef>基金代码</mat-header-cell>
+          <mat-cell *matCellDef="let item">
+            <div class="fund-info">
+              <span class="fund-code">{{ item.fundCode }}</span>
+              <span class="fund-type">{{ getFundTypeLabel(item.fundType) }}</span>
+            </div>
+          </mat-cell>
+        </ng-container>
+
+        <!-- 基金名称列 -->
+        <ng-container matColumnDef="fundName">
+          <mat-header-cell *matHeaderCellDef>基金名称</mat-header-cell>
+          <mat-cell *matCellDef="let item">
+            <span class="fund-name">{{ item.fundName }}</span>
+          </mat-cell>
+        </ng-container>
+
+        <!-- 当前市值列 -->
+        <ng-container matColumnDef="currentValue">
+          <mat-header-cell *matHeaderCellDef>当前市值</mat-header-cell>
+          <mat-cell *matCellDef="let item">
+            {{ formatCurrency(item.currentValue) }}
+          </mat-cell>
+        </ng-container>
+
+        <!-- 投入金额列 -->
+        <ng-container matColumnDef="investedAmount">
+          <mat-header-cell *matHeaderCellDef>投入金额</mat-header-cell>
+          <mat-cell *matCellDef="let item">
+            {{ formatCurrency(item.investedAmount) }}
+          </mat-cell>
+        </ng-container>
+
+        <!-- 权重列 -->
+        <ng-container matColumnDef="weight">
+          <mat-header-cell *matHeaderCellDef>权重</mat-header-cell>
+          <mat-cell *matCellDef="let item">
+            <div class="weight-display">
+              <div class="weight-bar">
+                <div class="weight-fill" [style.width.%]="item.weight"></div>
+              </div>
+              <span class="weight-text">{{ item.weight.toFixed(2) }}%</span>
+            </div>
+          </mat-cell>
+        </ng-container>
+
+        <!-- 收益列 -->
+        <ng-container matColumnDef="return">
+          <mat-header-cell *matHeaderCellDef>收益</mat-header-cell>
+          <mat-cell *matCellDef="let item">
+            <div class="return-display">
+              <div class="return-amount" [class]="getReturnClass(item.return)">
+                {{ formatCurrency(item.return) }}
+              </div>
+              <div class="return-rate" [class]="getReturnClass(item.returnRate)">
+                ({{ formatPercent(item.returnRate) }})
+              </div>
+            </div>
+          </mat-cell>
+        </ng-container>
+
+        <!-- 日涨跌列 -->
+        <ng-container matColumnDef="dailyChangeRate">
+          <mat-header-cell *matHeaderCellDef>日涨跌</mat-header-cell>
+          <mat-cell *matCellDef="let item">
+            <span class="daily-change" [class]="getReturnClass(item.dailyChangeRate)">
+              {{ formatPercent(item.dailyChangeRate) }}
+            </span>
+          </mat-cell>
+        </ng-container>
+
+        <mat-header-row *matHeaderRowDef="['fundCode', 'fundName', 'currentValue', 'investedAmount', 'weight', 'return', 'dailyChangeRate']"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: ['fundCode', 'fundName', 'currentValue', 'investedAmount', 'weight', 'return', 'dailyChangeRate']"></mat-row>
+      </mat-table>
+    </div>
+
+    <!-- 类型汇总（展开详情时显示） -->
+    <div class="type-summary" *ngIf="showDetails">
+      <h3 class="summary-title">按基金类型汇总</h3>
+      <div class="type-cards">
+        <div class="type-card" *ngFor="let type of getTypeSummary() | keyvalue">
+          <div class="type-header">
+            <span class="type-name">{{ getFundTypeLabel(type.key) }}</span>
+            <span class="type-count">{{ type.value.fundCount }}只</span>
+          </div>
+          <div class="type-stats">
+            <div class="type-stat">
+              <span class="stat-label">市值</span>
+              <span class="stat-value">{{ formatCurrency(type.value.totalValue) }}</span>
+            </div>
+            <div class="type-stat">
+              <span class="stat-label">权重</span>
+              <span class="stat-value">{{ type.value.weight.toFixed(2) }}%</span>
+            </div>
+            <div class="type-stat">
+              <span class="stat-label">收益</span>
+              <span class="stat-value" [class]="getReturnClass(type.value.returnRate)">
+                {{ formatPercent(type.value.returnRate) }}
+              </span>
+            </div>
+          </div>
+          <div class="type-comparison">
+            <div class="comparison-item">
+              <span class="comparison-label">当前权重</span>
+              <div class="weight-bar small">
+                <div class="weight-fill" [style.width.%]="type.value.weight"></div>
+              </div>
+              <span class="comparison-value">{{ type.value.weight.toFixed(1) }}%</span>
+            </div>
+            <div class="comparison-item">
+              <span class="comparison-label">建议权重</span>
+              <div class="weight-bar small recommended">
+                <div class="weight-fill" [style.width.%]="type.value.recommendedWeight"></div>
+              </div>
+              <span class="comparison-value">{{ type.value.recommendedWeight.toFixed(1) }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 投资建议 -->
+    <div class="recommendations" *ngIf="showDetails">
+      <h3 class="recommendations-title">配置建议</h3>
+      <mat-card class="recommendation-card">
+        <mat-card-content>
+          <div class="recommendation-item">
+            <mat-icon class="recommendation-icon">tips_and_updates</mat-icon>
+            <div class="recommendation-content">
+              <h4>分散投资建议</h4>
+              <p>当前投资组合包含{{ allocation.length }}只基金，建议将股票型基金权重控制在60%以内，债券型基金配置20%以上以降低风险。</p>
+            </div>
+          </div>
+          <div class="recommendation-item">
+            <mat-icon class="recommendation-icon">balance</mat-icon>
+            <div class="recommendation-content">
+              <h4>再平衡提醒</h4>
+              <p>建议每季度进行一次投资组合再平衡，确保资产配置比例符合目标配置。</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<!-- 加载状态 -->
+<div class="loading-overlay" *ngIf="isLoading">
+  <mat-spinner diameter="40"></mat-spinner>
+  <p>正在加载资产配置数据...</p>
+</div>

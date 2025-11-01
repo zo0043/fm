@@ -1,0 +1,348 @@
+.fund-selector {
+  .selected-funds {
+    margin-bottom: 24px;
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+
+    h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0;
+      color: #333;
+    }
+
+    .weight-summary {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .weight-text {
+        font-weight: 600;
+        color: #4caf50;
+
+        &.invalid {
+          color: #f44336;
+        }
+      }
+    }
+  }
+
+  .funds-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .fund-card {
+    .fund-header {
+      padding-bottom: 8px;
+
+      .fund-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .fund-info {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+
+          .fund-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+          }
+
+          .fund-code {
+            font-size: 14px;
+            color: #666;
+          }
+        }
+
+        .remove-btn {
+          mat-icon {
+            color: #f44336;
+          }
+        }
+      }
+    }
+
+    .fund-content {
+      padding-top: 0;
+
+      .weight-control {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+
+        .weight-field {
+          width: 120px;
+        }
+
+        .weight-slider {
+          width: 100%;
+        }
+      }
+    }
+  }
+
+  .weight-warning {
+    background-color: #fff3e0;
+    border: 1px solid #ffb74d;
+
+    mat-card-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #e65100;
+
+      .warning-icon {
+        color: #ff9800;
+        flex-shrink: 0;
+      }
+
+      .warning-text {
+        font-size: 14px;
+        line-height: 1.4;
+      }
+    }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+
+    .empty-icon {
+      font-size: 64px;
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+      color: #ccc;
+    }
+
+    h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+      color: #666;
+    }
+
+    p {
+      margin: 0;
+      font-size: 14px;
+    }
+  }
+
+  .add-fund-section {
+    text-align: center;
+    padding-top: 16px;
+    border-top: 1px solid #e0e0e0;
+
+    button {
+      margin-bottom: 8px;
+    }
+
+    .available-count {
+      display: block;
+      font-size: 14px;
+      color: #666;
+    }
+  }
+}
+
+// 添加基金对话框
+.add-fund-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+
+  .add-fund-dialog {
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    margin: 20px;
+
+    .close-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+    }
+
+    .search-field {
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    .fund-list {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      margin-bottom: 20px;
+
+      .fund-options {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+
+        .fund-option {
+          margin: 0;
+          padding: 16px;
+          border-bottom: 1px solid #f0f0f0;
+          width: 100%;
+
+          &:last-child {
+            border-bottom: none;
+          }
+
+          &:hover {
+            background-color: #f5f5f5;
+          }
+
+          &.mat-mdc-radio-button-checked {
+            background-color: #e3f2fd;
+          }
+
+          ::ng-deep .mdc-form-field {
+            width: 100%;
+          }
+
+          ::ng-deep .mat-mdc-radio-button {
+            width: 100%;
+          }
+        }
+
+        .fund-option-content {
+          margin-left: 28px;
+          width: 100%;
+
+          .fund-basic-info {
+            .fund-name-line {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 8px;
+
+              .fund-name {
+                font-weight: 600;
+                font-size: 16px;
+                color: #333;
+              }
+
+              .fund-type {
+                mat-chip {
+                  font-size: 12px;
+                }
+              }
+            }
+
+            .fund-meta {
+              display: flex;
+              gap: 16px;
+              font-size: 14px;
+              color: #666;
+
+              .fund-code {
+                font-weight: 500;
+              }
+
+              .fund-nav {
+                color: #333;
+              }
+
+              .fund-change {
+                font-weight: 600;
+              }
+            }
+          }
+        }
+      }
+
+      .no-funds {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+
+        mat-icon {
+          font-size: 48px;
+          width: 48px;
+          height: 48px;
+          margin-bottom: 16px;
+          color: #ccc;
+        }
+
+        p {
+          margin: 0;
+          font-size: 16px;
+        }
+      }
+    }
+
+    .weight-section {
+      border-top: 1px solid #e0e0e0;
+      padding-top: 20px;
+
+      .weight-field {
+        width: 100%;
+        margin-bottom: 16px;
+      }
+
+      .weight-slider {
+        width: 100%;
+      }
+    }
+  }
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+  .fund-selector {
+    .funds-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .section-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+
+      .weight-summary {
+        justify-content: center;
+      }
+    }
+  }
+
+  .add-fund-dialog-overlay {
+    .add-fund-dialog {
+      width: 95%;
+      max-height: 90vh;
+
+      .fund-option-content {
+        .fund-name-line {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+        }
+
+        .fund-meta {
+          flex-direction: column;
+          gap: 4px;
+        }
+      }
+    }
+  }
+}

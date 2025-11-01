@@ -1,0 +1,101 @@
+.strategy-selector {
+  .strategy-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .strategy-item {
+    margin: 0;
+    padding: 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      border-color: #3f51b5;
+      box-shadow: 0 2px 8px rgba(63, 81, 181, 0.1);
+    }
+
+    &.mat-mdc-radio-button-checked {
+      border-color: #3f51b5;
+      background-color: rgba(63, 81, 181, 0.05);
+    }
+
+    ::ng-deep .mdc-form-field {
+      width: 100%;
+    }
+
+    ::ng-deep .mat-mdc-radio-button {
+      width: 100%;
+    }
+  }
+
+  .strategy-content {
+    margin-left: 28px;
+  }
+
+  .strategy-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .strategy-name {
+    font-weight: 600;
+    font-size: 16px;
+    color: #333;
+  }
+
+  .strategy-description {
+    margin: 8px 0;
+    color: #666;
+    line-height: 1.5;
+    font-size: 14px;
+  }
+
+  .strategy-params {
+    margin-top: 12px;
+  }
+
+  .params-panel {
+    margin: 0;
+    box-shadow: none !important;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+
+    ::ng-deep .mat-expansion-panel-header {
+      height: 48px;
+      font-size: 14px;
+    }
+
+    ::ng-deep .mat-expansion-panel-body {
+      padding: 16px;
+    }
+  }
+
+  .params-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+  }
+
+  .param-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+  }
+
+  .param-label {
+    font-weight: 500;
+    color: #666;
+  }
+
+  .param-value {
+    font-weight: 600;
+    color: #333;
+  }
+}

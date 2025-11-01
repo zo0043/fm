@@ -1,0 +1,66 @@
+<mat-card class="strategy-selector">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>strategy</mat-icon>
+      选择投资策略
+    </mat-card-title>
+    <mat-card-subtitle>选择适合您的投资策略</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <mat-radio-group
+      class="strategy-list"
+      [(ngModel)]="selectedStrategyId"
+      (change)="onStrategyChange($event.value)">
+
+      <mat-radio-button
+        *ngFor="let strategy of strategies"
+        [value]="strategy.id"
+        class="strategy-item">
+
+        <div class="strategy-content">
+          <div class="strategy-header">
+            <span class="strategy-name">{{ strategy.name }}</span>
+            <mat-chip-list class="strategy-type">
+              <mat-chip color="primary" selected>
+                {{ getStrategyTypeLabel(strategy.type) }}
+              </mat-chip>
+            </mat-chip-list>
+          </div>
+
+          <p class="strategy-description">{{ strategy.description }}</p>
+
+          <!-- 策略参数显示 -->
+          <div class="strategy-params" *ngIf="strategy.params">
+            <mat-expansion-panel class="params-panel" [expanded]="false">
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  <mat-icon>tune</mat-icon>
+                  策略参数
+                </mat-panel-title>
+              </mat-expansion-panel-header>
+
+              <mat-expansion-panel-content>
+                <div class="params-grid">
+                  <div class="param-item" *ngIf="strategy.params.threshold">
+                    <span class="param-label">阈值:</span>
+                    <span class="param-value">{{ (strategy.params.threshold * 100).toFixed(1) }}%</span>
+                  </div>
+
+                  <div class="param-item" *ngIf="strategy.params.volatilityAdjustment !== undefined">
+                    <span class="param-label">波动率调整:</span>
+                    <span class="param-value">{{ strategy.params.volatilityAdjustment ? '启用' : '禁用' }}</span>
+                  </div>
+
+                  <div class="param-item" *ngIf="strategy.params.targetGrowthRate">
+                    <span class="param-label">目标增长率:</span>
+                    <span class="param-value">{{ (strategy.params.targetGrowthRate * 100).toFixed(1) }}%</span>
+                  </div>
+                </div>
+              </mat-expansion-panel-content>
+            </mat-expansion-panel>
+          </div>
+        </div>
+      </mat-radio-button>
+    </mat-radio-group>
+  </mat-card-content>
+</mat-card>

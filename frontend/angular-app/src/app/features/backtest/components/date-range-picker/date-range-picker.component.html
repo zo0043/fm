@@ -1,0 +1,77 @@
+<mat-card class="date-range-picker">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>date_range</mat-icon>
+      选择回测时间范围
+    </mat-card-title>
+    <mat-card-subtitle>选择要回测的历史时间段</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <!-- 预设时间范围 -->
+    <div class="preset-section">
+      <h3>快速选择</h3>
+      <mat-chip-list class="preset-chips">
+        <mat-chip
+          *ngFor="let preset of presetRanges"
+          [selected]="selectedPreset === preset.value"
+          (click)="onPresetSelect(preset.value)"
+          color="primary">
+          {{ preset.label }}
+        </mat-chip>
+      </mat-chip-list>
+    </div>
+
+    <!-- 自定义日期选择 -->
+    <div class="custom-date-section">
+      <h3>自定义时间范围</h3>
+
+      <mat-form-field appearance="outline" class="date-field">
+        <mat-label>开始日期</mat-label>
+        <input matInput
+               [matDatepicker]="startDatePicker"
+               [(ngModel)]="startDate"
+               (dateChange)="onStartDateChange($event)"
+               [min]="minDate"
+               [max]="endDate || maxDate">
+        <mat-datepicker-toggle matSuffix [for]="startDatePicker"></mat-datepicker-toggle>
+        <mat-datepicker #startDatePicker></mat-datepicker>
+      </mat-form-field>
+
+      <span class="date-separator">至</span>
+
+      <mat-form-field appearance="outline" class="date-field">
+        <mat-label>结束日期</mat-label>
+        <input matInput
+               [matDatepicker]="endDatePicker"
+               [(ngModel)]="endDate"
+               (dateChange)="onEndDateChange($event)"
+               [min]="startDate || minDate"
+               [max]="maxDate">
+        <mat-datepicker-toggle matSuffix [for]="endDatePicker"></mat-datepicker-toggle>
+        <mat-datepicker #endDatePicker></mat-datepicker>
+      </mat-form-field>
+    </div>
+
+    <!-- 时间范围信息 -->
+    <div class="range-info" *ngIf="startDate && endDate">
+      <mat-icon class="info-icon">info</mat-icon>
+      <div class="info-content">
+        <span class="duration-text">{{ getDurationText() }}</span>
+        <span class="date-text">
+          {{ startDate | date:'yyyy-MM-dd' }} 至 {{ endDate | date:'yyyy-MM-dd' }}
+        </span>
+        <mat-chip
+          [color]="isValidRange() ? 'primary' : 'warn'"
+          [selected]="true">
+          {{ isValidRange() ? '有效范围' : '无效范围' }}
+        </mat-chip>
+      </div>
+    </div>
+
+    <!-- 错误提示 -->
+    <div class="error-message" *ngIf="startDate && endDate && !isValidRange()">
+      <mat-icon class="error-icon">error</mat-icon>
+      <span>开始日期必须早于结束日期</span>
+    </div>
+  </mat-card-content>
+</mat-card>

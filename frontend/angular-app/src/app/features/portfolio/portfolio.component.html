@@ -1,0 +1,334 @@
+<div class="portfolio-container" *ngIf="!error; else errorState">
+  <!-- 页面标题栏 -->
+  <header class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        <mat-icon>account_balance</mat-icon>
+        投资组合分析
+      </h1>
+      <div class="header-actions">
+        <button mat-icon-button (click)="onRefresh()" matTooltip="刷新数据">
+          <mat-icon>refresh</mat-icon>
+        </button>
+      </div>
+    </div>
+    <div class="header-subtitle">
+      <span>全面分析您的投资组合表现和风险状况</span>
+    </div>
+  </header>
+
+  <!-- 主要内容 -->
+  <main class="main-content">
+    <!-- 概览卡片 -->
+    <section class="overview-section">
+      <div class="overview-cards">
+        <mat-card class="overview-card primary">
+          <mat-card-content>
+            <div class="card-content">
+              <div class="card-icon">
+                <mat-icon>trending_up</mat-icon>
+              </div>
+              <div class="card-info">
+                <div class="card-title">总资产</div>
+                <div class="card-value">{{ overview ? formatCurrency(overview.totalValue) : '--' }}</div>
+                <div class="card-change" [class]="overview?.dailyChangeRate >= 0 ? 'positive' : 'negative'">
+                  {{ overview ? formatPercent(overview.dailyChangeRate) : '--' }}
+                </div>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="overview-card success">
+          <mat-card-content>
+            <div class="card-content">
+              <div class="card-icon">
+                <mat-icon>show_chart</mat-icon>
+              </div>
+              <div class="card-info">
+                <div class="card-title">总收益</div>
+                <div class="card-value" [class]="overview?.totalReturn >= 0 ? 'positive' : 'negative'">
+                  {{ overview ? formatCurrency(overview.totalReturn) : '--' }}
+                </div>
+                <div class="card-change" [class]="overview?.totalReturnRate >= 0 ? 'positive' : 'negative'">
+                  {{ overview ? formatPercent(overview.totalReturnRate) : '--' }}
+                </div>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="overview-card warning">
+          <mat-card-content>
+            <div class="card-content">
+              <div class="card-icon">
+                <mat-icon>assessment</mat-icon>
+              </div>
+              <div class="card-info">
+                <div class="card-title">综合评级</div>
+                <div class="rating-display">
+                  <mat-icon
+                    *ngFor="let star of getRatingStars(getPerformanceRating())"
+                    class="rating-star"
+                    [style.color]="getRatingColor(getPerformanceRating())">
+                    star
+                  </mat-icon>
+                </div>
+                <div class="rating-text" [style.color]="getRatingColor(getPerformanceRating())">
+                  {{ getRatingText(getPerformanceRating()) }}
+                </div>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="overview-card info">
+          <mat-card-content>
+            <div class="card-content">
+              <div class="card-icon">
+                <mat-icon>security</mat-icon>
+              </div>
+              <div class="card-info">
+                <div class="card-title">风险等级</div>
+                <div class="risk-level" [style.color]="getRiskLevelColor()">
+                  {{ getRiskLevelText() }}
+                </div>
+                <div class="risk-subtitle">
+                  夏普比率: {{ getKeyMetrics()?.sharpeRatio.toFixed(2) || '--' }}
+                </div>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </section>
+
+    <!-- 标签页内容 -->
+    <mat-card class="content-tabs">
+      <mat-tab-group [(selectedIndex)]="selectedTab" (selectedTabChange)="onTabChange($event.index)">
+        <!-- 资产配置标签页 -->
+        <mat-tab label="资产配置">
+          <div class="tab-content">
+            <app-asset-allocation
+              [allocation]="allocation"
+              [summary]="[]"
+              [isLoading]="isLoading"
+              (rebalance)="onRebalance($event)">
+            </app-asset-allocation>
+          </div>
+        </mat-tab>
+
+        <!-- 业绩分析标签页 -->
+        <mat-tab label="业绩分析">
+          <div class="tab-content">
+            <div class="performance-controls">
+              <mat-chip-list class="period-chips">
+                <mat-chip
+                  *ngFor="let period of getPeriodOptions()"
+                  [selected]="selectedPeriod === period.value"
+                  (click)="onPeriodChange(period.value)"
+                  color="primary">
+                  {{ period.label }}
+                </mat-chip>
+              </mat-chip-list>
+            </div>
+
+            <!-- 业绩统计 -->
+            <div class="performance-stats" *ngIf="performance">
+              <h3>业绩表现</h3>
+              <div class="stats-grid">
+                <div class="stat-item">
+                  <span class="stat-label">近1日</span>
+                  <span class="stat-value" [class]="performance.returnStatistics.oneDay >= 0 ? 'positive' : 'negative'">
+                    {{ formatPercent(performance.returnStatistics.oneDay) }}
+                  </span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">近1周</span>
+                  <span class="stat-value" [class]="performance.returnStatistics.oneWeek >= 0 ? 'positive' : 'negative'">
+                    {{ formatPercent(performance.returnStatistics.oneWeek) }}
+                  </span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">近1月</span>
+                  <span class="stat-value" [class]="performance.returnStatistics.oneMonth >= 0 ? 'positive' : 'negative'">
+                    {{ formatPercent(performance.returnStatistics.oneMonth) }}
+                  </span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">近1年</span>
+                  <span class="stat-value" [class]="performance.returnStatistics.oneYear >= 0 ? 'positive' : 'negative'">
+                    {{ formatPercent(performance.returnStatistics.oneYear) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 基准比较 -->
+            <div class="benchmark-comparison" *ngIf="performance?.benchmarkComparison">
+              <h3>基准比较</h3>
+              <div class="comparison-grid">
+                <div class="comparison-item">
+                  <span class="comparison-label">基准</span>
+                  <span class="comparison-value">{{ performance.benchmarkComparison.benchmarkName }}</span>
+                </div>
+                <div class="comparison-item">
+                  <span class="comparison-label">Alpha系数</span>
+                  <span class="comparison-value" [class]="performance.benchmarkComparison.alpha >= 0 ? 'positive' : 'negative'">
+                    {{ formatPercent(performance.benchmarkComparison.alpha) }}
+                  </span>
+                </div>
+                <div class="comparison-item">
+                  <span class="comparison-label">Beta系数</span>
+                  <span class="comparison-value">{{ performance.benchmarkComparison.beta.toFixed(3) }}</span>
+                </div>
+                <div class="comparison-item">
+                  <span class="comparison-label">信息比率</span>
+                  <span class="comparison-value">{{ performance.benchmarkComparison.informationRatio.toFixed(3) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- 风险分析标签页 -->
+        <mat-tab label="风险分析">
+          <div class="tab-content">
+            <div class="risk-metrics" *ngIf="riskAnalysis">
+              <h3>风险指标</h3>
+              <div class="risk-grid">
+                <div class="risk-card">
+                  <div class="risk-title">最大回撤</div>
+                  <div class="risk-value negative">
+                    {{ formatPercent(riskAnalysis.riskMetrics.maxDrawdown) }}
+                  </div>
+                </div>
+                <div class="risk-card">
+                  <div class="risk-title">年化波动率</div>
+                  <div class="risk-value">
+                    {{ formatPercent(riskAnalysis.riskMetrics.volatility) }}
+                  </div>
+                </div>
+                <div class="risk-card">
+                  <div class="risk-title">夏普比率</div>
+                  <div class="risk-value">
+                    {{ riskAnalysis.riskMetrics.sharpeRatio.toFixed(3) }}
+                  </div>
+                </div>
+                <div class="risk-card">
+                  <div class="risk-title">VaR(95%)</div>
+                  <div class="risk-value negative">
+                    {{ formatPercent(riskAnalysis.riskMetrics.var95) }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- 回撤分析 -->
+              <div class="drawdown-analysis" *ngIf="getDrawdownAnalysis().length > 0">
+                <h4>历史回撤</h4>
+                <mat-table [dataSource]="getDrawdownAnalysis()" class="drawdown-table">
+                  <ng-container matColumnDef="startDate">
+                    <mat-header-cell *matHeaderCellDef>开始日期</mat-header-cell>
+                    <mat-cell *matCellDef="let drawdown">
+                      {{ formatDate(drawdown.startDate) }}
+                    </mat-cell>
+                  </ng-container>
+
+                  <ng-container matColumnDef="depth">
+                    <mat-header-cell *matHeaderCellDef>回撤深度</mat-header-cell>
+                    <mat-cell *matCellDef="let drawdown">
+                      <span class="negative">{{ formatPercent(drawdown.depth) }}</span>
+                    </mat-cell>
+                  </ng-container>
+
+                  <ng-container matColumnDef="duration">
+                    <mat-header-cell *matHeaderCellDef>持续天数</mat-header-cell>
+                    <mat-cell *matCellDef="let drawdown">
+                      {{ drawdown.duration }}天
+                    </mat-cell>
+                  </ng-container>
+
+                  <mat-header-row *matHeaderRowDef="['startDate', 'depth', 'duration']"></mat-header-row>
+                  <mat-row *matRowDef="let row; columns: ['startDate', 'depth', 'duration']"></mat-row>
+                </mat-table>
+              </div>
+
+              <!-- 压力测试 -->
+              <div class="stress-test" *ngIf="getStressTestResults().length > 0">
+                <h4>压力测试</h4>
+                <div class="stress-grid">
+                  <div class="stress-item" *ngFor="let test of getStressTestResults()">
+                    <div class="stress-header">
+                      <span class="stress-scenario">{{ test.scenario }}</span>
+                      <span class="stress-loss negative">{{ formatPercent(test.lossRate) }}</span>
+                    </div>
+                    <p class="stress-description">{{ test.description }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- 相关性分析标签页 -->
+        <mat-tab label="相关性分析">
+          <div class="tab-content">
+            <div class="correlation-overview" *ngIf="correlation">
+              <h3>相关性概览</h3>
+              <div class="correlation-stats">
+                <div class="correlation-item">
+                  <span class="correlation-label">平均相关性</span>
+                  <span class="correlation-value">{{ correlation.averageCorrelation.toFixed(3) }}</span>
+                </div>
+                <div class="correlation-item">
+                  <span class="correlation-label">最低相关性</span>
+                  <span class="correlation-value">{{ correlation.minCorrelation.toFixed(3) }}</span>
+                </div>
+                <div class="correlation-item">
+                  <span class="correlation-label">最高相关性</span>
+                  <span class="correlation-value">{{ correlation.maxCorrelation.toFixed(3) }}</span>
+                </div>
+                <div class="correlation-item">
+                  <span class="correlation-label">分散化程度</span>
+                  <span class="correlation-value" [style.color]="getDiversificationLevel().color">
+                    {{ getDiversificationLevel().text }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="correlation-matrix" *ngIf="correlation && correlation.funds.length <= 10">
+              <h3>相关性矩阵</h3>
+              <div class="matrix-container">
+                <!-- 这里可以显示相关性矩阵的热力图 -->
+                <p class="matrix-placeholder">相关性矩阵可视化图表（需要专门的图表库支持）</p>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card>
+  </main>
+</div>
+
+<!-- 错误状态 -->
+<ng-template #errorState>
+  <div class="error-state">
+    <mat-card class="error-card">
+      <mat-card-content class="error-content">
+        <mat-icon class="error-icon">error</mat-icon>
+        <h3>{{ error || '加载失败' }}</h3>
+        <p>{{ error || '无法加载投资组合数据，请检查网络连接或稍后重试' }}</p>
+        <button mat-raised-button color="primary" (click)="onRefresh()">
+          重试
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</ng-template>
+
+<!-- 加载状态 -->
+<div class="loading-overlay" *ngIf="isLoading">
+  <mat-spinner diameter="40"></mat-spinner>
+  <p>正在加载投资组合数据...</p>
+</div>

@@ -1,0 +1,243 @@
+<div class="backtest-results" *ngIf="result">
+  <!-- 结果概览 -->
+  <section class="results-summary">
+    <mat-card class="summary-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon color="primary">analytics</mat-icon>
+          回测结果概览
+        </mat-card-title>
+        <mat-card-subtitle>
+          基于历史数据的投资策略表现分析
+        </mat-card-subtitle>
+        <button mat-icon-button (click)="onExport()" matTooltip="导出报告">
+          <mat-icon>download</mat-icon>
+        </button>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="summary-grid">
+          <!-- 关键指标卡片 -->
+          <div class="metric-card primary">
+            <div class="metric-title">总收益率</div>
+            <div class="metric-value" [class]="getReturnColor(summary!.totalReturn)">
+              {{ formatPercent(summary!.totalReturn) }}
+            </div>
+            <div class="metric-subtitle">
+              {{ formatCurrency(summary!.totalInvested) }} → {{ formatCurrency(summary!.finalValue) }}
+            </div>
+          </div>
+
+          <div class="metric-card accent">
+            <div class="metric-title">年化收益率</div>
+            <div class="metric-value" [class]="getReturnColor(summary!.annualizedReturn)">
+              {{ formatPercent(summary!.annualizedReturn) }}
+            </div>
+            <div class="metric-subtitle">复合年增长率</div>
+          </div>
+
+          <div class="metric-card warning">
+            <div class="metric-title">最大回撤</div>
+            <div class="metric-value" [class]="getDrawdownColor(summary!.maxDrawdown)">
+              {{ formatPercent(summary!.maxDrawdown) }}
+            </div>
+            <div class="metric-subtitle">最大亏损幅度</div>
+          </div>
+
+          <div class="metric-card success">
+            <div class="metric-title">夏普比率</div>
+            <div class="metric-value" [class]="getSharpeRatioColor(summary!.sharpeRatio)">
+              {{ formatNumber(summary!.sharpeRatio, 3) }}
+            </div>
+            <div class="metric-subtitle">风险调整后收益</div>
+          </div>
+        </div>
+
+        <!-- 超额收益 -->
+        <div class="benchmark-comparison" *ngIf="summary!.benchmarkReturn !== undefined">
+          <div class="comparison-item">
+            <span class="label">基准收益率:</span>
+            <span class="value" [class]="getReturnColor(summary!.benchmarkReturn!)">
+              {{ formatPercent(summary!.benchmarkReturn!) }}
+            </span>
+          </div>
+          <div class="comparison-item">
+            <span class="label">超额收益率:</span>
+            <span class="value" [class]="getReturnColor(summary!.excessReturn!)">
+              {{ formatPercent(summary!.excessReturn!) }}
+            </span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </section>
+
+  <!-- 详细统计 -->
+  <section class="detailed-statistics">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>bar_chart</mat-icon>
+          详细统计指标
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="stats-grid">
+          <div class="stat-group">
+            <h4>收益指标</h4>
+            <div class="stat-item">
+              <span class="stat-label">总收益率:</span>
+              <span class="stat-value" [class]="getReturnColor(statistics!.totalReturn)">
+                {{ formatPercent(statistics!.totalReturn) }}
+              </span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">年化收益率:</span>
+              <span class="stat-value" [class]="getReturnColor(statistics!.annualizedReturn)">
+                {{ formatPercent(statistics!.annualizedReturn) }}
+              </span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">最佳月份:</span>
+              <span class="stat-value positive">
+                {{ formatPercent(statistics!.bestMonth) }}
+              </span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">最差月份:</span>
+              <span class="stat-value negative">
+                {{ formatPercent(statistics!.worstMonth) }}
+              </span>
+            </div>
+          </div>
+
+          <div class="stat-group">
+            <h4>风险指标</h4>
+            <div class="stat-item">
+              <span class="stat-label">年化波动率:</span>
+              <span class="stat-value">{{ formatPercent(statistics!.volatility) }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">最大回撤:</span>
+              <span class="stat-value" [class]="getDrawdownColor(statistics!.maxDrawdown)">
+                {{ formatPercent(statistics!.maxDrawdown) }}
+              </span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">夏普比率:</span>
+              <span class="stat-value" [class]="getSharpeRatioColor(statistics!.sharpeRatio)">
+                {{ formatNumber(statistics!.sharpeRatio, 3) }}
+              </span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">索提诺比率:</span>
+              <span class="stat-value">{{ formatNumber(statistics!.sortinoRatio, 3) }}</span>
+            </div>
+          </div>
+
+          <div class="stat-group">
+            <h4>收益分布</h4>
+            <div class="stat-item">
+              <span class="stat-label">盈利月数:</span>
+              <span class="stat-value positive">
+                {{ statistics!.positiveMonths }} / {{ statistics!.totalMonths }}
+              </span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">亏损月数:</span>
+              <span class="stat-value negative">
+                {{ statistics!.negativeMonths }} / {{ statistics!.totalMonths }}
+              </span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">胜率:</span>
+              <span class="stat-value">
+                {{ formatNumber((statistics!.positiveMonths / statistics!.totalMonths) * 100, 1) }}%
+              </span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">卡玛比率:</span>
+              <span class="stat-value">{{ formatNumber(statistics!.calmarRatio, 3) }}</span>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </section>
+
+  <!-- 回撤分析 -->
+  <section class="drawdown-analysis" *ngIf="drawdowns.length > 0">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>trending_down</mat-icon>
+          回撤分析
+        </mat-card-title>
+        <mat-card-subtitle>历史回撤情况</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="drawdown-summary">
+          <div class="summary-item">
+            <span class="label">最大回撤:</span>
+            <span class="value" [class]="getDrawdownColor(summary!.maxDrawdown)">
+              {{ formatPercent(summary!.maxDrawdown) }}
+            </span>
+          </div>
+          <div class="summary-item">
+            <span class="label">最大回撤持续:</span>
+            <span class="value">{{ getMaxDrawdownPeriod().duration }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">最大回撤恢复:</span>
+            <span class="value">{{ getMaxDrawdownPeriod().recovery }}</span>
+          </div>
+        </div>
+
+        <mat-table [dataSource]="drawdowns.slice(0, 5)" class="drawdown-table">
+          <ng-container matColumnDef="startDate">
+            <mat-header-cell *matHeaderCellDef>开始日期</mat-header-cell>
+            <mat-cell *matCellDef="let drawdown">
+              {{ drawdown.startDate | date:'yyyy-MM-dd' }}
+            </mat-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="endDate">
+            <mat-header-cell *matHeaderCellDef>结束日期</mat-header-cell>
+            <mat-cell *matCellDef="let drawdown">
+              {{ drawdown.endDate | date:'yyyy-MM-dd' }}
+            </mat-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="depth">
+            <mat-header-cell *matHeaderCellDef>回撤深度</mat-header-cell>
+            <mat-cell *matCellDef="let drawdown">
+              <span [class]="getDrawdownColor(drawdown.depth)">
+                {{ formatPercent(drawdown.depth) }}
+              </span>
+            </mat-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="duration">
+            <mat-header-cell *matHeaderCellDef>持续时间</mat-header-cell>
+            <mat-cell *matCellDef="let drawdown">
+              {{ formatDuration(drawdown.duration) }}
+            </mat-cell>
+          </ng-container>
+
+          <mat-header-row *matHeaderRowDef="['startDate', 'endDate', 'depth', 'duration']"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: ['startDate', 'endDate', 'depth', 'duration']"></mat-row>
+        </mat-table>
+      </mat-card-content>
+    </mat-card>
+  </section>
+</div>
+
+<!-- 加载状态 -->
+<div class="loading-container" *ngIf="isLoading">
+  <mat-card>
+    <mat-card-content class="loading-content">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>正在执行回测计算...</p>
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    </mat-card-content>
+  </mat-card>
+</div>

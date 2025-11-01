@@ -1,0 +1,293 @@
+<div class="fund-detail-container" *ngIf="!error; else errorState">
+  <!-- 页面头部 -->
+  <header class="page-header">
+    <div class="header-actions">
+      <button mat-icon-button (click)="onGoBack()" matTooltip="返回">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <button mat-icon-button (click)="onRefresh()" matTooltip="刷新">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </header>
+
+  <!-- 主要内容 -->
+  <main class="main-content">
+    <!-- 基金基本信息 -->
+    <app-fund-basic-info
+      [fund]="fund"
+      [isLoading]="isLoading"
+      (addToWatchlist)="onAddToWatchlist($event)"
+      (removeFromWatchlist)="onRemoveFromWatchlist($event)">
+    </app-fund-basic-info>
+
+    <!-- 标签页内容 -->
+    <mat-card class="content-tabs">
+      <mat-tab-group [(selectedIndex)]="selectedTab" (selectedTabChange)="onTabChange($event.index)">
+        <!-- 业绩分析标签页 -->
+        <mat-tab label="业绩分析">
+          <div class="tab-content">
+            <div class="chart-controls">
+              <mat-chip-list class="period-chips">
+                <mat-chip
+                  *ngFor="let period of ['1M', '3M', '6M', '1Y', '3Y', 'ALL']"
+                  [selected]="chartPeriod === period"
+                  (click)="onChartPeriodChange(period)"
+                  color="primary">
+                  {{ period === '1M' ? '1个月' :
+                     period === '3M' ? '3个月' :
+                     period === '6M' ? '6个月' :
+                     period === '1Y' ? '1年' :
+                     period === '3Y' ? '3年' : '全部' }}
+                </mat-chip>
+              </mat-chip-list>
+            </div>
+
+            <!-- 净值走势图 -->
+            <div class="chart-section">
+              <div class="chart-header">
+                <h3>净值走势</h3>
+                <div class="chart-stats" *ngIf="getNavStatistics()">
+                  <div class="stat-item">
+                    <span class="stat-label">区间收益</span>
+                    <span class="stat-value" [class]="getNavStatistics()!.totalReturn >= 0 ? 'positive' : 'negative'">
+                      {{ formatPercent(getNavStatistics()!.totalReturn) }}
+                    </span>
+                  </div>
+                  <div class="stat-item">
+                    <span class="stat-label">最大回撤</span>
+                    <span class="stat-value negative">
+                      {{ formatPercent(-getNavStatistics()!.maxDrawdown) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="chart-container" style="height: 400px;">
+                <canvas baseChart [config]="navChartConfig"></canvas>
+              </div>
+            </div>
+
+            <!-- 业绩统计 -->
+            <div class="performance-stats" *ngIf="fund && fund.performance">
+              <h3>业绩统计</h3>
+              <div class="stats-grid">
+                <div class="stat-card">
+                  <div class="stat-title">近期收益</div>
+                  <div class="stat-grid-small">
+                    <div class="mini-stat">
+                      <span class="mini-label">近1日</span>
+                      <span class="mini-value" [class]="fund.performance.recentReturns.oneDay >= 0 ? 'positive' : 'negative'">
+                        {{ formatPercent(fund.performance.recentReturns.oneDay) }}
+                      </span>
+                    </div>
+                    <div class="mini-stat">
+                      <span class="mini-label">近1周</span>
+                      <span class="mini-value" [class]="fund.performance.recentReturns.oneWeek >= 0 ? 'positive' : 'negative'">
+                        {{ formatPercent(fund.performance.recentReturns.oneWeek) }}
+                      </span>
+                    </div>
+                    <div class="mini-stat">
+                      <span class="mini-label">近1月</span>
+                      <span class="mini-value" [class]="fund.performance.recentReturns.oneMonth >= 0 ? 'positive' : 'negative'">
+                        {{ formatPercent(fund.performance.recentReturns.oneMonth) }}
+                      </span>
+                    </div>
+                    <div class="mini-stat">
+                      <span class="mini-label">近1年</span>
+                      <span class="mini-value" [class]="fund.performance.recentReturns.oneYear >= 0 ? 'positive' : 'negative'">
+                        {{ formatPercent(fund.performance.recentReturns.oneYear) }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="stat-card">
+                  <div class="stat-title">风险指标</div>
+                  <div class="stat-grid-small">
+                    <div class="mini-stat">
+                      <span class="mini-label">夏普比率</span>
+                      <span class="mini-value">{{ fund.performance.riskReturnRating.rating.toFixed(1) }}</span>
+                    </div>
+                    <div class="mini-stat">
+                      <span class="mini-label">风险等级</span>
+                      <span class="mini-value" [style.color]="getRatingColor(fund.performance.riskReturnRating.rating)">
+                        {{ getRatingText(fund.performance.riskReturnRating.rating) }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- 持仓分析标签页 -->
+        <mat-tab label="持仓分析">
+          <div class="tab-content">
+            <div class="holdings-section" *ngIf="fund && fund.holdings">
+              <h3>前十大持仓</h3>
+              <mat-table [dataSource]="fund.holdings.slice(0, 10)" class="holdings-table">
+                <!-- 股票代码列 -->
+                <ng-container matColumnDef="stockCode">
+                  <mat-header-cell *matHeaderCellDef>股票代码</mat-header-cell>
+                  <mat-cell *matCellDef="let holding">
+                    {{ holding.stockCode }}
+                  </mat-cell>
+                </ng-container>
+
+                <!-- 股票名称列 -->
+                <ng-container matColumnDef="stockName">
+                  <mat-header-cell *matHeaderCellDef>股票名称</mat-header-cell>
+                  <mat-cell *matCellDef="let holding">
+                    {{ holding.stockName }}
+                  </mat-cell>
+                </ng-container>
+
+                <!-- 持股数量列 -->
+                <ng-container matColumnDef="shares">
+                  <mat-header-cell *matHeaderCellDef>持股数量(万股)</mat-header-cell>
+                  <mat-cell *matCellDef="let holding">
+                    {{ holding.shares.toLocaleString() }}
+                  </mat-cell>
+                </ng-container>
+
+                <!-- 持仓市值列 -->
+                <ng-container matColumnDef="marketValue">
+                  <mat-header-cell *matHeaderCellDef>持仓市值(万元)</mat-header-cell>
+                  <mat-cell *matCellDef="let holding">
+                    {{ holding.marketValue.toLocaleString() }}
+                  </mat-cell>
+                </ng-container>
+
+                <!-- 占净值比例列 -->
+                <ng-container matColumnDef="weight">
+                  <mat-header-cell *matHeaderCellDef>占净值比例</mat-header-cell>
+                  <mat-cell *matCellDef="let holding">
+                    <span [class]="holding.changePercent >= 0 ? 'positive' : 'negative'">
+                      {{ holding.weight.toFixed(2) }}%
+                    </span>
+                  </mat-cell>
+                </ng-container>
+
+                <!-- 较上期变动列 -->
+                <ng-container matColumnDef="changePercent">
+                  <mat-header-cell *matHeaderCellDef>较上期变动</mat-header-cell>
+                  <mat-cell *matCellDef="let holding">
+                    <span [class]="holding.changePercent >= 0 ? 'positive' : 'negative'">
+                      {{ holding.changePercent >= 0 ? '+' : '' }}{{ holding.changePercent.toFixed(2) }}%
+                    </span>
+                  </mat-cell>
+                </ng-container>
+
+                <mat-header-row *matHeaderRowDef="['stockCode', 'stockName', 'shares', 'marketValue', 'weight', 'changePercent']"></mat-header-row>
+                <mat-row *matRowDef="let row; columns: ['stockCode', 'stockName', 'shares', 'marketValue', 'weight', 'changePercent']"></mat-row>
+              </mat-table>
+            </div>
+
+            <!-- 行业配置 -->
+            <div class="industry-section" *ngIf="fund && fund.industries">
+              <h3>行业配置</h3>
+              <div class="industry-grid">
+                <div class="industry-item" *ngFor="let industry of fund.industries">
+                  <div class="industry-header">
+                    <span class="industry-name">{{ industry.industryName }}</span>
+                    <span class="industry-weight">{{ industry.weight.toFixed(2) }}%</span>
+                  </div>
+                  <div class="industry-change" [class]="industry.changePercent >= 0 ? 'positive' : 'negative'">
+                    {{ industry.changePercent >= 0 ? '+' : '' }}{{ industry.changePercent.toFixed(2) }}%
+                  </div>
+                  <div class="industry-description" *ngIf="industry.description">
+                    {{ industry.description }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- 基金资讯标签页 -->
+        <mat-tab label="基金资讯">
+          <div class="tab-content">
+            <div class="news-section">
+              <h3>相关新闻</h3>
+              <div class="news-loading" *ngIf="isNewsLoading">
+                <mat-spinner diameter="24"></mat-spinner>
+                <span>加载中...</span>
+              </div>
+              <div class="news-list" *ngIf="!isNewsLoading && fundNews.length > 0">
+                <mat-card class="news-item" *ngFor="let news of fundNews">
+                  <mat-card-header>
+                    <mat-card-title class="news-title">
+                      <span class="news-importance" [style.background-color]="getNewsImportanceColor(news.importance)">
+                        {{ getNewsImportanceLabel(news.importance) }}
+                      </span>
+                      {{ news.title }}
+                    </mat-card-title>
+                    <mat-card-subtitle>
+                      {{ news.source }} · {{ formatDate(news.publishDate) }}
+                    </mat-card-subtitle>
+                  </mat-card-header>
+                  <mat-card-content>
+                    <p class="news-summary">{{ news.summary }}</p>
+                    <div class="news-tags">
+                      <mat-chip-list class="news-chips">
+                        <mat-chip *ngFor="let tag of news.tags" selected>
+                          {{ tag }}
+                        </mat-chip>
+                      </mat-chip-list>
+                    </div>
+                  </mat-card-content>
+                </mat-card>
+              </div>
+              <div class="no-news" *ngIf="!isNewsLoading && fundNews.length === 0">
+                <mat-icon class="empty-icon">article</mat-icon>
+                <p>暂无相关新闻</p>
+              </div>
+            </div>
+
+            <div class="announcements-section">
+              <h3>基金公告</h3>
+              <div class="announcements-loading" *ngIf="isAnnouncementsLoading">
+                <mat-spinner diameter="24"></mat-spinner>
+                <span>加载中...</span>
+              </div>
+              <div class="announcements-list" *ngIf="!isAnnouncementsLoading && fundAnnouncements.length > 0">
+                <mat-card class="announcement-item" *ngFor="let announcement of fundAnnouncements">
+                  <mat-card-header>
+                    <mat-card-title>{{ announcement.title }}</mat-card-title>
+                    <mat-card-subtitle>
+                      {{ announcement.type }} · {{ formatDate(announcement.publishDate) }}
+                    </mat-card-subtitle>
+                  </mat-card-header>
+                  <mat-card-content>
+                    <p class="announcement-summary">{{ announcement.summary }}</p>
+                  </mat-card-content>
+                </mat-card>
+              </div>
+              <div class="no-announcements" *ngIf="!isAnnouncementsLoading && fundAnnouncements.length === 0">
+                <mat-icon class="empty-icon">announcement</mat-icon>
+                <p>暂无基金公告</p>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card>
+  </main>
+</div>
+
+<!-- 错误状态 -->
+<ng-template #errorState>
+  <div class="error-state">
+    <mat-card class="error-card">
+      <mat-card-content class="error-content">
+        <mat-icon class="error-icon">error</mat-icon>
+        <h3>{{ error || '加载失败' }}</h3>
+        <p>{{ error || '无法加载基金信息，请检查网络连接或稍后重试' }}</p>
+        <button mat-raised-button color="primary" (click)="onGoBack()">
+          返回
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</ng-template>

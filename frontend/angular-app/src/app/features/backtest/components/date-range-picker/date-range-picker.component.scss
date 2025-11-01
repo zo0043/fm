@@ -1,0 +1,131 @@
+.date-range-picker {
+  .preset-section {
+    margin-bottom: 24px;
+
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #333;
+    }
+
+    .preset-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+
+      mat-chip {
+        cursor: pointer;
+        transition: all 0.3s ease;
+
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+      }
+    }
+  }
+
+  .custom-date-section {
+    border-top: 1px solid #e0e0e0;
+    padding-top: 24px;
+
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #333;
+    }
+
+    .date-fields-container {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .date-field {
+      flex: 1;
+    }
+
+    .date-separator {
+      font-weight: 500;
+      color: #666;
+      padding: 0 8px;
+    }
+  }
+
+  .range-info {
+    margin-top: 20px;
+    padding: 16px;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .info-icon {
+      color: #2196f3;
+      flex-shrink: 0;
+    }
+
+    .info-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      .duration-text {
+        font-weight: 600;
+        color: #333;
+        font-size: 16px;
+      }
+
+      .date-text {
+        color: #666;
+        font-size: 14px;
+      }
+    }
+  }
+
+  .error-message {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background-color: #ffebee;
+    border-left: 4px solid #f44336;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #c62828;
+
+    .error-icon {
+      color: #f44336;
+      flex-shrink: 0;
+    }
+  }
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+  .date-range-picker {
+    .preset-chips {
+      justify-content: center;
+    }
+
+    .date-fields-container {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .date-separator {
+      text-align: center;
+      padding: 8px 0;
+    }
+
+    .range-info {
+      flex-direction: column;
+      text-align: center;
+      gap: 8px;
+    }
+  }
+}

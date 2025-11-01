@@ -1,0 +1,172 @@
+<div class="backtest-container">
+  <!-- 页面标题栏 -->
+  <header class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        <mat-icon>assessment</mat-icon>
+        投资策略回测
+      </h1>
+      <div class="header-actions">
+        <button mat-stroked-button (click)="resetForm()">
+          <mat-icon>refresh</mat-icon>
+          重置配置
+        </button>
+      </div>
+    </div>
+    <div class="header-subtitle">
+      <span>基于历史数据验证您的投资策略效果</span>
+    </div>
+  </header>
+
+  <!-- 主要内容区域 -->
+  <main class="main-content">
+    <div class="backtest-layout">
+      <!-- 左侧配置区域 -->
+      <section class="config-section">
+        <!-- 策略选择 -->
+        <app-strategy-selector
+          [strategies]="availableStrategies"
+          [selectedStrategy]="selectedStrategy"
+          (strategyChange)="onStrategyChange($event)">
+        </app-strategy-selector>
+
+        <!-- 基金选择 -->
+        <app-fund-selector
+          [availableFunds]="availableFunds"
+          [selectedFunds]="selectedFunds"
+          (fundsChange)="onFundsChange($event)">
+        </app-fund-selector>
+
+        <!-- 时间范围选择 -->
+        <app-date-range-picker
+          (dateRangeChange)="onDateRangeChange($event)">
+        </app-date-range-picker>
+
+        <!-- 投资配置 -->
+        <mat-card class="investment-config">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>account_balance_wallet</mat-icon>
+              投资配置
+            </mat-card-title>
+            <mat-card-subtitle>设置定投金额和频率</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="config-grid">
+              <!-- 投资金额 -->
+              <mat-form-field appearance="outline" class="config-field">
+                <mat-label>每期投资金额</mat-label>
+                <mat-icon matPrefix>payments</mat-icon>
+                <input matInput
+                       type="number"
+                       formControlName="amount"
+                       min="100"
+                       step="100">
+                <span matSuffix>元</span>
+                <mat-hint>建议不少于100元</mat-hint>
+              </mat-form-field>
+
+              <!-- 投资频率 -->
+              <mat-form-field appearance="outline" class="config-field">
+                <mat-label>投资频率</mat-label>
+                <mat-icon matPrefix>schedule</mat-icon>
+                <mat-select formControlName="frequency">
+                  <mat-option value="daily">每日</mat-option>
+                  <mat-option value="weekly">每周</mat-option>
+                  <mat-option value="monthly">每月</mat-option>
+                  <mat-option value="quarterly">每季度</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <!-- 定投日期（仅月投显示） -->
+              <mat-form-field appearance="outline" class="config-field"
+                            *ngIf="backtestForm.get('investment.frequency')?.value === 'monthly'">
+                <mat-label>每月定投日期</mat-label>
+                <mat-icon matPrefix>event</mat-icon>
+                <input matInput
+                       type="number"
+                       formControlName="dayOfMonth"
+                       min="1"
+                       max="28">
+                <span matSuffix>日</span>
+                <mat-hint>1-28日，建议选择工资日后1-3天</mat-hint>
+              </mat-form-field>
+            </div>
+
+            <!-- 预设金额快速选择 -->
+            <div class="preset-amounts">
+              <span class="preset-label">快速选择:</span>
+              <mat-chip-list class="preset-chips">
+                <mat-chip
+                  *ngFor="let amount of investmentAmounts"
+                  [selected]="backtestForm.get('investment.amount')?.value === amount.value"
+                  (click)="backtestForm.get('investment.amount')?.setValue(amount.value)"
+                  color="primary">
+                  {{ amount.label }}
+                </mat-chip>
+              </mat-chip-list>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- 执行按钮 -->
+        <div class="action-section">
+          <button
+            mat-raised-button
+            color="primary"
+            class="run-button"
+            (click)="runBacktest()"
+            [disabled]="!isValidForm || isRunningBacktest"
+            size="large">
+            <mat-icon *ngIf="!isRunningBacktest">play_arrow</mat-icon>
+            <mat-spinner *ngIf="isRunningBacktest" diameter="20"></mat-spinner>
+            {{ isRunningBacktest ? '正在回测...' : '开始回测' }}
+          </button>
+
+          <div class="form-status" *ngIf="!isValidForm && backtestForm.dirty">
+            <mat-icon class="warning-icon">warning</mat-icon>
+            <span>请完善所有必填配置项</span>
+          </div>
+        </div>
+
+        <!-- 错误提示 -->
+        <mat-card class="error-card" *ngIf="errorMessage">
+          <mat-card-content>
+            <mat-icon class="error-icon">error</mat-icon>
+            <span class="error-text">{{ errorMessage }}</span>
+          </mat-card-content>
+        </mat-card>
+      </section>
+
+      <!-- 右侧结果区域 -->
+      <section class="results-section" *ngIf="hasResults || isRunningBacktest">
+        <!-- 回测结果 -->
+        <app-backtest-results
+          [result]="backtestResult"
+          [isLoading]="isRunningBacktest"
+          (exportReport)="exportReport()">
+        </app-backtest-results>
+      </section>
+
+      <!-- 空状态（未运行回测时） -->
+      <section class="empty-results" *ngIf="!hasResults && !isRunningBacktest">
+        <mat-card class="empty-card">
+          <mat-card-content class="empty-content">
+            <mat-icon class="empty-icon">analytics</mat-icon>
+            <h3>尚未执行回测</h3>
+            <p>完成左侧配置后点击"开始回测"查看结果</p>
+            <div class="quick-tips">
+              <h4>快速提示:</h4>
+              <ul>
+                <li>选择合适的投资策略，定期定额适合新手</li>
+                <li>基金组合建议2-5只，分散风险</li>
+                <li>回测时间建议至少1年以上</li>
+                <li>定投金额根据个人情况调整</li>
+              </ul>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </section>
+    </div>
+  </main>
+</div>

@@ -1,0 +1,186 @@
+<mat-card class="fund-basic-info" *ngIf="fund; else loading">
+  <mat-card-header class="fund-header">
+    <div class="fund-title-section">
+      <div class="fund-title">
+        <h2>{{ fund.name }}</h2>
+        <div class="fund-meta">
+          <mat-chip-list class="fund-chips">
+            <mat-chip color="primary" selected>
+              {{ fund.code }}
+            </mat-chip>
+            <mat-chip color="accent" selected>
+              {{ getFundTypeLabel(fund.type) }}
+            </mat-chip>
+            <mat-chip [style.background-color]="getRiskLevelColor('medium')" selected>
+              {{ getRiskLevelLabel('medium') }}
+            </mat-chip>
+          </mat-chip-list>
+        </div>
+      </div>
+      <div class="fund-actions">
+        <button
+          mat-icon-button
+          class="watchlist-btn"
+          [class.active]="isWatchlisted"
+          (click)="onWatchlistToggle()"
+          [matTooltip]="isWatchlisted ? '取消关注' : '添加关注'">
+          <mat-icon>{{ isWatchlisted ? 'star' : 'star_border' }}</mat-icon>
+        </button>
+        <button mat-icon-button (click)="addToWatchlist.emit(fund.id)" matTooltip="分享">
+          <mat-icon>share</mat-icon>
+        </button>
+      </div>
+    </div>
+  </mat-card-header>
+
+  <mat-card-content>
+    <!-- 净值信息 -->
+    <div class="nav-section">
+      <div class="nav-main">
+        <div class="current-nav">
+          <span class="nav-label">单位净值</span>
+          <span class="nav-value">{{ formatCurrency(fund.currentNav) }}</span>
+          <span class="nav-date">{{ formatDate(fund.lastUpdate) }}</span>
+        </div>
+        <div class="nav-change" [style.color]="getTrendInfo().color">
+          <mat-icon>{{ getTrendInfo().trend === 'up' ? 'trending_up' : getTrendInfo().trend === 'down' ? 'trending_down' : 'trending_flat' }}</mat-icon>
+          <span class="change-amount">{{ formatPercent(getTrendInfo().change / 100) }}</span>
+        </div>
+      </div>
+
+      <div class="nav-comparison">
+        <div class="nav-item">
+          <span class="label">昨日净值</span>
+          <span class="value">{{ formatCurrency(fund.yesterdayNav) }}</span>
+        </div>
+        <div class="nav-item">
+          <span class="label">上周净值</span>
+          <span class="value">{{ formatCurrency(fund.weekNav) }}</span>
+        </div>
+        <div class="nav-item">
+          <span class="label">上月净值</span>
+          <span class="value">{{ formatCurrency(fund.monthNav) }}</span>
+        </div>
+        <div class="nav-item">
+          <span class="label">年初净值</span>
+          <span class="value">{{ formatCurrency(fund.yearNav) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 基金基本信息 -->
+    <div class="basic-info-grid">
+      <div class="info-card">
+        <div class="info-item">
+          <span class="info-label">基金公司</span>
+          <span class="info-value">{{ fund.fundCompany }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">成立日期</span>
+          <span class="info-value">{{ formatDate(fund.establishDate) }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">基金规模</span>
+          <span class="info-value">{{ formatLargeNumber(fund.fundScale) }}</span>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-item">
+          <span class="info-label">管理费率</span>
+          <span class="info-value">{{ formatPercent(fund.managementFee) }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">托管费率</span>
+          <span class="info-value">{{ formatPercent(fund.custodyFee) }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">申购费率</span>
+          <span class="info-value">{{ formatPercent(fund.purchaseFee) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 基金经理信息 -->
+    <div class="manager-section" *ngIf="fund.managers && fund.managers.length > 0">
+      <h3 class="section-title">
+        <mat-icon>person</mat-icon>
+        基金经理
+      </h3>
+      <div class="manager-cards">
+        <mat-card class="manager-card" *ngFor="let manager of fund.managers">
+          <mat-card-header>
+            <mat-card-title>
+              <div class="manager-header">
+                <div class="manager-avatar">
+                  {{ manager.name.substring(0, 1) }}
+                </div>
+                <div class="manager-info">
+                  <h4>{{ manager.name }}</h4>
+                  <p class="manager-title">{{ getManagerExperience(manager) }} | {{ getManagerTenure(manager) }}</p>
+                </div>
+              </div>
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="manager-details">
+              <div class="detail-item">
+                <span class="detail-label">学历背景:</span>
+                <span class="detail-value">{{ manager.education }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">任职日期:</span>
+                <span class="detail-value">{{ formatDate(manager.startDate) }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">管理描述:</span>
+                <span class="detail-value">{{ manager.description }}</span>
+              </div>
+            </div>
+
+            <div class="manager-performance" *ngIf="manager.performance">
+              <h5>任职期间业绩</h5>
+              <div class="performance-grid">
+                <div class="perf-item">
+                  <span class="perf-label">任职期间</span>
+                  <span class="perf-value">{{ manager.performance.period }}</span>
+                </div>
+                <div class="perf-item">
+                  <span class="perf-label">收益率</span>
+                  <span class="perf-value positive">{{ formatPercent(manager.performance.return / 100) }}</span>
+                </div>
+                <div class="perf-item">
+                  <span class="perf-label">年化收益</span>
+                  <span class="perf-value positive">{{ formatPercent(manager.performance.annualizedReturn / 100) }}</span>
+                </div>
+                <div class="perf-item">
+                  <span class="perf-label">最大回撤</span>
+                  <span class="perf-value negative">{{ formatPercent(manager.performance.maxDrawdown / 100) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="managed-funds" *ngIf="manager.managedFunds && manager.managedFunds.length > 0">
+              <h5>管理基金</h5>
+              <mat-chip-list class="funds-chips">
+                <mat-chip *ngFor="let fundName of manager.managedFunds" selected>
+                  {{ fundName }}
+                </mat-chip>
+              </mat-chip-list>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<!-- 加载状态 -->
+<ng-template #loading>
+  <mat-card class="loading-card">
+    <mat-card-content class="loading-content">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>正在加载基金信息...</p>
+    </mat-card-content>
+  </mat-card>
+</ng-template>
