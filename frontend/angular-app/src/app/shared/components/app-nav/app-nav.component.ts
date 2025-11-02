@@ -36,6 +36,11 @@ export class AppNavComponent implements OnInit, OnDestroy {
       label: '回测分析'
     },
     {
+      path: '/history',
+      icon: 'history',
+      label: '历史记录'
+    },
+    {
       path: '/monitor',
       icon: 'notifications_active',
       label: '监控设置'

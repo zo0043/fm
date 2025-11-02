@@ -35,6 +35,7 @@ import { MonitorSettingsComponent } from '../features/monitor-settings/monitor-s
 import { BacktestComponent } from '../features/backtest/backtest.component';
 import { FundDetailComponent } from '../features/fund-detail/fund-detail.component';
 import { PortfolioComponent } from '../features/portfolio/portfolio.component';
+import { HistoryComponent } from '../features/history/history.component';
 import { AppNavComponent } from './shared/components/app-nav/app-nav.component';
 
 // 回测组件
@@ -49,6 +50,9 @@ import { PerformanceChartComponent } from '../features/fund-detail/components/pe
 
 // 投资组合组件
 import { AssetAllocationComponent } from '../features/portfolio/components/asset-allocation/asset-allocation.component';
+
+// 历史记录组件
+import { TransactionRecordsComponent } from '../features/history/components/transaction-records/transaction-records.component';
 
 const routes: Routes = [
   {
@@ -87,6 +91,11 @@ const routes: Routes = [
     title: '投资组合分析'
   },
   {
+    path: 'history',
+    component: HistoryComponent,
+    title: '历史记录'
+  },
+  {
     path: '**',
     redirectTo: '/dashboard'
   }
@@ -101,6 +110,7 @@ const routes: Routes = [
     BacktestComponent,
     FundDetailComponent,
     PortfolioComponent,
+    HistoryComponent,
     AppNavComponent,
     // 回测组件
     StrategySelectorComponent,
@@ -111,7 +121,9 @@ const routes: Routes = [
     FundBasicInfoComponent,
     PerformanceChartComponent,
     // 投资组合组件
-    AssetAllocationComponent
+    AssetAllocationComponent,
+    // 历史记录组件
+    TransactionRecordsComponent
   ],
   imports: [
     BrowserModule,

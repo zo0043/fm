@@ -1,0 +1,415 @@
+<div class="history-container">
+  <!-- 页面标题栏 -->
+  <header class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        <mat-icon>history</mat-icon>
+        历史记录
+      </h1>
+      <div class="header-actions">
+        <button mat-icon-button (click)="onRefresh()" matTooltip="刷新数据">
+          <mat-icon>refresh</mat-icon>
+        </button>
+      </div>
+    </div>
+    <div class="header-subtitle">
+      <span>查看和管理您的历史交易记录、净值历史和操作日志</span>
+    </div>
+  </header>
+
+  <!-- 统计概览 -->
+  <section class="statistics-section" *ngIf="getSummaryStats()">
+    <div class="stats-cards">
+      <mat-card class="stat-card primary">
+        <mat-card-content>
+          <div class="stat-content">
+            <div class="stat-icon">
+              <mat-icon>receipt_long</mat-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-title">总交易次数</div>
+              <div class="stat-value">{{ getSummaryStats()!.totalTransactions }}</div>
+              <div class="stat-change">成功率 {{ getSummaryStats()!.successRate.toFixed(1) }}%</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card success">
+        <mat-card-content>
+          <div class="stat-content">
+            <div class="stat-icon">
+              <mat-icon>account_balance</mat-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-title">总交易金额</div>
+              <div class="stat-value">{{ formatCurrency(getSummaryStats()!.totalAmount) }}</div>
+              <div class="stat-subtitle">累计交易额</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card accent">
+        <mat-card-content>
+          <div class="stat-content">
+            <div class="stat-icon">
+              <mat-icon>trending_up</mat-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-title">累计收益</div>
+              <div class="stat-value" [class]="getSummaryStats()!.totalReturn >= 0 ? 'positive' : 'negative'">
+                {{ formatCurrency(getSummaryStats()!.totalReturn) }}
+              </div>
+              <div class="stat-change" [class]="getSummaryStats()!.totalReturnRate >= 0 ? 'positive' : 'negative'">
+                {{ formatPercent(getSummaryStats()!.totalReturnRate) }}
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card info">
+        <mat-card-content>
+          <div class="stat-content">
+            <div class="stat-icon">
+              <mat-icon>list_alt</mat-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-title">操作日志</div>
+              <div class="stat-value">{{ getSummaryStats()!.totalOperations }}</div>
+              <div class="stat-subtitle">系统操作记录</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </section>
+
+  <!-- 标签页内容 -->
+  <main class="main-content">
+    <mat-card class="content-tabs">
+      <mat-tab-group [(selectedIndex)]="selectedTab" (selectedTabChange)="onTabChange($event.index)">
+        <!-- 交易记录标签页 -->
+        <mat-tab label="交易记录">
+          <div class="tab-content">
+            <app-transaction-records
+              [transactions]="transactions"
+              [isLoading]="transactionLoading"
+              [totalCount]="transactionTotal"
+              [currentPage]="transactionPage"
+              [pageSize]="transactionPageSize"
+              [statistics]="statistics?.transactionStats"
+              (pageChange)="onTransactionPageChange($event)"
+              (filterChange)="onTransactionFilterChange($event)"
+              (exportData)="onExportTransactions()"
+              (viewDetails)="console.log('查看交易详情')">
+            </app-transaction-records>
+          </div>
+        </mat-tab>
+
+        <!-- 净值历史标签页 -->
+        <mat-tab label="净值历史">
+          <div class="tab-content">
+            <div class="nav-history-header">
+              <div class="header-title">
+                <h3>净值历史记录</h3>
+                <p class="header-description">查看基金的净值变化历史</p>
+              </div>
+              <div class="header-actions">
+                <button mat-stroked-button (click)="onExportNavHistory()">
+                  <mat-icon>download</mat-icon>
+                  导出CSV
+                </button>
+              </div>
+            </div>
+
+            <!-- 净值历史表格 -->
+            <div class="nav-history-table-container">
+              <mat-table [dataSource]="navHistory" class="nav-table">
+                <!-- 日期列 -->
+                <ng-container matColumnDef="date">
+                  <mat-header-cell *matHeaderCellDef>日期</mat-header-cell>
+                  <mat-cell *matCellDef="let item">
+                    {{ formatDate(item.date) }}
+                  </mat-cell>
+                </ng-container>
+
+                <!-- 基金名称列 -->
+                <ng-container matColumnDef="fundName">
+                  <mat-header-cell *matHeaderCellDef>基金名称</mat-header-cell>
+                  <mat-cell *matCellDef="let item">
+                    <div class="fund-name-cell">
+                      <span class="fund-name">{{ item.fundName }}</span>
+                      <span class="fund-code">{{ item.fundCode }}</span>
+                    </div>
+                  </mat-cell>
+                </ng-container>
+
+                <!-- 单位净值列 -->
+                <ng-container matColumnDef="unitNav">
+                  <mat-header-cell *matHeaderCellDef>单位净值</mat-header-cell>
+                  <mat-cell *matCellDef="let item">
+                    {{ item.unitNav.toFixed(4) }}
+                  </mat-cell>
+                </ng-container>
+
+                <!-- 累计净值列 -->
+                <ng-container matColumnDef="accumulatedNav">
+                  <mat-header-cell *matHeaderCellDef>累计净值</mat-header-cell>
+                  <mat-cell *matCellDef="let item">
+                    {{ item.accumulatedNav.toFixed(4) }}
+                  </mat-cell>
+                </ng-container>
+
+                <!-- 日涨跌幅列 -->
+                <ng-container matColumnDef="dailyChange">
+                  <mat-header-cell *matHeaderCellDef>日涨跌幅</mat-header-cell>
+                  <mat-cell *matCellDef="let item">
+                    <span class="daily-change" [class]="item.dailyChange >= 0 ? 'positive' : 'negative'">
+                      {{ item.dailyChange >= 0 ? '+' : '' }}{{ (item.dailyChange * 100).toFixed(2) }}%
+                    </span>
+                  </mat-cell>
+                </ng-container>
+
+                <!-- 累计收益率列 -->
+                <ng-container matColumnDef="totalReturn">
+                  <mat-header-cell *matHeaderCellDef>累计收益率</mat-header-cell>
+                  <mat-cell *matCellDef="let item">
+                    <span class="total-return" [class]="item.totalReturn >= 0 ? 'positive' : 'negative'">
+                      {{ item.totalReturn >= 0 ? '+' : '' }}{{ item.totalReturn.toFixed(2) }}%
+                    </span>
+                  </mat-cell>
+                </ng-container>
+
+                <mat-header-row *matHeaderRowDef="['date', 'fundName', 'unitNav', 'accumulatedNav', 'dailyChange', 'totalReturn']"></mat-header-row>
+                <mat-row *matRowDef="let row; columns: ['date', 'fundName', 'unitNav', 'accumulatedNav', 'dailyChange', 'totalReturn']"></mat-row>
+              </mat-table>
+
+              <!-- 分页 -->
+              <div class="pagination-container" *ngIf="navTotal > navPageSize">
+                <mat-paginator
+                  [length]="navTotal"
+                  [pageSize]="navPageSize"
+                  [pageSizeOptions]="[20, 50, 100]"
+                  (page)="onNavPageChange($event.pageIndex + 1)"
+                  showFirstLastButtons>
+                </mat-paginator>
+              </div>
+            </div>
+
+            <!-- 加载状态 -->
+            <div class="loading-container" *ngIf="navLoading">
+              <mat-spinner diameter="40"></mat-spinner>
+              <p>正在加载净值历史...</p>
+            </div>
+
+            <!-- 错误状态 -->
+            <div class="error-container" *ngIf="navError">
+              <mat-icon class="error-icon">error</mat-icon>
+              <p>{{ navError }}</p>
+              <button mat-stroked-button (click)="onRefresh()">重试</button>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- 操作日志标签页 -->
+        <mat-tab label="操作日志">
+          <div class="tab-content">
+            <div class="operation-logs-container">
+              <mat-table [dataSource]="operationLogs" class="operation-table">
+                <!-- 时间列 -->
+                <ng-container matColumnDef="timestamp">
+                  <mat-header-cell *matHeaderCellDef>时间</mat-header-cell>
+                  <mat-cell *matCellDef="let item">
+                    {{ formatDateTime(item.timestamp) }}
+                  </mat-cell>
+                </ng-container>
+
+                <!-- 用户列 -->
+                <ng-container matColumnDef="username">
+                  <mat-header-cell *matHeaderCellDef>用户</mat-header-cell>
+                  <mat-cell *matCellDef="let item">
+                    {{ item.username }}
+                  </mat-cell>
+                </ng-container>
+
+                <!-- 模块列 -->
+                <ng-container matColumnDef="module">
+                  <mat-header-cell *matHeaderCellDef>模块</mat-header-cell>
+                  <mat-cell *matCellDef="let item">
+                    <mat-chip color="primary" selected>{{ item.module }}</mat-chip>
+                  </mat-cell>
+                </ng-container>
+
+                <!-- 操作列 -->
+                <ng-container matColumnDef="operation">
+                  <mat-header-cell *matHeaderCellDef>操作</mat-header-cell>
+                  <mat-cell *matCellDef="let item">
+                    {{ item.operation }}
+                  </mat-cell>
+                </ng-container>
+
+                <!-- 描述列 -->
+                <ng-container matColumnDef="description">
+                  <mat-header-cell *matHeaderCellDef>描述</mat-header-cell>
+                  <mat-cell *matCellDef="let item">
+                    {{ item.description }}
+                  </mat-cell>
+                </ng-container>
+
+                <!-- 状态列 -->
+                <ng-container matColumnDef="status">
+                  <mat-header-cell *matHeaderCellDef>状态</mat-header-cell>
+                  <mat-cell *matCellDef="let item">
+                    <mat-chip
+                      [color]="item.status === 'success' ? 'primary' : 'warn'"
+                      [selected]="true">
+                      {{ item.status === 'success' ? '成功' : '失败' }}
+                    </mat-chip>
+                  </mat-cell>
+                </ng-container>
+
+                <!-- IP地址列 -->
+                <ng-container matColumnDef="ipAddress">
+                  <mat-header-cell *matHeaderCellDef>IP地址</mat-header-cell>
+                  <mat-cell *matCellDef="let item">
+                    {{ item.ipAddress }}
+                  </mat-cell>
+                </ng-container>
+
+                <mat-header-row *matHeaderRowDef="['timestamp', 'username', 'module', 'operation', 'description', 'status', 'ipAddress']"></mat-header-row>
+                <mat-row *matRowDef="let row; columns: ['timestamp', 'username', 'module', 'operation', 'description', 'status', 'ipAddress']"></mat-row>
+              </mat-table>
+
+              <!-- 分页 -->
+              <div class="pagination-container" *ngIf="operationTotal > operationPageSize">
+                <mat-paginator
+                  [length]="operationTotal"
+                  [pageSize]="operationPageSize"
+                  [pageSizeOptions]="[20, 50, 100]"
+                  (page)="onOperationPageChange($event.pageIndex + 1)"
+                  showFirstLastButtons>
+                </mat-paginator>
+              </div>
+            </div>
+
+            <!-- 加载状态 -->
+            <div class="loading-container" *ngIf="operationLoading">
+              <mat-spinner diameter="40"></mat-spinner>
+              <p>正在加载操作日志...</p>
+            </div>
+
+            <!-- 错误状态 -->
+            <div class="error-container" *ngIf="operationError">
+              <mat-icon class="error-icon">error</mat-icon>
+              <p>{{ operationError }}</p>
+              <button mat-stroked-button (click)="onRefresh()">重试</button>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- 分红记录标签页 -->
+        <mat-tab label="分红记录">
+          <div class="tab-content">
+            <div class="dividend-records-container">
+              <mat-table [dataSource]="dividendRecords" class="dividend-table">
+                <!-- 基金名称列 -->
+                <ng-container matColumnDef="fundName">
+                  <mat-header-cell *matHeaderCellDef>基金名称</mat-header-cell>
+                  <mat-cell *matCellDef="let item">
+                    <div class="fund-name-cell">
+                      <span class="fund-name">{{ item.fundName }}</span>
+                      <span class="fund-code">{{ item.fundCode }}</span>
+                    </div>
+                  </mat-cell>
+                </ng-container>
+
+                <!-- 除权除息日列 -->
+                <ng-container matColumnDef="exDividendDate">
+                  <mat-header-cell *matHeaderCellDef>除权除息日</mat-header-cell>
+                  <mat-cell *matCellDef="let item">
+                    {{ formatDate(item.exDividendDate) }}
+                  </mat-cell>
+                </ng-container>
+
+                <!-- 分红类型列 -->
+                <ng-container matColumnDef="dividendType">
+                  <mat-header-cell *matHeaderCellDef>分红类型</mat-header-cell>
+                  <mat-cell *matCellDef="let item">
+                    <mat-chip color="accent" selected>
+                      {{ item.dividendType === 'cash' ? '现金' : '股票' }}
+                    </mat-chip>
+                  </mat-cell>
+                </ng-container>
+
+                <!-- 每份分红列 -->
+                <ng-container matColumnDef="dividendPerUnit">
+                  <mat-header-cell *matHeaderCellDef>每份分红</mat-header-cell>
+                  <mat-cell *matCellDef="let item">
+                    ¥{{ item.dividendPerUnit.toFixed(4) }}
+                  </mat-cell>
+                </ng-container>
+
+                <!-- 分红总额列 -->
+                <ng-container matColumnDef="totalAmount">
+                  <mat-header-cell *matHeaderCellDef>分红总额</mat-header-cell>
+                  <mat-cell *matCellDef="let item">
+                    {{ formatCurrency(item.totalAmount) }}
+                  </mat-cell>
+                </ng-container>
+
+                <!-- 税后分红列 -->
+                <ng-container matColumnDef="afterTaxDividend">
+                  <mat-header-cell *matHeaderCellDef>税后分红</mat-header-cell>
+                  <mat-cell *matCellDef="let item">
+                    ¥{{ item.afterTaxDividend.toFixed(4) }}
+                  </mat-cell>
+                </ng-container>
+
+                <!-- 状态列 -->
+                <ng-container matColumnDef="status">
+                  <mat-header-cell *matHeaderCellDef>状态</mat-header-cell>
+                  <mat-cell *matCellDef="let item">
+                    <mat-chip
+                      [color]="item.status === 'paid' ? 'primary' : 'warn'"
+                      [selected]="true">
+                      {{ item.status === 'paid' ? '已派发' : '待派发' }}
+                    </mat-chip>
+                  </mat-cell>
+                </ng-container>
+
+                <mat-header-row *matHeaderRowDef="['fundName', 'exDividendDate', 'dividendType', 'dividendPerUnit', 'totalAmount', 'afterTaxDividend', 'status']"></mat-header-row>
+                <mat-row *matRowDef="let row; columns: ['fundName', 'exDividendDate', 'dividendType', 'dividendPerUnit', 'totalAmount', 'afterTaxDividend', 'status']"></mat-row>
+              </mat-table>
+
+              <!-- 分页 -->
+              <div class="pagination-container" *ngIf="dividendTotal > dividendPageSize">
+                <mat-paginator
+                  [length]="dividendTotal"
+                  [pageSize]="dividendPageSize"
+                  [pageSizeOptions]="[20, 50, 100]"
+                  (page)="onDividendPageChange($event.pageIndex + 1)"
+                  showFirstLastButtons>
+                </mat-paginator>
+              </div>
+            </div>
+
+            <!-- 加载状态 -->
+            <div class="loading-container" *ngIf="dividendLoading">
+              <mat-spinner diameter="40"></mat-spinner>
+              <p>正在加载分红记录...</p>
+            </div>
+
+            <!-- 错误状态 -->
+            <div class="error-container" *ngIf="dividendError">
+              <mat-icon class="error-icon">error</mat-icon>
+              <p>{{ dividendError }}</p>
+              <button mat-stroked-button (click)="onRefresh()">重试</button>
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card>
+  </main>
+</div>
