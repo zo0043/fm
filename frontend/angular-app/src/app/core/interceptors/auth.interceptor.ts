@@ -8,7 +8,7 @@ import {
   HttpErrorResponse
 } from '@angular/common/http';
 import { Observable, throwError, from } from 'rxjs';
-import { catchError, switchMap, map } from 'rxjs/operators';
+import { catchError, switchMap, map, tap } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
 
 @Injectable()
@@ -42,19 +42,24 @@ export class AuthInterceptor implements HttpInterceptor {
     if (this.authService.isAuthenticated && this.shouldRefreshToken()) {
       if (!this.isRefreshing) {
         this.isRefreshing = true;
-        try {
-          await this.authService.refreshToken().toPromise();
-          const newToken = this.authService.getAccessToken();
-          if (newToken) {
-            request = this.addTokenHeader(req, newToken);
-          }
-        } catch (error) {
-          console.error('令牌刷新失败:', error);
-          // 刷新失败，清除认证状态
-          this.authService.logout().subscribe();
-        } finally {
-          this.isRefreshing = false;
-        }
+        return from(this.authService.refreshToken()).pipe(
+          switchMap(() => {
+            this.isRefreshing = false;
+            const newToken = this.authService.getAccessToken();
+            if (newToken) {
+              const newRequest = this.addTokenHeader(req, newToken);
+              return next.handle(newRequest);
+            }
+            return throwError(() => error);
+          }),
+          catchError((refreshError) => {
+            this.isRefreshing = false;
+            console.error('令牌刷新失败:', refreshError);
+            // 刷新失败，清除认证状态
+            this.authService.logout().subscribe();
+            return throwError(() => refreshError);
+          })
+        );
       }
     }
 
@@ -66,7 +71,7 @@ export class AuthInterceptor implements HttpInterceptor {
       catchError((error: HttpErrorResponse) => {
         return this.handleResponseError(error, req, next);
       })
-    ).toPromise();
+    );
   }
 
   private addTokenHeader(request: HttpRequest<any>, token: string): HttpRequest<any> {
