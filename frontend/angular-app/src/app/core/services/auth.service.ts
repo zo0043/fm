@@ -265,7 +265,13 @@ export class AuthService {
    * 获取当前用户（从存储）
    */
   private getCurrentUser(): User | null {
-    return this.authStorageService.getCurrentUser();
+    const userJson = localStorage.getItem(this.USER_KEY);
+    if (!userJson) return null;
+    try {
+      return JSON.parse(userJson);
+    } catch {
+      return null;
+    }
   }
 
   /**

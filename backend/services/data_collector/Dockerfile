@@ -1,41 +1,22 @@
-# 数据收集服务 Dockerfile
-FROM python:3.11-slim
+# 数据收集服务 Dockerfile - 优化版本
+FROM fund-monitor-base AS data-collector
 
-# 设置工作目录
-WORKDIR /app
+# 复制服务特定的依赖和代码
+COPY backend/services/data_collector/requirements.txt /app/service-requirements.txt
+RUN pip install --no-cache-dir -r service-requirements.txt
 
-# 设置环境变量
-ENV PYTHONPATH=/app
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
-
-# 安装系统依赖
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    libpq-dev \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# 复制共享库
-COPY ../../shared /app/shared
-COPY ./requirements.txt /app/
-
-# 安装Python依赖
-RUN pip install --no-cache-dir -r requirements.txt
-
-# 复制服务代码
-COPY . /app/
+# 复制服务代码（最后复制以最大化层缓存）
+COPY backend/services/data_collector /app/
 
 # 创建日志目录
 RUN mkdir -p /app/logs
 
-# 暴露端口
-EXPOSE 8000
+# 暴露端口（覆盖基础镜像）
+EXPOSE 8001
 
-# 健康检查
+# 健康检查（覆盖基础镜像）
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:8001/health || exit 1
 
 # 启动命令
 CMD ["python", "main.py"]

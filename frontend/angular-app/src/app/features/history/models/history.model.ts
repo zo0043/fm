@@ -114,7 +114,6 @@ export interface HistoryQuery {
   // 操作日志专用
   module?: string;
   operation?: string;
-  status?: string;
   userId?: string;
 }
 

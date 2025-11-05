@@ -29,28 +29,6 @@ import { FundService } from '../../core/services/fund.service';
 
 @Component({
   selector: 'app-monitor-settings',
-  standalone: true,
-  imports: [
-    CommonModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatOptionModule,
-    MatCheckboxModule,
-    MatSliderModule,
-    MatSlideToggleModule,
-    MatRadioModule,
-    MatSnackBar,
-    MatDividerModule,
-    MatTabsModule,
-    MatExpansionModule,
-    MatChipModule,
-    MatTooltipModule,
-    MatDialogModule
-  ],
   templateUrl: './monitor-settings.component.html',
   styleUrls: ['./monitor-settings.component.scss']
 })

@@ -26,22 +26,6 @@ import { QuickExportOption } from '../../shared/components/simple-export-button/
 
 @Component({
   selector: 'app-dashboard',
-  standalone: true,
-  imports: [
-    CommonModule,
-    MatGridListModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressBarModule,
-    MatTabsModule,
-    MatSelectModule,
-    MatOptionModule,
-    KLineChartComponent,
-    FundCardComponent,
-    TrendIndicatorComponent,
-    SimpleExportButtonComponent
-  ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })

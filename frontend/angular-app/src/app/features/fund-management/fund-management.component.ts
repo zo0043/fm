@@ -31,28 +31,6 @@ import { FundInfo } from '../../models/fund.model';
 
 @Component({
   selector: 'app-fund-management',
-  standalone: true,
-  imports: [
-    CommonModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatSortModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatOptionModule,
-    MatDialogModule,
-    MatTabsModule,
-    MatDividerModule,
-    MatTooltipModule,
-    MatProgressBarModule,
-    FundCardComponent,
-    TrendIndicatorComponent,
-    SimpleExportButtonComponent
-  ],
   templateUrl: './fund-management.component.html',
   styleUrls: ['./fund-management.component.scss']
 })

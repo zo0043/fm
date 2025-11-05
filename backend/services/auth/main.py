@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from contextlib import asynccontextmanager
 import uvicorn
 
-from shared.database import get_async_db, init_db
+from shared.database import get_async_db, create_tables
 from shared.utils import get_logger
 from .routers.auth_router import router as auth_router
 from .routers.user_router import router as user_router
@@ -25,7 +25,7 @@ async def lifespan(app: FastAPI):
     logger.info("认证服务启动中...")
 
     # 初始化数据库
-    await init_db()
+    await create_tables()
     logger.info("数据库初始化完成")
 
     # 创建默认管理员用户

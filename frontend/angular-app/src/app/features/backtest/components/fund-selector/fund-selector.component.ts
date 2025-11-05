@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { FundAllocation } from '../../models/backtest.model';
-import { FundInfo } from '../../../models/fund.model';
+import { FundInfo } from '../../../../../models/fund.model';
 
 @Component({
   selector: 'app-fund-selector',

@@ -308,7 +308,7 @@ export class BacktestService {
       }
     });
 
-    const monthlyReturns = [];
+    const monthlyReturns: Array<{ date: string; return: number; portfolioValue: number }> = [];
     let prevInvested = 0;
     let prevValue = 0;
 
@@ -343,7 +343,7 @@ export class BacktestService {
       }
     });
 
-    const yearlyReturns = [];
+    const yearlyReturns: Array<{ year: number; return: number; portfolioValue: number; investedAmount: number }> = [];
     let prevInvested = 0;
     let prevValue = 0;
 
@@ -365,7 +365,13 @@ export class BacktestService {
   }
 
   private calculateDrawdowns(performance: PerformanceData[]) {
-    const drawdowns = [];
+    const drawdowns: Array<{
+      startDate: Date;
+      endDate: Date;
+      depth: number;
+      recoveryDate: Date;
+      duration: number;
+    }> = [];
     let peak = performance[0]?.portfolioValue || 0;
     let drawdownStart: Date | null = null;
     let maxDrawdown = 0;

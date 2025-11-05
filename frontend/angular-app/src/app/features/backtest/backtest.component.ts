@@ -26,7 +26,7 @@ export class BacktestComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   // 表单和配置
-  backtestForm: FormGroup;
+  backtestForm!: FormGroup;
   availableStrategies: BacktestStrategy[] = PREDEFINED_STRATEGIES;
   availableFunds: FundInfo[] = [];
   selectedFunds: FundAllocation[] = [];

@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { TransactionRecord, HistoryQuery, TransactionStatus } from '../../models/history.model';
+import { TransactionRecord, HistoryQuery } from '../../models/history.model';
 
 @Component({
   selector: 'app-transaction-records',

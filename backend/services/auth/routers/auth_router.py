@@ -13,7 +13,7 @@ import re
 
 from shared.database import get_async_db
 from shared.utils import get_logger
-from .services.auth_service import AuthService, ACCESS_TOKEN_EXPIRE_MINUTES
+from ..services.auth_service import AuthService, ACCESS_TOKEN_EXPIRE_MINUTES
 
 router = APIRouter()
 logger = get_logger(__name__)
@@ -285,28 +285,6 @@ async def refresh_token(
         )
 
 
-@router.post("/logout", summary="用户登出")
-async def logout():
-    """
-    用户登出接口
-
-    实际项目中可能需要将令牌加入黑名单
-    """
-    return {"message": "登出成功"}
-
-
-@router.get("/me", response_model=UserResponse, summary="获取当前用户信息")
-async def get_current_user_info(
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """
-    获取当前登录用户的信息
-
-    需要在请求头中提供有效的访问令牌
-    """
-    return UserResponse(**current_user)
-
-
 # 依赖注入函数
 async def get_current_user(
     credentials: str = Depends(HTTPBearer()),
@@ -347,3 +325,25 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="用户认证失败"
         )
+
+
+@router.post("/logout", summary="用户登出")
+async def logout():
+    """
+    用户登出接口
+
+    实际项目中可能需要将令牌加入黑名单
+    """
+    return {"message": "登出成功"}
+
+
+@router.get("/me", response_model=UserResponse, summary="获取当前用户信息")
+async def get_current_user_info(
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    """
+    获取当前登录用户的信息
+
+    需要在请求头中提供有效的访问令牌
+    """
+    return UserResponse(**current_user)
