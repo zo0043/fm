@@ -21,7 +21,7 @@ beautifulsoup4==4.12.2
 lxml==4.9.3
 
 # 财经数据源
-akshare==1.12.65
+akshare==1.17.83
 yfinance==0.2.28
 
 # 工具库

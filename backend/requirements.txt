@@ -22,7 +22,7 @@ flower==2.0.1
 
 # HTTP 客户端
 httpx==0.25.2
-aiohttp==3.9.1
+aiohttp>=3.11.13
 
 # 数据验证和序列化
 pydantic==2.5.0
@@ -48,7 +48,7 @@ numpy==1.25.2
 
 # 财经数据
 yfinance==0.2.28
-akshare==1.12.65
+akshare==1.17.83
 
 # 测试
 pytest==7.4.3
