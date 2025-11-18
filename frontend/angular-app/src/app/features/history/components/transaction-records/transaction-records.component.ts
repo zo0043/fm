@@ -26,6 +26,9 @@ export class TransactionRecordsComponent {
   // 筛选条件
   filterQuery: HistoryQuery = {};
 
+  // 表格列定义
+  displayedColumns = ['date', 'type', 'fundName', 'amount', 'status', 'actions'];
+
   // 预设选项
   dateRanges = [
     { label: '最近7天', value: 7 },

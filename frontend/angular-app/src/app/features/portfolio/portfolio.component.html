@@ -31,7 +31,7 @@
               <div class="card-info">
                 <div class="card-title">总资产</div>
                 <div class="card-value">{{ overview ? formatCurrency(overview.totalValue) : '--' }}</div>
-                <div class="card-change" [class]="overview?.dailyChangeRate >= 0 ? 'positive' : 'negative'">
+                <div class="card-change" [class]="(overview?.dailyChangeRate ?? 0) >= 0 ? 'positive' : 'negative'">
                   {{ overview ? formatPercent(overview.dailyChangeRate) : '--' }}
                 </div>
               </div>
@@ -47,10 +47,10 @@
               </div>
               <div class="card-info">
                 <div class="card-title">总收益</div>
-                <div class="card-value" [class]="overview?.totalReturn >= 0 ? 'positive' : 'negative'">
+                <div class="card-value" [class]="(overview?.totalReturn ?? 0) >= 0 ? 'positive' : 'negative'">
                   {{ overview ? formatCurrency(overview.totalReturn) : '--' }}
                 </div>
-                <div class="card-change" [class]="overview?.totalReturnRate >= 0 ? 'positive' : 'negative'">
+                <div class="card-change" [class]="(overview?.totalReturnRate ?? 0) >= 0 ? 'positive' : 'negative'">
                   {{ overview ? formatPercent(overview.totalReturnRate) : '--' }}
                 </div>
               </div>
@@ -94,7 +94,7 @@
                   {{ getRiskLevelText() }}
                 </div>
                 <div class="risk-subtitle">
-                  夏普比率: {{ getKeyMetrics()?.sharpeRatio.toFixed(2) || '--' }}
+                  夏普比率: {{ getKeyMetrics()?.sharpeRatio?.toFixed(2) ?? '--' }}
                 </div>
               </div>
             </div>
@@ -122,15 +122,16 @@
         <mat-tab label="业绩分析">
           <div class="tab-content">
             <div class="performance-controls">
-              <mat-chip-list class="period-chips">
+              <div class="period-chips">
                 <mat-chip
                   *ngFor="let period of getPeriodOptions()"
-                  [selected]="selectedPeriod === period.value"
+                  class="period-chip"
+                  [class.active]="selectedPeriod === period.value"
                   (click)="onPeriodChange(period.value)"
                   color="primary">
                   {{ period.label }}
                 </mat-chip>
-              </mat-chip-list>
+              </div>
             </div>
 
             <!-- 业绩统计 -->
@@ -170,21 +171,21 @@
               <div class="comparison-grid">
                 <div class="comparison-item">
                   <span class="comparison-label">基准</span>
-                  <span class="comparison-value">{{ performance.benchmarkComparison.benchmarkName }}</span>
+                  <span class="comparison-value">{{ performance?.benchmarkComparison?.benchmarkName ?? 'N/A' }}</span>
                 </div>
                 <div class="comparison-item">
                   <span class="comparison-label">Alpha系数</span>
-                  <span class="comparison-value" [class]="performance.benchmarkComparison.alpha >= 0 ? 'positive' : 'negative'">
-                    {{ formatPercent(performance.benchmarkComparison.alpha) }}
+                  <span class="comparison-value" [class]="(performance?.benchmarkComparison?.alpha ?? 0) >= 0 ? 'positive' : 'negative'">
+                    {{ formatPercent(performance?.benchmarkComparison?.alpha ?? 0) }}
                   </span>
                 </div>
                 <div class="comparison-item">
                   <span class="comparison-label">Beta系数</span>
-                  <span class="comparison-value">{{ performance.benchmarkComparison.beta.toFixed(3) }}</span>
+                  <span class="comparison-value">{{ performance?.benchmarkComparison?.beta?.toFixed(3) ?? '0.000' }}</span>
                 </div>
                 <div class="comparison-item">
                   <span class="comparison-label">信息比率</span>
-                  <span class="comparison-value">{{ performance.benchmarkComparison.informationRatio.toFixed(3) }}</span>
+                  <span class="comparison-value">{{ performance?.benchmarkComparison?.informationRatio?.toFixed(3) ?? '0.000' }}</span>
                 </div>
               </div>
             </div>

@@ -66,7 +66,7 @@ export class AssetAllocationComponent {
               label: (context) => {
                 const label = context.label || '';
                 const value = context.parsed;
-                return `${label}: ${value.toFixed(2)}%`;
+                return `${label}: ${value?.toFixed(2) ?? '0.00'}%`;
               }
             }
           }
@@ -134,7 +134,7 @@ export class AssetAllocationComponent {
               label: (context) => {
                 const label = context.dataset.label || '';
                 const value = context.parsed.y;
-                return `${label}: ${value.toFixed(2)}%`;
+                return `${label}: ${value?.toFixed(2) ?? '0.00'}%`;
               }
             }
           }
