@@ -1,22 +1,41 @@
-# 数据收集服务 Dockerfile - 优化版本
-FROM fund-monitor-base AS data-collector
+# data_collector服务 Dockerfile - 最终修复版
+FROM fund-monitor-python:local
 
-# 复制服务特定的依赖和代码
-COPY backend/services/data_collector/requirements.txt /app/service-requirements.txt
-RUN pip install --no-cache-dir -r service-requirements.txt
+# 设置工作目录
+WORKDIR /app
 
-# 复制服务代码（最后复制以最大化层缓存）
-COPY backend/services/data_collector /app/
+# 重置PATH环境变量（移除包含空格的路径以避免Docker解析错误）
+ENV PATH=/usr/local/bin:/usr/bin:/bin:/sbin:/usr/local/games:/usr/games
 
-# 创建日志目录
-RUN mkdir -p /app/logs
+# 复制服务代码
+COPY services/data_collector /app/
 
-# 暴露端口（覆盖基础镜像）
-EXPOSE 8001
+# 切换到非root用户
+USER appuser
 
-# 健康检查（覆盖基础镜像）
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8001/health || exit 1
+# 安装C++编译工具（用于pandas等包编译）- 需要在非root下使用sudo或切换回root
+USER root
+RUN apk add --no-cache g++ libc-dev python3-dev
+# 升级setuptools以支持Python 3.12
+RUN pip3 install --break-system-packages --upgrade setuptools wheel
+USER appuser
+
+# 设置环境变量
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# 安装服务特定依赖（在非root用户下）
+RUN pip install --break-system-packages --user --no-cache-dir -r /app/requirements.txt
+
+# 设置环境变量
+ENV PATH=/home/appuser/.local/bin:/usr/local/bin:/usr/bin:/bin
+
+# 暴露端口
+EXPOSE 8000
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3   CMD python -c "import requests; requests.get('http://localhost:${PORT:-8000}/health', timeout=5)" || exit 1
 
 # 启动命令
 CMD ["python", "main.py"]

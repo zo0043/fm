@@ -24,7 +24,7 @@ ENV NODE_ENV=$NODE_ENV
 ENV NG_CLI_ANALYZE=$NG_CLI_ANALYZE
 
 # 构建应用
-RUN npm run build -- --prod --output-path=/app/dist --configuration=production
+RUN npm run build -- --output-path=/app/dist --configuration=production
 
 # 阶段2: 生产阶段 - 使用 nginx 作为 Web 服务器
 FROM nginx:alpine AS production
@@ -121,5 +121,5 @@ COPY . .
 ARG NG_CLI_ANALYZE=false
 ENV NG_CLI_ANALYZE=$NG_CLI_ANALYZE
 
-RUN npm run build -- --prod --stats-json
+RUN npm run build -- --configuration=production --stats-json
 RUN npm run analyze -- --stats-json || true

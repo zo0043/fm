@@ -14,11 +14,11 @@ RUN apk add --no-cache \
     g++
 
 # 复制package文件并安装依赖
-COPY package*.json ./
-RUN npm ci --include=dev
+COPY frontend/package*.json ./
+RUN npm install --include=dev
 
 # 复制源代码
-COPY . .
+COPY frontend/ .
 
 # 构建应用
 RUN npm run build
@@ -34,8 +34,8 @@ RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001 -G nodejs
 
 # 只安装生产依赖
-COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+COPY frontend/package*.json ./
+RUN npm install --production && npm cache clean --force
 
 # 复制构建结果
 COPY --from=builder /app/dist ./dist
