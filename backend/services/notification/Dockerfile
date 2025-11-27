@@ -1,4 +1,4 @@
-# data_collector服务 Dockerfile - 最终修复版
+# notification服务 Dockerfile - 最终修复版
 FROM fund-monitor-python:local
 
 # 设置工作目录
@@ -7,31 +7,16 @@ WORKDIR /app
 # 重置PATH环境变量（移除包含空格的路径以避免Docker解析错误）
 ENV PATH=/usr/local/bin:/usr/bin:/bin:/sbin:/usr/local/games:/usr/games
 
-# 复制服务代码
-COPY services/data_collector /app/
-
-# 切换到非root用户
-USER appuser
-
-# 安装完整的构建依赖（修复aarch64兼容性）
-USER root
-RUN apk add --no-cache \
-    gcc \
-    g++ \
-    musl-dev \
-    python3-dev \
-    linux-headers \
-    pkgconfig \
-    openblas-dev
-
-# 升级构建工具
-RUN pip3 install --break-system-packages --upgrade setuptools wheel pip
-USER appuser
-
 # 设置环境变量
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
+
+# 复制服务代码
+COPY services/notification /app/
+
+# 切换到非root用户
+USER appuser
 
 # 安装服务特定依赖（在非root用户下）
 RUN pip install --break-system-packages --user --no-cache-dir -r /app/requirements.txt

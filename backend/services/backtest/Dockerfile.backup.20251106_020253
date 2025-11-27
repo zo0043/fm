@@ -1,0 +1,56 @@
+# 回测服务 Dockerfile
+FROM python:3.11-slim
+
+# 设置工作目录和环境变量
+WORKDIR /app
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# 安装系统依赖
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    libpq-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# 创建非root用户
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+# 先复制共享库
+COPY shared /app/shared
+
+# 复制依赖文件并安装
+COPY requirements.txt /app/base-requirements.txt
+COPY services/backtest/requirements.txt /app/service-requirements.txt
+
+# 合并并安装依赖（容错处理服务特定依赖）
+RUN if [ -f /app/service-requirements.txt ]; then \
+        cat /app/base-requirements.txt /app/service-requirements.txt > /app/all-requirements.txt; \
+    else \
+        cp /app/base-requirements.txt /app/all-requirements.txt; \
+    fi && \
+    pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r /app/all-requirements.txt && \
+    rm /app/all-requirements.txt
+
+# 复制服务代码
+COPY services/backtest /app/
+
+# 创建日志目录并设置权限
+RUN mkdir -p /app/logs && \
+    chown -R appuser:appuser /app
+
+# 切换到非root用户
+USER appuser
+
+# 暴露端口
+EXPOSE 8004
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8004/health || exit 1
+
+# 启动命令
+CMD ["python", "main.py"]

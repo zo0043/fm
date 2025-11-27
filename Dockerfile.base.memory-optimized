@@ -59,10 +59,10 @@ RUN pip install --no-cache-dir --break-system-packages \
     python-jose[cryptography]==3.3.0 \
     passlib[bcrypt]==1.7.4
 
-# 5. 安装数据处理库（第四批，修复aarch64兼容性）
+# 5. 安装数据处理库（第四批，需要较多内存）
 RUN pip install --no-cache-dir --break-system-packages \
-    pandas==2.2.2 \
-    numpy==1.26.4
+    pandas==2.1.4 \
+    numpy==1.25.2
 
 # 6. 安装财经数据（第五批）
 RUN pip install --no-cache-dir --break-system-packages \

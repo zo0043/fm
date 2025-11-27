@@ -1,0 +1,52 @@
+# 使用本地 nginx:alpine 作为基础构建 Python 环境
+FROM nginx:alpine AS python-base
+
+# 切换到 root 用户
+USER root
+
+# 安装 Python 和依赖
+RUN apk add --no-cache \
+    python3 \
+    python3-dev \
+    py3-pip \
+    gcc \
+    musl-dev \
+    libffi-dev \
+    openssl-dev \
+    curl \
+    && python3 -m pip install --upgrade pip
+
+# 创建工作目录
+WORKDIR /app
+
+# 创建非 root 用户
+RUN addgroup -g 1001 appuser && \
+    adduser -D -u 1001 -G appuser appuser
+
+# 设置 Python 符号链接
+RUN ln -sf python3 /usr/bin/python && \
+    ln -sf pip3 /usr/bin/pip
+
+# 安装通用 Python 依赖
+RUN pip install --no-cache-dir \
+    fastapi \
+    uvicorn \
+    sqlalchemy \
+    asyncpg \
+    redis \
+    celery \
+    requests
+
+# 设置权限
+RUN chown -R appuser:appuser /app
+
+# 切换到非 root 用户
+USER appuser
+
+# 验证安装
+RUN python --version && pip --version
+
+# 暴露端口
+EXPOSE 8000
+
+CMD ["python", "main.py"]
