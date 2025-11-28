@@ -50,7 +50,7 @@
                 <input matInput
                        type="number"
                        [(ngModel)]="fund.weight"
-                       (input)="updateFundWeight(fund.fundId, $event.target.value)"
+                       (input)="updateFundWeight(fund.fundId, $event)"
                        min="0"
                        max="100"
                        step="0.1">
@@ -59,7 +59,7 @@
               <mat-slider
                 class="weight-slider"
                 [(ngModel)]="fund.weight"
-                (input)="updateFundWeight(fund.fundId, $event.value)"
+                (input)="updateFundWeight(fund.fundId, $event)"
                 min="0"
                 max="100"
                 step="0.1"
@@ -134,11 +134,7 @@
               <div class="fund-basic-info">
                 <div class="fund-name-line">
                   <span class="fund-name">{{ fund.name }}</span>
-                  <mat-chip-list class="fund-type">
-                    <mat-chip color="accent" selected>
-                      {{ getFundTypeLabel(fund.type) }}
-                    </mat-chip>
-                  </mat-chip-list>
+                  <span class="fund-type-badge">{{ getFundTypeLabel(fund.type) }}</span>
                 </div>
                 <div class="fund-meta">
                   <span class="fund-code">{{ fund.code }}</span>

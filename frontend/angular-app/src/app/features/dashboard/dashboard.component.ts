@@ -6,9 +6,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTabsModule } from '@angular/material/tabs';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 // 导入自定义组件
 import { KLineChartComponent } from '../../shared/components/fund-chart/k-line-chart/k-line-chart.component';
@@ -27,7 +28,25 @@ import { QuickExportOption } from '../../shared/components/simple-export-button/
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.scss']
+  styleUrls: ['./dashboard.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatGridListModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressBarModule,
+    MatProgressSpinnerModule,
+    MatTabsModule,
+    MatSnackBarModule,
+    MatSelectModule,
+    MatOptionModule,
+    KLineChartComponent,
+    FundCardComponent,
+    TrendIndicatorComponent,
+    SimpleExportButtonComponent
+  ]
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   // 数据属性

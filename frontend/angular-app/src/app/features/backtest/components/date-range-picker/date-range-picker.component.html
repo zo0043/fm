@@ -10,15 +10,15 @@
     <!-- 预设时间范围 -->
     <div class="preset-section">
       <h3>快速选择</h3>
-      <mat-chip-list class="preset-chips">
-        <mat-chip
+      <div class="preset-chips">
+        <button
           *ngFor="let preset of presetRanges"
-          [selected]="selectedPreset === preset.value"
-          (click)="onPresetSelect(preset.value)"
-          color="primary">
+          class="preset-chip"
+          [class.selected]="selectedPreset === preset.value"
+          (click)="onPresetSelect(preset.value)">
           {{ preset.label }}
-        </mat-chip>
-      </mat-chip-list>
+        </button>
+      </div>
     </div>
 
     <!-- 自定义日期选择 -->
@@ -60,11 +60,11 @@
         <span class="date-text">
           {{ startDate | date:'yyyy-MM-dd' }} 至 {{ endDate | date:'yyyy-MM-dd' }}
         </span>
-        <mat-chip
-          [color]="isValidRange() ? 'primary' : 'warn'"
-          [selected]="true">
+        <span class="range-status"
+          [class.valid]="isValidRange()"
+          [class.invalid]="!isValidRange()">
           {{ isValidRange() ? '有效范围' : '无效范围' }}
-        </mat-chip>
+        </span>
       </div>
     </div>
 

@@ -25,6 +25,9 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatGridListModule } from '@angular/material/grid-list';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatOptionModule } from '@angular/material/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgFor, NgIf, NgClass } from '@angular/common';
 
@@ -155,6 +158,10 @@ const routes: Routes = [
     MatDatepickerModule,
     MatNativeDateModule,
     MatExpansionModule,
+    // 仪表盘模块
+    MatGridListModule,
+    MatProgressBarModule,
+    MatOptionModule,
     FormsModule,
     ReactiveFormsModule
   ],

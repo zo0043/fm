@@ -9,16 +9,23 @@ const routes: Routes = [
   },
   {
     path: 'dashboard',
-    loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent),
+    loadComponent: () => import('./app/features/dashboard/dashboard.component').then(m => m.DashboardComponent),
     title: '基金监控面板'
   },
   {
     path: 'funds',
-    loadChildren: () => import('./features/fund-management/fund-management.module').then(m => m.FundManagementModule)
+    loadComponent: () => import('./app/features/fund-management/fund-management.component').then(m => m.FundManagementComponent),
+    title: '基金管理'
+  },
+  {
+    path: 'backtest',
+    loadComponent: () => import('./app/features/backtest/backtest.component').then(m => m.BacktestComponent),
+    title: '回测分析'
   },
   {
     path: 'monitor',
-    loadChildren: () => import('./features/monitor-settings/monitor-settings.module').then(m => m.MonitorSettingsModule)
+    loadComponent: () => import('./app/features/monitor-settings/monitor-settings.component').then(m => m.MonitorSettingsComponent),
+    title: '监控设置'
   },
   {
     path: '**',

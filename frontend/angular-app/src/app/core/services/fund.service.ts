@@ -135,6 +135,62 @@ export class FundService {
   }
 
   /**
+   * 使用东方财富接口获取基金净值数据
+   */
+  getFundNavFromEastmoney(fundCode: string, page: number = 1, pageSize: number = 20): Observable<FundHistoryData[]> {
+    const url = `https://fundf10.eastmoney.com/F10DataApi.aspx?type=lsjz&code=${fundCode}&page=${page}&per=${pageSize}`;
+    
+    return this.http.get(url, { responseType: 'text' }).pipe(
+      map(response => {
+        // 解析返回的JavaScript变量
+        const dataMatch = response.match(/var apidata=({.*?});/s);
+        if (!dataMatch) {
+          throw new Error('无法解析返回的数据格式');
+        }
+        
+        try {
+          const data = JSON.parse(dataMatch[1]);
+          if (!data.content) {
+            throw new Error('返回数据中没有内容');
+          }
+          
+          const content = data.content;
+          
+          // 解析表格内容，使用正则表达式匹配每一行数据
+          // 改进正则表达式，支持更多格式
+          const rowRegex = /<tr>\s*<td>(\d{4}-\d{2}-\d{2})<\/td>\s*<td>(\d+(?:\.\d{4})?)<\/td>\s*<td>(\d+(?:\.\d{4})?)<\/td>\s*<td>([+-]?\d+(?:\.\d{2})?)%<\/td>/g;
+          const historyData: FundHistoryData[] = [];
+          let match;
+          
+          while ((match = rowRegex.exec(content)) !== null) {
+            const [, date, navStr, totalNavStr, dailyChangeStr] = match;
+            
+            historyData.push({
+              date,
+              nav: parseFloat(navStr),
+              totalNav: parseFloat(totalNavStr),
+              dailyChange: parseFloat(dailyChangeStr) / 100
+            });
+          }
+          
+          if (historyData.length === 0) {
+            console.warn('未匹配到任何基金净值数据，可能是正则表达式不匹配或数据格式变化');
+          }
+          
+          return historyData;
+        } catch (parseError) {
+          throw new Error(`解析数据失败: ${parseError instanceof Error ? parseError.message : '未知错误'}`);
+        }
+      }),
+      catchError(error => {
+        console.error(`获取基金${fundCode}净值数据失败:`, error);
+        // 返回模拟数据作为备选
+        return this.getMockFundHistory(fundCode);
+      })
+    );
+  }
+
+  /**
    * 获取基金信息（适配新模型）
    */
   getFundInfo(id: string): Observable<FundInfo | null> {

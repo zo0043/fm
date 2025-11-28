@@ -2,6 +2,23 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatOptionModule } from '@angular/material/core';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatChipsModule } from '@angular/material/chips';
 
 import { BacktestService } from './services/backtest.service';
 import { FundService } from '../../core/services/fund.service';
@@ -17,8 +34,40 @@ import {
 } from './models/backtest.model';
 import { FundInfo } from '../../models/fund.model';
 
+// 导入子组件
+import { StrategySelectorComponent } from './components/strategy-selector/strategy-selector.component';
+import { DateRangePickerComponent } from './components/date-range-picker/date-range-picker.component';
+import { FundSelectorComponent } from './components/fund-selector/fund-selector.component';
+import { BacktestResultsComponent } from './components/backtest-results/backtest-results.component';
+
 @Component({
   selector: 'app-backtest',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MatCardModule,
+    MatIconModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatOptionModule,
+    MatCheckboxModule,
+    MatTabsModule,
+    MatProgressSpinnerModule,
+    MatSnackBarModule,
+    MatTooltipModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatChipsModule,
+    // 子组件
+    StrategySelectorComponent,
+    DateRangePickerComponent,
+    FundSelectorComponent,
+    BacktestResultsComponent
+  ],
   templateUrl: './backtest.component.html',
   styleUrls: ['./backtest.component.scss']
 })

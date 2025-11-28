@@ -1,7 +1,38 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatSelectModule } from '@angular/material/select';
+import { MatOptionModule } from '@angular/material/core';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatDatepickerInputEvent } from '@angular/material/datepicker';
 
 @Component({
   selector: 'app-date-range-picker',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MatCardModule,
+    MatIconModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatSelectModule,
+    MatOptionModule,
+    MatTooltipModule,
+    MatChipsModule
+  ],
   templateUrl: './date-range-picker.component.html',
   styleUrls: ['./date-range-picker.component.scss']
 })
@@ -33,14 +64,14 @@ export class DateRangePickerComponent {
     this.minDate = minDate;
   }
 
-  onStartDateChange(date: Date) {
-    this.startDate = date;
+  onStartDateChange(event: MatDatepickerInputEvent<Date>) {
+    this.startDate = event.value;
     this.emitDateRange();
     this.clearPresetSelection();
   }
 
-  onEndDateChange(date: Date) {
-    this.endDate = date;
+  onEndDateChange(event: MatDatepickerInputEvent<Date>) {
+    this.endDate = event.value;
     this.emitDateRange();
     this.clearPresetSelection();
   }

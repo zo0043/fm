@@ -96,15 +96,15 @@
             <!-- 预设金额快速选择 -->
             <div class="preset-amounts">
               <span class="preset-label">快速选择:</span>
-              <mat-chip-list class="preset-chips">
-                <mat-chip
+              <div class="preset-chips">
+                <button
                   *ngFor="let amount of investmentAmounts"
-                  [selected]="backtestForm.get('investment.amount')?.value === amount.value"
-                  (click)="backtestForm.get('investment.amount')?.setValue(amount.value)"
-                  color="primary">
+                  class="preset-chip"
+                  [class.selected]="backtestForm.get('investment.amount')?.value === amount.value"
+                  (click)="backtestForm.get('investment.amount')?.setValue(amount.value)">
                   {{ amount.label }}
-                </mat-chip>
-              </mat-chip-list>
+                </button>
+              </div>
             </div>
           </mat-card-content>
         </mat-card>

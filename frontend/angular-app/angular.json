@@ -127,7 +127,8 @@
       "@angular/material": {
         "version": "17.0.0"
       }
-    }
+    },
+    "analytics": false
   },
   "schematics": {
     "@angular/material:application": {

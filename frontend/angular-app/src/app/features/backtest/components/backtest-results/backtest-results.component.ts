@@ -1,8 +1,30 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTableModule } from '@angular/material/table';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
+
 import { BacktestResult, BacktestSummary } from '../../models/backtest.model';
 
 @Component({
   selector: 'app-backtest-results',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatCardModule,
+    MatIconModule,
+    MatButtonModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatProgressSpinnerModule,
+    MatProgressBarModule,
+    MatTooltipModule
+  ],
   templateUrl: './backtest-results.component.html',
   styleUrls: ['./backtest-results.component.scss']
 })
@@ -81,7 +103,7 @@ export class BacktestResultsComponent {
     return { duration, recovery };
   }
 
-  private formatDuration(days: number): string {
+  formatDuration(days: number): string {
     if (days < 30) return `${days}天`;
     if (days < 365) return `${Math.floor(days / 30)}个月`;
     return `${(days / 365).toFixed(1)}年`;

@@ -68,8 +68,59 @@
                       <mat-select multiple [(ngModel)]="rule.notificationType">
                         <mat-option value="wechat">微信通知</mat-option>
                         <mat-option value="email">邮件通知</mat-option>
+                        <mat-option value="bark">Bark通知</mat-option>
                       </mat-select>
                     </mat-form-field>
+                  </div>
+                </div>
+
+                <!-- 消息模板设置 -->
+                <div class="message-templates">
+                  <h4>消息模板</h4>
+                  <div class="template-row">
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>上涨消息</mat-label>
+                      <textarea matInput [(ngModel)]="rule.messageTemplates.up" rows="2"></textarea>
+                    </mat-form-field>
+                  </div>
+                  <div class="template-row">
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>下跌消息</mat-label>
+                      <textarea matInput [(ngModel)]="rule.messageTemplates.down" rows="2"></textarea>
+                    </mat-form-field>
+                  </div>
+                  <div class="template-help">
+                    <mat-icon>info</mat-icon>
+                    <span>支持变量：{{ '{{' }}fundName{{ '}}' }} - 基金名称，{{ '{{' }}changePercent{{ '}}' }} - 涨跌幅，{{ '{{' }}currentNav{{ '}}' }} - 当前净值，{{ '{{' }}threshold{{ '}}' }} - 阈值</span>
+                  </div>
+                </div>
+
+                <!-- 推送策略设置 -->
+                <div class="push-strategy">
+                  <h4>推送策略</h4>
+                  <div class="strategy-row">
+                    <mat-form-field appearance="outline">
+                      <mat-label>推送条件</mat-label>
+                      <mat-select [(ngModel)]="rule.pushStrategy.condition">
+                        <mat-option value="once">仅推送一次</mat-option>
+                        <mat-option value="every">每次满足条件都推送</mat-option>
+                        <mat-option value="continuous">连续满足条件推送</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" *ngIf="rule.pushStrategy.condition === 'continuous'">
+                      <mat-label>连续天数</mat-label>
+                      <input matInput type="number" [(ngModel)]="rule.pushStrategy.continuousDays" min="1" max="7">
+                    </mat-form-field>
+                  </div>
+
+                  <div class="strategy-row">
+                    <mat-form-field appearance="outline">
+                      <mat-label>推送间隔</mat-label>
+                      <input matInput type="number" [(ngModel)]="rule.pushStrategy.pushInterval" min="0" max="1440">
+                      <span matSuffix>分钟</span>
+                    </mat-form-field>
+                    <span class="strategy-help">设置为0表示无间隔限制</span>
                   </div>
                 </div>
               </mat-card-content>
@@ -165,6 +216,64 @@
                 </div>
               </mat-card-content>
             </mat-card>
+
+            <!-- Bark通知配置 -->
+            <mat-card class="notification-card">
+              <mat-card-header>
+                <mat-card-title>
+                  <mat-checkbox [(ngModel)]="notificationSettings.bark.enabled"></mat-checkbox>
+                  Bark通知
+                </mat-card-title>
+                <mat-icon color="accent">notifications</mat-icon>
+              </mat-card-header>
+              <mat-card-content *ngIf="notificationSettings.bark.enabled">
+                <div class="notification-config">
+                  <div class="config-row">
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>服务器地址</mat-label>
+                      <input matInput [(ngModel)]="notificationSettings.bark.serverUrl">
+                    </mat-form-field>
+                  </div>
+
+                  <div class="config-row">
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>设备密钥</mat-label>
+                      <input matInput [(ngModel)]="notificationSettings.bark.deviceKey">
+                      <mat-hint>在Bark App中获取设备密钥</mat-hint>
+                    </mat-form-field>
+                  </div>
+
+                  <div class="config-row">
+                    <mat-form-field appearance="outline">
+                      <mat-label>通知分组</mat-label>
+                      <input matInput [(ngModel)]="notificationSettings.bark.group">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>通知音效</mat-label>
+                      <input matInput [(ngModel)]="notificationSettings.bark.sound">
+                      <mat-hint>留空使用默认音效</mat-hint>
+                    </mat-form-field>
+                  </div>
+
+                  <div class="config-row">
+                    <div class="config-item">
+                      <mat-slide-toggle [(ngModel)]="notificationSettings.bark.isArchive">
+                        保存到历史记录
+                      </mat-slide-toggle>
+                      <span class="config-description">将通知保存到Bark历史记录中</span>
+                    </div>
+                  </div>
+
+                  <div class="action-buttons">
+                    <button mat-stroked-button (click)="testNotification('bark')">
+                      <mat-icon>send</mat-icon>
+                      测试Bark通知
+                    </button>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
           </div>
         </div>
       </mat-tab>
@@ -234,35 +343,33 @@
                     全局设置
                   </mat-panel-title>
                 </mat-expansion-panel-header>
-                <mat-expansion-panel-content>
-                  <div class="global-config">
-                    <div class="config-item">
-                      <mat-slide-toggle [(ngModel)]="globalSettings.enableSound">
-                        启用声音提醒
-                      </mat-slide-toggle>
-                    </div>
-
-                    <div class="config-item">
-                      <mat-slide-toggle [(ngModel)]="globalSettings.enableNotification">
-                        启用系统通知
-                      </mat-slide-toggle>
-                    </div>
-
-                    <div class="config-item">
-                      <mat-slide-toggle [(ngModel)]="globalSettings.enableAutoRefresh">
-                        自动刷新数据
-                      </mat-slide-toggle>
-                    </div>
-
-                    <div class="config-item">
-                      <mat-form-field appearance="outline">
-                        <mat-label>数据保留天数</mat-label>
-                        <input matInput type="number" [(ngModel)]="globalSettings.dataRetention">
-                        <span class="suffix">天</span>
-                      </mat-form-field>
-                    </div>
+                <div class="global-config">
+                  <div class="config-item">
+                    <mat-slide-toggle [(ngModel)]="globalSettings.enableSound">
+                      启用声音提醒
+                    </mat-slide-toggle>
                   </div>
-                </mat-expansion-panel-content>
+
+                  <div class="config-item">
+                    <mat-slide-toggle [(ngModel)]="globalSettings.enableNotification">
+                      启用系统通知
+                    </mat-slide-toggle>
+                  </div>
+
+                  <div class="config-item">
+                    <mat-slide-toggle [(ngModel)]="globalSettings.enableAutoRefresh">
+                      自动刷新数据
+                    </mat-slide-toggle>
+                  </div>
+
+                  <div class="config-item">
+                    <mat-form-field appearance="outline">
+                      <mat-label>数据保留天数</mat-label>
+                      <input matInput type="number" [(ngModel)]="globalSettings.dataRetention">
+                      <span class="suffix">天</span>
+                    </mat-form-field>
+                  </div>
+                </div>
               </mat-expansion-panel>
             </mat-accordion>
           </div>

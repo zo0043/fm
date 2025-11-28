@@ -248,68 +248,103 @@ class TTFundNavDataSource(BaseCollector):
     async def _get_batch_nav_data(self, nav_date: date, fund_codes: List[str]) -> List[Dict[str, Any]]:
         """获取批量净值数据"""
         try:
-            # 构建请求URL
-            codes_str = ','.join(fund_codes)
-            date_str = nav_date.strftime('%Y-%m-%d')
-            url = f"https://fund.eastmoney.com/js/fundgrouplist.js"
-
-            params = {
-                'rt': int(datetime.now().timestamp()),
-                'date': date_str,
-                'code': codes_str
-            }
-
-            response = await self.fetch_data(url, params=params)
-            if not response:
-                return []
-
-            # 解析响应数据
-            import re
-            content = response.get('text', '')
-
-            # 提取数据数组
-            match = re.search(r'var Data = (\[.*?\]);', content)
-            if not match:
-                return []
-
-            import json
-            try:
-                nav_data_list = json.loads(match.group(1))
-            except json.JSONDecodeError:
-                return []
-
-            # 转换为标准格式
-            processed_navs = []
-            for item in nav_data_list:
-                try:
-                    if len(item) < 10:
-                        continue
-
-                    fund_code = item[0].strip()
-                    if fund_code not in fund_codes:
-                        continue
-
-                    nav_info = {
-                        'fund_code': fund_code,
-                        'nav_date': nav_date,
-                        'unit_nav': self._parse_decimal(item[1]),
-                        'accumulated_nav': self._parse_decimal(item[2]),
-                        'daily_change_rate': self._parse_decimal(item[3]),
-                        'daily_change_amount': self._parse_decimal(item[4]),
-                    }
-
-                    # 验证净值数据
-                    if nav_info['unit_nav'] and nav_info['accumulated_nav']:
-                        processed_navs.append(nav_info)
-
-                except Exception as e:
-                    self.logger.warning(f"处理净值数据失败: {item}, 错误: {e}")
-                    continue
-
-            return processed_navs
+            # 使用用户指定的天天基金接口获取净值数据
+            navs_data = []
+            
+            # 逐个基金获取，因为该接口不支持批量查询
+            for fund_code in fund_codes:
+                fund_navs = await self._get_nav_data_from_eastmoney(fund_code, nav_date)
+                navs_data.extend(fund_navs)
+                
+                # 请求间隔
+                await self.sleep_between_requests(0.2)
+            
+            return navs_data
 
         except Exception as e:
             self.logger.error(f"获取批量净值数据失败: {e}")
+            return []
+            
+    async def _get_nav_data_from_eastmoney(self, fund_code: str, nav_date: date) -> List[Dict[str, Any]]:
+        """使用天天基金F10接口获取基金净值数据"""
+        try:
+            # 构建请求URL
+            url = f"https://fundf10.eastmoney.com/F10DataApi.aspx?type=lsjz&code={fund_code}&page=1&per=20"
+            
+            response = await self.fetch_data(url)
+            if not response:
+                return []
+            
+            # 解析返回的JavaScript变量
+            import re
+            content = response.get('text', '')
+            
+            # 提取数据
+            data_match = re.search(r'var apidata=(\{.*?\});', content)
+            if not data_match:
+                return []
+            
+            import json
+            data = json.loads(data_match[1])
+            
+            # 提取净值数据
+            navs_data = []
+            if 'content' in data:
+                content = data['content']
+                
+                # 解析表格内容
+                rows = content.split('2025-').filter(row => row.strip())
+                
+                for row in rows:
+                    # 提取日期
+                    date_str = '2025-' + row.substring(0, 10)
+                    nav_date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+                    
+                    # 只保留指定日期的数据
+                    if nav_date_obj != nav_date:
+                        continue
+                    
+                    # 提取单位净值
+                    nav_match = re.search(r'\d{4}-\d{2}-\d{2}(\d+\.\d{4})', row)
+                    if not nav_match:
+                        continue
+                    unit_nav = self._parse_decimal(nav_match[1])
+                    
+                    # 提取累计净值
+                    total_nav_match = re.search(r'\d+\.\d{4}(\d+\.\d{4})', row)
+                    if not total_nav_match:
+                        continue
+                    accumulated_nav = self._parse_decimal(total_nav_match[1])
+                    
+                    # 提取日增长率
+                    change_match = re.search(r'(\d+\.\d{2})%', row)
+                    daily_change_rate = self._parse_decimal(change_match[1]) / 100 if change_match else None
+                    
+                    # 计算日涨跌额
+                    daily_change_amount = None
+                    if unit_nav and accumulated_nav:
+                        # 这里需要前一天的净值数据来计算日涨跌额
+                        # 暂时设为None
+                        daily_change_amount = None
+                    
+                    # 构建净值数据
+                    nav_info = {
+                        'fund_code': fund_code,
+                        'nav_date': nav_date,
+                        'unit_nav': unit_nav,
+                        'accumulated_nav': accumulated_nav,
+                        'daily_change_rate': daily_change_rate,
+                        'daily_change_amount': daily_change_amount,
+                    }
+                    
+                    # 验证净值数据
+                    if nav_info['unit_nav'] and nav_info['accumulated_nav']:
+                        navs_data.append(nav_info)
+            
+            return navs_data
+            
+        except Exception as e:
+            self.logger.error(f"使用天天基金F10接口获取净值数据失败 {fund_code}: {e}")
             return []
 
     def _parse_decimal(self, value) -> Optional[Decimal]:

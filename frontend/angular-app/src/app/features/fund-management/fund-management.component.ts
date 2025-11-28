@@ -16,6 +16,8 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 // 导入服务和组件
 import { FundService } from '../../core/services/fund.service';
@@ -31,6 +33,29 @@ import { FundInfo } from '../../models/fund.model';
 
 @Component({
   selector: 'app-fund-management',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatSortModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatOptionModule,
+    MatDialogModule,
+    MatTabsModule,
+    MatDividerModule,
+    MatTooltipModule,
+    MatProgressBarModule,
+    MatProgressSpinnerModule,
+    FundCardComponent,
+    TrendIndicatorComponent,
+    SimpleExportButtonComponent
+  ],
   templateUrl: './fund-management.component.html',
   styleUrls: ['./fund-management.component.scss']
 })
@@ -59,6 +84,13 @@ export class FundManagementComponent implements OnInit {
   upCount = 0;
   downCount = 0;
   flatCount = 0;
+
+  // 导出选项
+  exportOptions = [
+    { label: '导出关注列表', format: 'excel' as const, icon: 'download', value: 'watchlist' },
+    { label: '导出全部基金', format: 'excel' as const, icon: 'download', value: 'all' },
+    { label: '导出筛选结果', format: 'excel' as const, icon: 'download', value: 'filtered' }
+  ];
 
   constructor(
     private fundService: FundService,
@@ -99,21 +131,25 @@ export class FundManagementComponent implements OnInit {
   }
 
   // 处理基金添加到关注列表
-  onAddToWatchlist(fund: FundInfo): void {
-    if (!this.watchlistFunds.find(f => f.id === fund.id)) {
+  onAddToWatchlist(fundId: string): void {
+    const fund = this.availableFunds.find(f => f.id === fundId);
+    if (fund && !this.watchlistFunds.find(f => f.id === fundId)) {
       this.watchlistFunds.push(fund);
-      this.availableFunds = this.availableFunds.filter(f => f.id !== fund.id);
+      this.availableFunds = this.availableFunds.filter(f => f.id !== fundId);
       this.updateStatistics();
       this.snackBar.open(`已将 ${fund.name} 添加到关注列表`, '关闭', { duration: 3000 });
     }
   }
 
   // 处理从关注列表移除
-  onRemoveFromWatchlist(fund: FundInfo): void {
-    this.watchlistFunds = this.watchlistFunds.filter(f => f.id !== fund.id);
-    this.availableFunds.push(fund);
-    this.updateStatistics();
-    this.snackBar.open(`已将 ${fund.name} 从关注列表移除`, '关闭', { duration: 3000 });
+  onRemoveFromWatchlist(fundId: string): void {
+    const fund = this.watchlistFunds.find(f => f.id === fundId);
+    if (fund) {
+      this.watchlistFunds = this.watchlistFunds.filter(f => f.id !== fundId);
+      this.availableFunds.push(fund);
+      this.updateStatistics();
+      this.snackBar.open(`已将 ${fund.name} 从关注列表移除`, '关闭', { duration: 3000 });
+    }
   }
 
   // 处理搜索
@@ -158,8 +194,11 @@ export class FundManagementComponent implements OnInit {
   }
 
   // 处理查看基金详情
-  onViewDetails(fund: FundInfo): void {
-    this.snackBar.open(`查看 ${fund.name} 详情`, '关闭', { duration: 2000 });
+  onViewDetails(fundId: string): void {
+    const fund = this.allFunds.find(f => f.id === fundId);
+    if (fund) {
+      this.snackBar.open(`查看 ${fund.name} 详情`, '关闭', { duration: 2000 });
+    }
   }
 
   // 处理批量操作

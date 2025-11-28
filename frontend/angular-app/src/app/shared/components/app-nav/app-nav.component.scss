@@ -127,6 +127,11 @@
   margin-top: 8px;
 }
 
+// 全局移除按钮自动生成的触摸目标span
+.mat-mdc-button-touch-target {
+  display: none !important;
+}
+
 .main-content {
   background: #f5f5f5;
   min-height: 100vh;

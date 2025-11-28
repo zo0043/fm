@@ -83,11 +83,10 @@ export class BacktestService {
    * 获取基金历史数据用于回测
    */
   getFundHistoryData(fundId: string, startDate: Date, endDate: Date): Observable<FundHistoryData[]> {
-    return this.fundService.getFundHistory(
-      fundId,
-      startDate.toISOString().split('T')[0],
-      endDate.toISOString().split('T')[0]
-    );
+    // 从fundId中提取基金代码（假设fundId格式为fund_XXXX，其中XXXX是基金代码）
+    const fundCode = fundId.replace('fund_', '');
+    // 使用东方财富API获取基金净值数据
+    return this.fundService.getFundNavFromEastmoney(fundCode);
   }
 
   /**

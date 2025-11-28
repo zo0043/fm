@@ -1,13 +1,48 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatOptionModule } from '@angular/material/core';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatRadioModule } from '@angular/material/radio';
+
 import { FundAllocation } from '../../models/backtest.model';
-import { FundInfo } from '../../../../../models/fund.model';
+import { FundInfo } from '../../../../models/fund.model';
 
 @Component({
   selector: 'app-fund-selector',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MatCardModule,
+    MatIconModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatOptionModule,
+    MatCheckboxModule,
+    MatChipsModule,
+    MatTooltipModule,
+    MatDialogModule,
+    MatRadioModule
+  ],
   templateUrl: './fund-selector.component.html',
   styleUrls: ['./fund-selector.component.scss']
 })
 export class FundSelectorComponent {
+  // 暴露Math对象给模板使用
+  Math = Math;
   @Input() availableFunds: FundInfo[] = [];
   @Input() selectedFunds: FundAllocation[] = [];
   @Output() fundsChange = new EventEmitter<FundAllocation[]>();
@@ -108,13 +143,15 @@ export class FundSelectorComponent {
     this.fundsChange.emit(updatedFunds);
   }
 
-  updateFundWeight(fundId: string, newWeight: number) {
-    if (newWeight < 0 || newWeight > 100) {
+  updateFundWeight(fundId: string, newWeight: any) {
+    // 处理不同类型的事件对象
+    const weight = typeof newWeight === 'number' ? newWeight : parseFloat(newWeight);
+    if (isNaN(weight) || weight < 0 || weight > 100) {
       return;
     }
 
     const updatedFunds = this.selectedFunds.map(f =>
-      f.fundId === fundId ? { ...f, weight: newWeight } : f
+      f.fundId === fundId ? { ...f, weight } : f
     );
 
     this.selectedFunds = updatedFunds;
