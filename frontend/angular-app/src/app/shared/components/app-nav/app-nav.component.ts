@@ -58,11 +58,6 @@ export class AppNavComponent {
       path: '/monitor',
       icon: 'notifications_active',
       label: '监控设置'
-    },
-    {
-      path: '/notifications',
-      icon: 'notifications',
-      label: '通知管理'
     }
   ];
 
