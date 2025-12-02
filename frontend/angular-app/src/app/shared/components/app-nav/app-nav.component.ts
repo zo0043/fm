@@ -1,7 +1,6 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { RouterModule } from '@angular/router';
-import { Observable, Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,8 +9,6 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatListModule } from '@angular/material/list';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
-
-import { AuthService, User } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-app-nav',
@@ -30,12 +27,7 @@ import { AuthService, User } from '../../../core/services/auth.service';
   templateUrl: './app-nav.component.html',
   styleUrls: ['./app-nav.component.scss']
 })
-export class AppNavComponent implements OnInit, OnDestroy {
-  currentUser: User | null = null;
-  isAuthenticated = false;
-
-  private authSubscription: Subscription | undefined;
-
+export class AppNavComponent {
   navigationItems = [
     {
       path: '/dashboard',
@@ -75,22 +67,8 @@ export class AppNavComponent implements OnInit, OnDestroy {
   ];
 
   constructor(
-    private router: Router,
-    private authService: AuthService
+    private router: Router
   ) {}
-
-  ngOnInit(): void {
-    this.authSubscription = this.authService.currentUser$.subscribe(user => {
-      this.currentUser = user;
-      this.isAuthenticated = user !== null;
-    });
-  }
-
-  ngOnDestroy(): void {
-    if (this.authSubscription) {
-      this.authSubscription.unsubscribe();
-    }
-  }
 
   isActiveRoute(path: string): boolean {
     return this.router.url === path || this.router.url.startsWith(path + '/');
@@ -98,30 +76,5 @@ export class AppNavComponent implements OnInit, OnDestroy {
 
   navigateTo(path: string): void {
     this.router.navigate([path]);
-  }
-
-  logout(): void {
-    this.authService.logout().subscribe({
-      next: () => {
-        this.router.navigate(['/login']);
-      },
-      error: (error) => {
-        console.error('Logout failed:', error);
-        // 即使登出失败，也清除本地状态
-        this.router.navigate(['/login']);
-      }
-    });
-  }
-
-  getUserInitials(): string {
-    if (!this.currentUser) return '';
-    const username = this.currentUser.username;
-    return username.substring(0, 2).toUpperCase();
-  }
-
-  formatUserName(): string {
-    if (!this.currentUser) return '';
-    return this.currentUser.username.charAt(0).toUpperCase() +
-           this.currentUser.username.slice(1).toLowerCase();
   }
 }

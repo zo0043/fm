@@ -3,7 +3,6 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, BehaviorSubject, of, throwError } from 'rxjs';
 import { map, tap, catchError, retry } from 'rxjs/operators';
 import { ApiConfigService } from './api-config.service';
-import { AuthService } from './auth.service';
 
 // 监控规则接口
 export interface MonitorRule {
@@ -98,8 +97,7 @@ export class MonitorService {
 
   constructor(
     private http: HttpClient,
-    private apiConfig: ApiConfigService,
-    private authService: AuthService
+    private apiConfig: ApiConfigService
   ) {}
 
   /**
@@ -122,9 +120,7 @@ export class MonitorService {
       params = params.set('is_active', filter.is_active.toString());
     }
 
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.get<any>(this.apiConfig.rulesUrl, { params, headers }).pipe(
+    return this.http.get<any>(this.apiConfig.rulesUrl, { params }).pipe(
       retry(2),
       map(response => ({
         data: response.data || [],
@@ -149,9 +145,7 @@ export class MonitorService {
    * 获取监控规则详情
    */
   getRuleDetail(ruleId: number): Observable<MonitorRule> {
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.get<any>(`${this.apiConfig.rulesUrl}/${ruleId}`, { headers }).pipe(
+    return this.http.get<any>(`${this.apiConfig.rulesUrl}/${ruleId}`).pipe(
       map(response => this.transformRuleData(response)),
       catchError(error => this.handleError(error, '获取监控规则详情失败'))
     );
@@ -161,9 +155,7 @@ export class MonitorService {
    * 创建监控规则
    */
   createRule(ruleData: MonitorRuleRequest): Observable<MonitorRule> {
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.post<any>(this.apiConfig.rulesUrl, ruleData, { headers }).pipe(
+    return this.http.post<any>(this.apiConfig.rulesUrl, ruleData).pipe(
       map(response => this.transformRuleData(response)),
       tap(rule => {
         // 更新本地规则列表
@@ -178,9 +170,7 @@ export class MonitorService {
    * 更新监控规则
    */
   updateRule(ruleId: number, ruleData: MonitorRuleRequest): Observable<MonitorRule> {
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.put<any>(`${this.apiConfig.rulesUrl}/${ruleId}`, ruleData, { headers }).pipe(
+    return this.http.put<any>(`${this.apiConfig.rulesUrl}/${ruleId}`, ruleData).pipe(
       map(response => this.transformRuleData(response)),
       tap(updatedRule => {
         // 更新本地规则列表
@@ -198,9 +188,7 @@ export class MonitorService {
    * 删除监控规则
    */
   deleteRule(ruleId: number): Observable<any> {
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.delete(`${this.apiConfig.rulesUrl}/${ruleId}`, { headers }).pipe(
+    return this.http.delete(`${this.apiConfig.rulesUrl}/${ruleId}`).pipe(
       tap(() => {
         // 从本地规则列表中移除
         const currentRules = this.rulesSubject.value;
@@ -215,9 +203,7 @@ export class MonitorService {
    * 切换监控规则状态
    */
   toggleRuleStatus(ruleId: number): Observable<any> {
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.post(`${this.apiConfig.rulesUrl}/${ruleId}/toggle`, {}, { headers }).pipe(
+    return this.http.post(`${this.apiConfig.rulesUrl}/${ruleId}/toggle`, {}).pipe(
       tap(response => {
         // 更新本地规则状态
         const currentRules = this.rulesSubject.value;
@@ -248,9 +234,7 @@ export class MonitorService {
       params = params.set('end_date', filter.end_date);
     }
 
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.get<any>(`${this.apiConfig.monitorUrl}/results`, { params, headers }).pipe(
+    return this.http.get<any>(`${this.apiConfig.monitorUrl}/results`, { params }).pipe(
       retry(2),
       map(response => ({
         data: (response.data || []).map((item: any) => this.transformResultData(item)),
@@ -274,9 +258,7 @@ export class MonitorService {
    * 获取监控结果详情
    */
   getResultDetail(resultId: number): Observable<MonitorResult> {
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.get<any>(`${this.apiConfig.monitorUrl}/results/${resultId}`, { headers }).pipe(
+    return this.http.get<any>(`${this.apiConfig.monitorUrl}/results/${resultId}`).pipe(
       map(response => this.transformResultData(response)),
       catchError(error => this.handleError(error, '获取监控结果详情失败'))
     );
@@ -287,9 +269,7 @@ export class MonitorService {
    */
   runMonitor(fundCodes?: string[]): Observable<any> {
     const params = fundCodes ? new HttpParams().set('fund_codes', fundCodes.join(',')) : undefined;
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.post(`${this.apiConfig.monitorUrl}/run`, null, { params, headers }).pipe(
+    return this.http.post(`${this.apiConfig.monitorUrl}/run`, null, { params }).pipe(
       catchError(error => this.handleError(error, '执行监控任务失败'))
     );
   }
@@ -309,9 +289,7 @@ export class MonitorService {
       params = params.set('end_date', filter.end_date);
     }
 
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.get<any>(`${this.apiConfig.monitorUrl}/alerts`, { params, headers }).pipe(
+    return this.http.get<any>(`${this.apiConfig.monitorUrl}/alerts`, { params }).pipe(
       map(response => (response.data || []).map((item: any) => this.transformResultData(item))),
       catchError(error => this.handleError(error, '获取监控告警失败'))
     );
@@ -321,9 +299,7 @@ export class MonitorService {
    * 确认告警
    */
   acknowledgeAlert(alertId: number): Observable<any> {
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.post(`${this.apiConfig.monitorUrl}/alerts/${alertId}/acknowledge`, {}, { headers }).pipe(
+    return this.http.post(`${this.apiConfig.monitorUrl}/alerts/${alertId}/acknowledge`, {}).pipe(
       catchError(error => this.handleError(error, '确认告警失败'))
     );
   }
@@ -332,9 +308,7 @@ export class MonitorService {
    * 获取监控统计信息
    */
   getMonitorStatistics(): Observable<MonitorStatistics> {
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.get<any>(`${this.apiConfig.monitorUrl}/statistics`, { headers }).pipe(
+    return this.http.get<any>(`${this.apiConfig.monitorUrl}/statistics`).pipe(
       map(response => ({
         totalRules: response.total_rules || 0,
         activeRules: response.active_rules || 0,
@@ -350,9 +324,7 @@ export class MonitorService {
    * 获取监控仪表板数据
    */
   getMonitorDashboard(): Observable<MonitorDashboard> {
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.get<any>(`${this.apiConfig.monitorUrl}/dashboard`, { headers }).pipe(
+    return this.http.get<any>(`${this.apiConfig.monitorUrl}/dashboard`).pipe(
       map(response => ({
         overview: {
           totalFunds: response.overview?.total_funds || 0,
@@ -379,9 +351,7 @@ export class MonitorService {
    * 获取规则类型列表
    */
   getRuleTypes(): Observable<string[]> {
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.get<any>(`${this.apiConfig.rulesUrl}/types`, { headers }).pipe(
+    return this.http.get<any>(`${this.apiConfig.rulesUrl}/types`).pipe(
       map(response => response.data || []),
       catchError(error => this.handleError(error, '获取规则类型失败'))
     );
@@ -391,9 +361,7 @@ export class MonitorService {
    * 获取条件操作符列表
    */
   getConditionOperators(): Observable<string[]> {
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.get<any>(`${this.apiConfig.rulesUrl}/operators`, { headers }).pipe(
+    return this.http.get<any>(`${this.apiConfig.rulesUrl}/operators`).pipe(
       map(response => response.data || []),
       catchError(error => this.handleError(error, '获取条件操作符失败'))
     );
@@ -403,9 +371,7 @@ export class MonitorService {
    * 获取通知渠道列表
    */
   getNotificationChannels(): Observable<string[]> {
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.get<any>(`${this.apiConfig.rulesUrl}/channels`, { headers }).pipe(
+    return this.http.get<any>(`${this.apiConfig.rulesUrl}/channels`).pipe(
       map(response => response.data || []),
       catchError(error => this.handleError(error, '获取通知渠道失败'))
     );
@@ -415,9 +381,7 @@ export class MonitorService {
    * 获取监控状态
    */
   getMonitorStatus(): Observable<any> {
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.get<any>(`${this.apiConfig.monitorUrl}/status`, { headers }).pipe(
+    return this.http.get<any>(`${this.apiConfig.monitorUrl}/status`).pipe(
       catchError(error => this.handleError(error, '获取监控状态失败'))
     );
   }

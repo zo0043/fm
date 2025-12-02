@@ -3,7 +3,6 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, BehaviorSubject, of, throwError } from 'rxjs';
 import { map, tap, catchError, retry } from 'rxjs/operators';
 import { ApiConfigService } from './api-config.service';
-import { AuthService } from './auth.service';
 
 // 基金信息接口
 export interface Fund {
@@ -94,8 +93,7 @@ export class EnhancedFundService {
 
   constructor(
     private http: HttpClient,
-    private apiConfig: ApiConfigService,
-    private authService: AuthService
+    private apiConfig: ApiConfigService
   ) {}
 
   /**
@@ -121,10 +119,7 @@ export class EnhancedFundService {
       params = params.set('status', filter.status);
     }
 
-    // 构建请求头
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.get<any>(this.apiConfig.fundsUrl, { params, headers }).pipe(
+    return this.http.get<any>(this.apiConfig.fundsUrl, { params }).pipe(
       retry(2), // 失败时重试2次
       map(response => {
         // 转换数据格式
@@ -154,9 +149,7 @@ export class EnhancedFundService {
    * 获取基金详情
    */
   getFundDetail(fundCode: string): Observable<Fund> {
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.get<any>(`${this.apiConfig.fundsUrl}/${fundCode}`, { headers }).pipe(
+    return this.http.get<any>(`${this.apiConfig.fundsUrl}/${fundCode}`).pipe(
       map(response => this.transformFundData(response)),
       catchError(error => this.handleError(error, '获取基金详情失败'))
     );
@@ -185,9 +178,7 @@ export class EnhancedFundService {
       params = params.set('end_date', endDate);
     }
 
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.get<any>(`${this.apiConfig.navUrl}/history/${fundCode}`, { params, headers }).pipe(
+    return this.http.get<any>(`${this.apiConfig.navUrl}/history/${fundCode}`, { params }).pipe(
       map(response => response.data || []),
       catchError(error => this.handleError(error, '获取基金历史数据失败'))
     );
@@ -197,9 +188,7 @@ export class EnhancedFundService {
    * 获取最新净值
    */
   getLatestNav(fundCode: string): Observable<NavData | null> {
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.get<any>(`${this.apiConfig.navUrl}/latest/${fundCode}`, { headers }).pipe(
+    return this.http.get<any>(`${this.apiConfig.navUrl}/latest/${fundCode}`).pipe(
       map(response => response.data || null),
       catchError(error => this.handleError(error, '获取最新净值失败'))
     );
@@ -256,9 +245,7 @@ export class EnhancedFundService {
    * 获取基金类型列表
    */
   getFundTypes(): Observable<string[]> {
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.get<any>(`${this.apiConfig.fundsUrl}/types`, { headers }).pipe(
+    return this.http.get<any>(`${this.apiConfig.fundsUrl}/types`).pipe(
       map(response => response.data || []),
       catchError(error => this.handleError(error, '获取基金类型失败'))
     );
@@ -268,9 +255,7 @@ export class EnhancedFundService {
    * 获取基金公司列表
    */
   getFundCompanies(): Observable<string[]> {
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.get<any>(`${this.apiConfig.fundsUrl}/companies`, { headers }).pipe(
+    return this.http.get<any>(`${this.apiConfig.fundsUrl}/companies`).pipe(
       map(response => response.data || []),
       catchError(error => this.handleError(error, '获取基金公司失败'))
     );
@@ -285,9 +270,7 @@ export class EnhancedFundService {
       params = params.set('fund_codes', fundCodes.join(','));
     }
 
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.post(`${this.apiConfig.fundsUrl}/collect`, null, { params, headers }).pipe(
+    return this.http.post(`${this.apiConfig.fundsUrl}/collect`, null, { params }).pipe(
       catchError(error => this.handleError(error, '收集基金数据失败'))
     );
   }
@@ -301,9 +284,7 @@ export class EnhancedFundService {
       params = params.set('fund_codes', fundCodes.join(','));
     }
 
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.post(`${this.apiConfig.navUrl}/collect`, null, { params, headers }).pipe(
+    return this.http.post(`${this.apiConfig.navUrl}/collect`, null, { params }).pipe(
       catchError(error => this.handleError(error, '收集净值数据失败'))
     );
   }
@@ -312,9 +293,7 @@ export class EnhancedFundService {
    * 获取基金统计数据
    */
   getFundStatistics(): Observable<FundStatistics> {
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.get<any>(`${this.apiConfig.navUrl}/summary`, { headers }).pipe(
+    return this.http.get<any>(`${this.apiConfig.navUrl}/summary`).pipe(
       map(response => ({
         totalFunds: response.total_funds || 0,
         activeFunds: response.active_funds || 0,
@@ -332,9 +311,7 @@ export class EnhancedFundService {
    */
   cleanupOldData(daysToKeep: number = 365): Observable<any> {
     const params = new HttpParams().set('days_to_keep', daysToKeep.toString());
-    const headers = this.authService.getAuthHeaders();
-
-    return this.http.delete(`${this.apiConfig.navUrl}/cleanup`, { params, headers }).pipe(
+    return this.http.delete(`${this.apiConfig.navUrl}/cleanup`, { params }).pipe(
       catchError(error => this.handleError(error, '清理旧数据失败'))
     );
   }

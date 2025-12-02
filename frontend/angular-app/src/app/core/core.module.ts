@@ -10,14 +10,12 @@ import { MockDataService } from './services/mock-data.service';
 
 // 新增核心服务
 import { ApiConfigService } from './services/api-config.service';
-import { AuthService } from './services/auth.service';
 import { EnhancedFundService } from './services/enhanced-fund.service';
 import { MonitorService } from './services/monitor.service';
 import { LoadingService } from './services/loading.service';
 import { ErrorHandlerService } from './services/error-handler.service';
 
 // HTTP拦截器
-import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { LoadingInterceptor } from './interceptors/loading.interceptor';
 
 @NgModule({
@@ -34,7 +32,6 @@ import { LoadingInterceptor } from './interceptors/loading.interceptor';
 
     // 新增服务
     ApiConfigService,
-    AuthService,
     EnhancedFundService,
     MonitorService,
     LoadingService,
@@ -44,11 +41,6 @@ import { LoadingInterceptor } from './interceptors/loading.interceptor';
     {
       provide: HTTP_INTERCEPTORS,
       useClass: LoadingInterceptor,
-      multi: true
-    },
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: AuthInterceptor,
       multi: true
     }
   ],
