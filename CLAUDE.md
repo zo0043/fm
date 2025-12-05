@@ -165,20 +165,22 @@ npm run e2e                 # 端到端测试 (Protractor)
 npm run analyze             # bundle 分析
 ```
 
-**关键目录：**
-- `src/app/` - 应用组件和路由
-- `src/app/components/` - 可复用组件
-- `src/app/services/` - API 服务层
-- `src/app/pages/` - 页面组件
+**模块化架构：**
+- `src/app/core/` - 核心服务（认证、API配置、拦截器、路由守卫）
+- `src/app/features/` - 功能模块（按业务领域组织）
+- `src/app/shared/` - 共享组件（导航栏、通用UI组件）
 - `src/environments/` - 环境配置
 
-**主要页面：**
-- 登录/注册页面
-- 仪表板（基金总览、图表）
-- 基金列表（搜索、筛选、详情）
-- 监控规则管理（创建、编辑、启用/禁用）
-- 通知配置（渠道、模板、测试）
-- 回测分析（策略配置、报告查看）
+**主要功能模块 (features/)：**
+- `dashboard/` - 仪表板（基金总览、实时图表）
+- `fund-management/` - 基金管理（列表、搜索、筛选）
+- `fund-detail/` - 基金详情（基本信息、历史走势）
+- `fund-history/` - 基金历史净值查询
+- `monitor-settings/` - 监控规则管理
+- `backtest/` - 回测分析（策略配置、结果展示）
+- `portfolio/` - 投资组合分析
+- `history/` - 历史记录
+- `trade-record/` - 交易记录管理
 
 ## 后端开发
 
@@ -218,6 +220,25 @@ python -m backend.services.backtest.main
 - `shared/database/` - PostgreSQL 连接、SQLAlchemy 模型
 - `shared/utils/` - 通用工具函数、日志配置
 - 共享数据模型、类型定义
+
+### 核心数据模型 (backend/shared/database/models.py)
+项目使用 SQLAlchemy ORM 定义核心数据表：
+- **Fund** - 基金基础信息（代码、名称、类型、基金经理、规模）
+- **NetAssetValue** - 净值数据（单位净值、累计净值、日涨跌幅）
+- **MonitorRule** - 监控规则（规则类型、阈值、通知渠道、启用状态）
+- **MonitorResult** - 监控结果（触发记录、通知状态）
+- **NotificationConfig** - 通知配置（渠道类型、配置数据）
+- **NotificationLog** - 通知记录（发送状态、错误信息）
+- **BacktestStrategy** - 回测策略（投资金额、频率、日期范围）
+- **BacktestResult** - 回测结果（收益率、最大回撤、夏普比率）
+- **User** - 用户表（用户名、邮箱、密码哈希）
+- **SystemConfig** - 系统配置（键值对配置）
+
+**数据表关系：**
+- Fund ↔ NetAssetValue（一对多）
+- Fund ↔ MonitorResult（一对多）
+- MonitorRule ↔ MonitorResult（一对多）
+- BacktestStrategy ↔ BacktestResult（一对多）
 
 ### 依赖管理
 ```bash
