@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,21 +11,33 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 // 导入自定义组件
 import { KLineChartComponent } from '../../shared/components/fund-chart/k-line-chart/k-line-chart.component';
 import { FundCardComponent } from '../../shared/components/fund-card/fund-card.component';
 import { TrendIndicatorComponent } from '../../shared/components/trend-indicator/trend-indicator.component';
 import { SimpleExportButtonComponent } from '../../shared/components/simple-export-button/simple-export-button.component';
+import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
+import { SkeletonLoaderComponent } from '../../shared/components/skeleton-loader/skeleton-loader.component';
 
 // 导入服务和模型
 import { FundService } from '../../core/services/fund.service';
+import { WatchlistService } from '../../core/services/watchlist.service';
 import { FundInfo, KLineDataPoint, TrendInfo } from '../../models/fund.model';
 import { QuickExportOption } from '../../shared/components/simple-export-button/simple-export-button.component';
+import { TIME_CONSTANTS } from '../../shared/constants/app.constants';
+import { FormatUtils } from '../../shared/utils/format.utils';
 
-// 使用方法：在路由配置中使用
-// { path: 'dashboard', component: DashboardComponent }
-
+/**
+ * 仪表板组件
+ * 展示用户关注的基金列表、K线图和涨跌统计
+ *
+ * 使用方法：路由配置 { path: 'dashboard', component: DashboardComponent }
+ */
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
@@ -42,13 +55,19 @@ import { QuickExportOption } from '../../shared/components/simple-export-button/
     MatSnackBarModule,
     MatSelectModule,
     MatOptionModule,
+    MatChipsModule,
+    MatTooltipModule,
     KLineChartComponent,
     FundCardComponent,
     TrendIndicatorComponent,
-    SimpleExportButtonComponent
+    SimpleExportButtonComponent,
+    EmptyStateComponent,
+    SkeletonLoaderComponent
   ]
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+
   // 数据属性
   funds: FundInfo[] = [];
   selectedFund: FundInfo | null = null;
@@ -59,6 +78,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isLoading = true;
   selectedTab = 0;
   refreshing = false;
+
+  // 数据来源提示
+  get isUsingMockData(): boolean {
+    return this.fundService.isUsingMockData;
+  }
 
   // 导出配置
   quickExportOptions: QuickExportOption[] = [
@@ -78,16 +102,33 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     private fundService: FundService,
-    private snackBar: MatSnackBar
+    private watchlistService: WatchlistService,
+    private snackBar: MatSnackBar,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
     this.loadDashboardData();
     this.startAutoRefresh();
+    this.subscribeToWatchlist();
   }
 
   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
     this.stopAutoRefresh();
+  }
+
+  // 订阅关注列表变化
+  private subscribeToWatchlist(): void {
+    this.watchlistService.watchlist$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(watchlist => {
+        // 当关注列表变化时重新加载数据
+        if (watchlist.length > 0 && !this.isLoading) {
+          this.loadWatchlistFunds();
+        }
+      });
   }
 
   // 加载仪表盘数据
@@ -98,31 +139,57 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // 加载关注列表基金
   private loadWatchlistFunds(): void {
-    // 模拟获取关注列表的基金
-    const fundIds = ['fund_0001', 'fund_0002', 'fund_0003', 'fund_0004', 'fund_0005', 'fund_0006'];
+    // 从 WatchlistService 获取关注列表
+    const watchlist = this.watchlistService.watchlist;
+
+    if (watchlist.length === 0) {
+      // 如果没有关注的基金，使用默认列表
+      const defaultFundIds = ['fund_0001', 'fund_0002', 'fund_0003', 'fund_0004', 'fund_0005', 'fund_0006'];
+      this.loadFundsByIds(defaultFundIds);
+    } else {
+      const fundIds = watchlist.map(item => item.fundId);
+      this.loadFundsByIds(fundIds);
+    }
+  }
+
+  private loadFundsByIds(fundIds: string[]): void {
+    this.funds = [];
+    let loadedCount = 0;
 
     fundIds.forEach(id => {
-      this.fundService.getFundInfo(id).subscribe(
-        fundInfo => {
-          if (fundInfo) {
-            this.funds.push(fundInfo);
-          }
+      this.fundService.getFundInfo(id)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (fundInfo) => {
+            if (fundInfo) {
+              this.funds.push(fundInfo);
+            }
+            loadedCount++;
 
-          // 加载完数据后选择第一个基金显示图表
-          if (this.funds.length === 1 && !this.selectedFund) {
-            this.selectFund(this.funds[0]);
+            // 加载完数据后选择第一个基金显示图表
+            if (this.funds.length === 1 && !this.selectedFund) {
+              this.selectFund(this.funds[0]);
+            }
+
+            // 全部加载完成
+            if (loadedCount === fundIds.length) {
+              this.isLoading = false;
+            }
+          },
+          error: (error) => {
+            console.error('加载基金信息失败:', error);
+            loadedCount++;
+            if (loadedCount === fundIds.length) {
+              this.isLoading = false;
+            }
           }
-        },
-        error => {
-          console.error('加载基金信息失败:', error);
-        }
-      );
+        });
     });
 
-    // 模拟加载完成
-    setTimeout(() => {
+    // 如果没有基金需要加载
+    if (fundIds.length === 0) {
       this.isLoading = false;
-    }, 1000);
+    }
   }
 
   // 选择基金显示详情
@@ -134,48 +201,53 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // 加载基金详细信息
   private loadFundDetails(fundId: string): void {
     // 加载K线图数据
-    this.fundService.getFundKLineData(fundId, 90).subscribe(
-      data => {
-        this.kLineData = data;
-      },
-      error => {
-        console.error('加载K线数据失败:', error);
-        this.snackBar.open('加载图表数据失败', '关闭', { duration: 3000 });
-      }
-    );
+    this.fundService.getFundKLineData(fundId, 90)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.kLineData = data;
+        },
+        error: (error) => {
+          console.error('加载K线数据失败:', error);
+          this.snackBar.open('加载图表数据失败', '关闭', { duration: TIME_CONSTANTS.SNACKBAR_DURATION });
+        }
+      });
 
     // 加载涨跌信息
-    this.fundService.getFundTrendInfo(fundId).subscribe(
-      trendInfo => {
-        this.trendInfo = trendInfo;
-      },
-      error => {
-        console.error('加载涨跌信息失败:', error);
-      }
-    );
+    this.fundService.getFundTrendInfo(fundId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (trendInfo) => {
+          this.trendInfo = trendInfo;
+        },
+        error: (error) => {
+          console.error('加载涨跌信息失败:', error);
+        }
+      });
   }
 
   // 处理查看基金详情
   onViewFundDetails(fundId: string): void {
-    this.snackBar.open(`查看基金 ${fundId} 详情`, '关闭', { duration: 2000 });
+    this.router.navigate(['/fund', fundId]);
   }
 
   // 处理添加到关注列表
   onAddToWatchlist(fundId: string): void {
-    this.fundService.addToWatchlist(fundId).subscribe(
-      response => {
-        this.snackBar.open('已添加到关注列表', '关闭', { duration: 3000 });
-      },
-      error => {
-        this.snackBar.open('添加失败', '关闭', { duration: 3000 });
-      }
-    );
+    const fund = this.funds.find(f => f.id === fundId);
+    if (fund) {
+      this.watchlistService.add({ id: fund.id, code: fund.code, name: fund.name })
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
+          this.snackBar.open('已添加到关注列表', '关闭', { duration: TIME_CONSTANTS.SNACKBAR_DURATION });
+        });
+    }
   }
 
   // 处理从关注列表移除
   onRemoveFromWatchlist(fundId: string): void {
-    this.fundService.removeFromWatchlist(fundId).subscribe(
-      response => {
+    this.watchlistService.remove(fundId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
         // 从列表中移除基金
         this.funds = this.funds.filter(f => f.id !== fundId);
 
@@ -188,12 +260,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.trendInfo = null;
         }
 
-        this.snackBar.open('已从关注列表移除', '关闭', { duration: 3000 });
-      },
-      error => {
-        this.snackBar.open('移除失败', '关闭', { duration: 3000 });
-      }
-    );
+        this.snackBar.open('已从关注列表移除', '关闭', { duration: TIME_CONSTANTS.SNACKBAR_DURATION });
+      });
+  }
+
+  // 检查基金是否在关注列表
+  isWatched(fundId: string): boolean {
+    return this.watchlistService.isWatched(fundId);
   }
 
   // 手动刷新数据
@@ -230,10 +303,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // 开始自动刷新
   private startAutoRefresh(): void {
-    // 每5分钟自动刷新一次
     this.refreshInterval = setInterval(() => {
       this.refreshData();
-    }, 5 * 60 * 1000);
+    }, TIME_CONSTANTS.AUTO_REFRESH_INTERVAL);
   }
 
   // 停止自动刷新
@@ -269,15 +341,55 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return stats;
   }
 
-  // 格式化百分比
+  // 格式化百分比（使用工具类）
   formatPercent(value: number): string {
-    const sign = value >= 0 ? '+' : '';
-    return `${sign}${value.toFixed(2)}%`;
+    return FormatUtils.percent(value, true, 2);
   }
 
   // 导出处理
   onExportClick(option: QuickExportOption): void {
     this.snackBar.open(`正在导出${option.label}...`, '关闭', { duration: 2000 });
-    console.log('导出选项:', option);
+
+    if (option.format === 'excel') {
+      this.exportToExcel();
+    } else if (option.format === 'pdf') {
+      this.exportToPdf();
+    }
+  }
+
+  // 导出到 Excel
+  private exportToExcel(): void {
+    const headers = ['基金代码', '基金名称', '类型', '当前净值', '昨日净值', '日涨跌幅'];
+    const rows = this.funds.map(fund => [
+      fund.code,
+      fund.name,
+      fund.type,
+      fund.currentNav.toFixed(4),
+      fund.yesterdayNav.toFixed(4),
+      FormatUtils.percent((fund.currentNav - fund.yesterdayNav) / fund.yesterdayNav)
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n');
+
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `基金监控_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+
+    this.snackBar.open('导出成功', '关闭', { duration: TIME_CONSTANTS.SNACKBAR_DURATION });
+  }
+
+  // 导出到 PDF（简化版，实际需要 PDF 库）
+  private exportToPdf(): void {
+    this.snackBar.open('PDF 导出功能开发中...', '关闭', { duration: TIME_CONSTANTS.SNACKBAR_DURATION });
+  }
+
+  // 跳转到基金管理页面添加基金
+  goToFundManagement(): void {
+    this.router.navigate(['/funds']);
   }
 }
