@@ -1,103 +1,156 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../../environments/environment';
 
+/**
+ * API 配置服务
+ * 统一管理所有 API 端点配置，支持开发/生产环境切换
+ *
+ * 使用方法：
+ * constructor(private apiConfig: ApiConfigService) {}
+ * const url = this.apiConfig.getUrl('funds', '/list');
+ */
 @Injectable({
   providedIn: 'root'
 })
 export class ApiConfigService {
-  // 基础API配置
-  private readonly baseUrls = {
-    // 开发环境API地址
-    development: {
-      auth: 'http://localhost:8000/api/v1/auth',
-      users: 'http://localhost:8000/api/v1/users',
-      funds: 'http://localhost:8001/funds',
-      nav: 'http://localhost:8001/nav',
-      monitor: 'http://localhost:8002/monitor',
-      rules: 'http://localhost:8002/rules',
-      notifications: 'http://localhost:8003/notifications',
-      configs: 'http://localhost:8003/configs',
-      backtest: 'http://localhost:8004/backtest',
-      strategies: 'http://localhost:8004/strategies'
-    },
-    // 生产环境API地址
-    production: {
-      auth: '/api/v1/auth',
-      users: '/api/v1/users',
-      funds: '/api/v1/funds',
-      nav: '/api/v1/nav',
-      monitor: '/api/v1/monitor',
-      rules: '/api/v1/rules',
-      notifications: '/api/v1/notifications',
-      configs: '/api/v1/configs',
-      backtest: '/api/v1/backtest',
-      strategies: '/api/v1/strategies'
-    }
+  // NestJS API Gateway 地址（统一入口）
+  private readonly gatewayUrl = environment.production
+    ? ''  // 生产环境使用相对路径
+    : 'http://localhost:3000';
+
+  // 微服务直连地址（开发调试用）
+  private readonly microservices = {
+    auth: 'http://localhost:8000',
+    dataCollector: 'http://localhost:8001',
+    monitorEngine: 'http://localhost:8002',
+    notification: 'http://localhost:8003',
+    backtest: 'http://localhost:8004',
   };
 
-  private readonly environment = 'development'; // 可以根据环境变量切换
+  // API 版本
+  private readonly apiVersion = 'v1';
 
-  getBaseUrl(service: keyof typeof this.baseUrls.development): string {
-    return this.baseUrls[this.environment][service];
+  // 服务路由映射
+  private readonly serviceRoutes: Record<string, string> = {
+    auth: '/api/auth',
+    users: '/api/users',
+    funds: '/api/funds',
+    nav: '/api/nav',
+    monitor: '/api/monitor',
+    rules: '/api/rules',
+    notifications: '/api/notifications',
+    configs: '/api/configs',
+    backtest: '/api/backtest',
+    strategies: '/api/strategies',
+    // 代理服务（解决跨域问题）
+    proxy: '/api/proxy',
+  };
+
+  // 外部数据源代理配置
+  private readonly externalProxies = {
+    eastmoney: '/api/proxy/eastmoney',
+    sina: '/api/proxy/sina',
+  };
+
+  /**
+   * 获取 API URL
+   * @param service 服务名称
+   * @param endpoint 端点路径
+   */
+  getUrl(service: keyof typeof this.serviceRoutes, endpoint: string = ''): string {
+    const basePath = this.serviceRoutes[service] || '';
+    return `${this.gatewayUrl}${basePath}${endpoint}`;
   }
 
-  // 获取认证服务URL
+  /**
+   * 获取外部数据源代理 URL
+   * @param source 数据源名称
+   * @param params 查询参数
+   */
+  getProxyUrl(source: 'eastmoney' | 'sina', params: Record<string, string> = {}): string {
+    const basePath = this.externalProxies[source];
+    const queryString = new URLSearchParams(params).toString();
+    return `${this.gatewayUrl}${basePath}${queryString ? '?' + queryString : ''}`;
+  }
+
+  /**
+   * 获取东方财富基金净值代理 URL
+   * @param fundCode 基金代码
+   * @param page 页码
+   * @param pageSize 每页条数
+   */
+  getEastmoneyNavUrl(fundCode: string, page: number = 1, pageSize: number = 20): string {
+    return this.getProxyUrl('eastmoney', {
+      type: 'lsjz',
+      code: fundCode,
+      page: page.toString(),
+      per: pageSize.toString(),
+    });
+  }
+
+  // ============= 便捷访问器 =============
+
   get authUrl(): string {
-    return this.getBaseUrl('auth');
+    return this.getUrl('auth');
   }
 
-  // 获取用户服务URL
   get usersUrl(): string {
-    return this.getBaseUrl('users');
+    return this.getUrl('users');
   }
 
-  // 获取基金服务URL
   get fundsUrl(): string {
-    return this.getBaseUrl('funds');
+    return this.getUrl('funds');
   }
 
-  // 获取净值服务URL
   get navUrl(): string {
-    return this.getBaseUrl('nav');
+    return this.getUrl('nav');
   }
 
-  // 获取监控服务URL
   get monitorUrl(): string {
-    return this.getBaseUrl('monitor');
+    return this.getUrl('monitor');
   }
 
-  // 获取规则服务URL
   get rulesUrl(): string {
-    return this.getBaseUrl('rules');
+    return this.getUrl('rules');
   }
 
-  // 获取通知服务URL
   get notificationsUrl(): string {
-    return this.getBaseUrl('notifications');
+    return this.getUrl('notifications');
   }
 
-  // 获取配置服务URL
   get configsUrl(): string {
-    return this.getBaseUrl('configs');
+    return this.getUrl('configs');
   }
 
-  // 获取回测服务URL
   get backtestUrl(): string {
-    return this.getBaseUrl('backtest');
+    return this.getUrl('backtest');
   }
 
-  // 获取策略服务URL
   get strategiesUrl(): string {
-    return this.getBaseUrl('strategies');
+    return this.getUrl('strategies');
   }
 
-  // 检查是否为开发环境
+  // ============= 环境信息 =============
+
   get isDevelopment(): boolean {
-    return this.environment === 'development';
+    return !environment.production;
   }
 
-  // 获取完整的API URL
-  getFullUrl(service: keyof typeof this.baseUrls.development, endpoint: string): string {
-    const baseUrl = this.getBaseUrl(service);
-    return `${baseUrl}${endpoint}`;
+  get isProduction(): boolean {
+    return environment.production;
+  }
+
+  get gatewayBaseUrl(): string {
+    return this.gatewayUrl;
+  }
+
+  /**
+   * 获取微服务直连地址（仅开发环境使用）
+   */
+  getMicroserviceUrl(service: keyof typeof this.microservices): string {
+    if (this.isProduction) {
+      console.warn('生产环境不应直连微服务');
+    }
+    return this.microservices[service];
   }
 }
