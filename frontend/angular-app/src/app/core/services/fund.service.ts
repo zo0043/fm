@@ -5,6 +5,8 @@ import { map, tap, catchError, delay } from 'rxjs/operators';
 
 import { FundInfo, KLineDataPoint, TrendInfo } from '../../models/fund.model';
 import { MockDataService } from './mock-data.service';
+import { ApiConfigService } from './api-config.service';
+import { TIME_CONSTANTS, PAGINATION } from '../../shared/constants/app.constants';
 
 export interface Fund {
   id: string;
@@ -49,6 +51,14 @@ export interface FundFilter {
   sortOrder?: 'asc' | 'desc';
 }
 
+/**
+ * 基金服务
+ * 提供基金数据的获取、缓存和管理功能
+ *
+ * 使用方法：
+ * constructor(private fundService: FundService) {}
+ * this.fundService.getFunds().subscribe(response => ...);
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -57,15 +67,22 @@ export class FundService {
   private fundsSubject = new BehaviorSubject<Fund[]>([]);
   public funds$ = this.fundsSubject.asObservable();
 
+  // 数据来源标识
+  private _isUsingMockData = false;
+  public get isUsingMockData(): boolean {
+    return this._isUsingMockData;
+  }
+
   constructor(
     private http: HttpClient,
-    private mockDataService: MockDataService
+    private mockDataService: MockDataService,
+    private apiConfig: ApiConfigService
   ) {}
 
   /**
    * 获取基金列表
    */
-  getFunds(filter: FundFilter = {}, page: number = 1, pageSize: number = 20): Observable<FundListResponse> {
+  getFunds(filter: FundFilter = {}, page: number = 1, pageSize: number = PAGINATION.DEFAULT_PAGE_SIZE): Observable<FundListResponse> {
     let params = new HttpParams()
       .set('page', page.toString())
       .set('pageSize', pageSize.toString());
@@ -89,14 +106,16 @@ export class FundService {
       params = params.set('sortOrder', filter.sortOrder);
     }
 
-    return this.http.get<FundListResponse>(this.apiUrl, { params }).pipe(
+    return this.http.get<FundListResponse>(this.apiConfig.fundsUrl, { params }).pipe(
       tap(response => {
+        this._isUsingMockData = false;
         if (page === 1) {
           this.fundsSubject.next(response.funds);
         }
       }),
       catchError(error => {
         console.error('获取基金列表失败:', error);
+        this._isUsingMockData = true;
         return this.getMockFunds(filter, page, pageSize);
       })
     );
@@ -106,9 +125,11 @@ export class FundService {
    * 获取基金详情
    */
   getFundDetail(id: string): Observable<Fund> {
-    return this.http.get<Fund>(`${this.apiUrl}/${id}`).pipe(
+    return this.http.get<Fund>(`${this.apiConfig.fundsUrl}/${id}`).pipe(
+      tap(() => this._isUsingMockData = false),
       catchError(error => {
         console.error('获取基金详情失败:', error);
+        this._isUsingMockData = true;
         return this.getMockFund(id);
       })
     );
@@ -126,68 +147,94 @@ export class FundService {
       params = params.set('endDate', endDate);
     }
 
-    return this.http.get<FundHistoryData[]>(`${this.apiUrl}/${id}/history`, { params }).pipe(
+    return this.http.get<FundHistoryData[]>(`${this.apiConfig.fundsUrl}/${id}/history`, { params }).pipe(
+      tap(() => this._isUsingMockData = false),
       catchError(error => {
         console.error('获取基金历史数据失败:', error);
+        this._isUsingMockData = true;
         return this.getMockFundHistory(id);
       })
     );
   }
 
+  // 添加缓存机制
+  private navDataCache = new Map<string, { data: FundHistoryData[]; timestamp: number }>();
+  private cacheExpiry = TIME_CONSTANTS.CACHE_EXPIRY;
+
   /**
-   * 使用东方财富接口获取基金净值数据
+   * 使用代理获取基金净值数据（解决跨域问题）
+   * 通过后端代理调用东方财富接口
    */
-  getFundNavFromEastmoney(fundCode: string, page: number = 1, pageSize: number = 20): Observable<FundHistoryData[]> {
-    const url = `https://fundf10.eastmoney.com/F10DataApi.aspx?type=lsjz&code=${fundCode}&page=${page}&per=${pageSize}`;
-    
-    return this.http.get(url, { responseType: 'text' }).pipe(
+  getFundNavFromEastmoney(fundCode: string, page: number = 1, pageSize: number = 20, startDate?: string, endDate?: string): Observable<FundHistoryData[]> {
+    // 检查缓存
+    const cacheKey = `${fundCode}_${page}_${pageSize}_${startDate || ''}_${endDate || ''}`;
+    const cachedData = this.navDataCache.get(cacheKey);
+
+    // 如果缓存存在且未过期，直接返回缓存数据
+    if (cachedData && Date.now() - cachedData.timestamp < this.cacheExpiry) {
+      this._isUsingMockData = false;
+      return of(cachedData.data);
+    }
+
+    // 通过后端代理调用（解决跨域）
+    const proxyUrl = this.apiConfig.getEastmoneyNavUrl(fundCode, page, pageSize);
+
+    return this.http.get<{ data: FundHistoryData[] }>(proxyUrl).pipe(
       map(response => {
-        // 解析返回的JavaScript变量
-        const dataMatch = response.match(/var apidata=({.*?});/s);
-        if (!dataMatch) {
-          throw new Error('无法解析返回的数据格式');
+        let historyData = response.data || [];
+
+        // 按日期排序（从旧到新）
+        historyData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+        // 应用日期范围过滤
+        if (startDate) {
+          const start = new Date(startDate);
+          historyData = historyData.filter(item => new Date(item.date) >= start);
         }
-        
-        try {
-          const data = JSON.parse(dataMatch[1]);
-          if (!data.content) {
-            throw new Error('返回数据中没有内容');
-          }
-          
-          const content = data.content;
-          
-          // 解析表格内容，使用正则表达式匹配每一行数据
-          // 改进正则表达式，支持更多格式
-          const rowRegex = /<tr>\s*<td>(\d{4}-\d{2}-\d{2})<\/td>\s*<td>(\d+(?:\.\d{4})?)<\/td>\s*<td>(\d+(?:\.\d{4})?)<\/td>\s*<td>([+-]?\d+(?:\.\d{2})?)%<\/td>/g;
-          const historyData: FundHistoryData[] = [];
-          let match;
-          
-          while ((match = rowRegex.exec(content)) !== null) {
-            const [, date, navStr, totalNavStr, dailyChangeStr] = match;
-            
-            historyData.push({
-              date,
-              nav: parseFloat(navStr),
-              totalNav: parseFloat(totalNavStr),
-              dailyChange: parseFloat(dailyChangeStr) / 100
-            });
-          }
-          
-          if (historyData.length === 0) {
-            console.warn('未匹配到任何基金净值数据，可能是正则表达式不匹配或数据格式变化');
-          }
-          
-          return historyData;
-        } catch (parseError) {
-          throw new Error(`解析数据失败: ${parseError instanceof Error ? parseError.message : '未知错误'}`);
+        if (endDate) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          historyData = historyData.filter(item => new Date(item.date) <= end);
         }
+
+        // 保存到缓存
+        this.navDataCache.set(cacheKey, {
+          data: historyData,
+          timestamp: Date.now()
+        });
+
+        this._isUsingMockData = false;
+        return historyData;
       }),
       catchError(error => {
         console.error(`获取基金${fundCode}净值数据失败:`, error);
+        this._isUsingMockData = true;
         // 返回模拟数据作为备选
         return this.getMockFundHistory(fundCode);
       })
     );
+  }
+
+  /**
+   * 清除指定基金的缓存数据
+   */
+  clearNavDataCache(fundCode?: string): void {
+    if (fundCode) {
+      // 清除指定基金的所有缓存
+      const keysToDelete: string[] = [];
+      this.navDataCache.forEach((value, key) => {
+        if (key.startsWith(`${fundCode}_`)) {
+          keysToDelete.push(key);
+        }
+      });
+      
+      keysToDelete.forEach(key => {
+        this.navDataCache.delete(key);
+      });
+    } else {
+      // 清除所有缓存
+      this.navDataCache.clear();
+    }
   }
 
   /**
