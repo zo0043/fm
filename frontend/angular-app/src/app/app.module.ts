@@ -32,20 +32,19 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgFor, NgIf, NgClass } from '@angular/common';
 
 import { AppComponent } from '../app.component';
+
+// Standalone 组件 - 通过 imports 引入
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { FundManagementComponent } from './features/fund-management/fund-management.component';
 import { MonitorSettingsComponent } from './features/monitor-settings/monitor-settings.component';
 import { BacktestComponent } from './features/backtest/backtest.component';
+import { FundHistoryComponent } from './features/fund-history/fund-history.component';
+import { AppNavComponent } from './shared/components/app-nav/app-nav.component';
+
+// 非 Standalone 组件 - 通过 declarations 声明
 import { FundDetailComponent } from './features/fund-detail/fund-detail.component';
 import { PortfolioComponent } from './features/portfolio/portfolio.component';
 import { HistoryComponent } from './features/history/history.component';
-import { AppNavComponent } from './shared/components/app-nav/app-nav.component';
-
-// 回测组件
-import { StrategySelectorComponent } from './features/backtest/components/strategy-selector/strategy-selector.component';
-import { DateRangePickerComponent } from './features/backtest/components/date-range-picker/date-range-picker.component';
-import { FundSelectorComponent } from './features/backtest/components/fund-selector/fund-selector.component';
-import { BacktestResultsComponent } from './features/backtest/components/backtest-results/backtest-results.component';
 
 // 基金详情组件
 import { FundBasicInfoComponent } from './features/fund-detail/components/fund-basic-info/fund-basic-info.component';
@@ -99,6 +98,11 @@ const routes: Routes = [
     title: '历史记录'
   },
   {
+    path: 'fund-history',
+    component: FundHistoryComponent,
+    title: '基金历史净值'
+  },
+  {
     path: '**',
     redirectTo: '/dashboard'
   }
@@ -106,26 +110,17 @@ const routes: Routes = [
 
 @NgModule({
   declarations: [
+    // 非 Standalone 组件
     AppComponent,
-    DashboardComponent,
-    FundManagementComponent,
-    MonitorSettingsComponent,
-    BacktestComponent,
     FundDetailComponent,
     PortfolioComponent,
     HistoryComponent,
-    AppNavComponent,
-    // 回测组件
-    StrategySelectorComponent,
-    DateRangePickerComponent,
-    FundSelectorComponent,
-    BacktestResultsComponent,
-    // 基金详情组件
+    // 基金详情子组件
     FundBasicInfoComponent,
     PerformanceChartComponent,
-    // 投资组合组件
+    // 投资组合子组件
     AssetAllocationComponent,
-    // 历史记录组件
+    // 历史记录子组件
     TransactionRecordsComponent
   ],
   imports: [
@@ -133,6 +128,9 @@ const routes: Routes = [
     BrowserAnimationsModule,
     HttpClientModule,
     RouterModule.forRoot(routes),
+    FormsModule,
+    ReactiveFormsModule,
+    // Material 模块
     MatToolbarModule,
     MatSidenavModule,
     MatIconModule,
@@ -140,7 +138,6 @@ const routes: Routes = [
     MatCardModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
-    // 基金管理模块
     MatTableModule,
     MatPaginatorModule,
     MatCheckboxModule,
@@ -148,22 +145,24 @@ const routes: Routes = [
     MatInputModule,
     MatSelectModule,
     MatSnackBarModule,
-    // 监控设置模块
     MatChipsModule,
     MatDialogModule,
-    // 回测功能模块
     MatRadioModule,
     MatSliderModule,
     MatTabsModule,
     MatDatepickerModule,
     MatNativeDateModule,
     MatExpansionModule,
-    // 仪表盘模块
     MatGridListModule,
     MatProgressBarModule,
     MatOptionModule,
-    FormsModule,
-    ReactiveFormsModule
+    // Standalone 组件 - 通过 imports 引入
+    DashboardComponent,
+    FundManagementComponent,
+    MonitorSettingsComponent,
+    BacktestComponent,
+    FundHistoryComponent,
+    AppNavComponent
   ],
   providers: [],
   bootstrap: [AppComponent]
