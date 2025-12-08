@@ -271,6 +271,103 @@
             </div>
           </div>
         </mat-tab>
+
+        <!-- 历史净值标签页 -->
+        <mat-tab label="历史净值">
+          <div class="tab-content">
+            <div class="history-nav-section">
+              <h3>历史净值查询</h3>
+              
+              <!-- 历史净值查询表单 -->
+              <div class="history-nav-controls">
+                <div class="date-range-picker">
+                  <mat-form-field appearance="outline" class="date-field">
+                    <mat-label>开始日期</mat-label>
+                    <input matInput [matDatepicker]="startDatePicker" [(ngModel)]="historyStartDate">
+                    <mat-datepicker-toggle matIconSuffix [for]="startDatePicker"></mat-datepicker-toggle>
+                    <mat-datepicker #startDatePicker></mat-datepicker>
+                  </mat-form-field>
+                  
+                  <mat-form-field appearance="outline" class="date-field">
+                    <mat-label>结束日期</mat-label>
+                    <input matInput [matDatepicker]="endDatePicker" [(ngModel)]="historyEndDate">
+                    <mat-datepicker-toggle matIconSuffix [for]="endDatePicker"></mat-datepicker-toggle>
+                    <mat-datepicker #endDatePicker></mat-datepicker>
+                  </mat-form-field>
+                </div>
+                
+                <div class="history-actions">
+                  <button mat-raised-button color="primary" (click)="loadFundHistoryData()" [disabled]="isHistoryLoading">
+                    <mat-icon *ngIf="!isHistoryLoading">search</mat-icon>
+                    <mat-spinner *ngIf="isHistoryLoading" diameter="20"></mat-spinner>
+                    {{ isHistoryLoading ? '查询中...' : '查询' }}
+                  </button>
+                  
+                  <button mat-raised-button color="accent" (click)="exportHistoryData()" [disabled]="historyData.length === 0">
+                    <mat-icon>download</mat-icon>
+                    导出数据
+                  </button>
+                </div>
+              </div>
+              
+              <!-- 历史净值数据表格 -->
+              <div class="history-nav-table" *ngIf="historyData.length > 0">
+                <mat-card>
+                  <mat-card-header>
+                    <mat-card-title>历史净值数据</mat-card-title>
+                    <mat-card-subtitle>共 {{ historyData.length }} 条记录</mat-card-subtitle>
+                  </mat-card-header>
+                  <mat-card-content>
+                    <div class="table-container">
+                      <table mat-table [dataSource]="historyData" class="mat-elevation-z8">
+                        <!-- 日期列 -->
+                        <ng-container matColumnDef="date">
+                          <th mat-header-cell *matHeaderCellDef> 日期 </th>
+                          <td mat-cell *matCellDef="let element"> {{ element.date }} </td>
+                        </ng-container>
+
+                        <!-- 单位净值列 -->
+                        <ng-container matColumnDef="nav">
+                          <th mat-header-cell *matHeaderCellDef> 单位净值 </th>
+                          <td mat-cell *matCellDef="let element"> {{ element.nav.toFixed(4) }} </td>
+                        </ng-container>
+
+                        <!-- 累计净值列 -->
+                        <ng-container matColumnDef="totalNav">
+                          <th mat-header-cell *matHeaderCellDef> 累计净值 </th>
+                          <td mat-cell *matCellDef="let element"> {{ element.totalNav.toFixed(4) }} </td>
+                        </ng-container>
+
+                        <!-- 日涨跌幅列 -->
+                        <ng-container matColumnDef="dailyChange">
+                          <th mat-header-cell *matHeaderCellDef> 日涨跌幅 </th>
+                          <td mat-cell *matCellDef="let element" [class]="element.dailyChange >= 0 ? 'positive' : 'negative'">
+                            {{ (element.dailyChange * 100).toFixed(2) }}%
+                          </td>
+                        </ng-container>
+
+                        <tr mat-header-row *matHeaderRowDef="historyDisplayedColumns"></tr>
+                        <tr mat-row *matRowDef="let row; columns: historyDisplayedColumns;"></tr>
+                      </table>
+                    </div>
+                  </mat-card-content>
+                </mat-card>
+              </div>
+              
+              <!-- 空数据状态 -->
+              <div class="no-history-data" *ngIf="!isHistoryLoading && historyData.length === 0">
+                <mat-icon class="empty-icon">info_outline</mat-icon>
+                <p>暂无历史净值数据，请调整查询条件后重试</p>
+              </div>
+              
+              <!-- 加载状态 -->
+              <div class="history-loading" *ngIf="isHistoryLoading">
+                <mat-spinner diameter="40"></mat-spinner>
+                <span>加载历史净值数据中...</span>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
       </mat-tab-group>
     </mat-card>
   </main>
