@@ -13,8 +13,6 @@ import { MatSliderModule } from '@angular/material/slider';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Inject } from '@angular/core';
-import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatExpansionModule } from '@angular/material/expansion';
@@ -25,8 +23,11 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 
 // 导入服务
 import { FundService } from '../../core/services/fund.service';
+import { ApiConfigService } from '../../core/services/api-config.service';
 // 导入共享组件
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
+// 导入常量
+import { STORAGE_KEYS, TIME_CONSTANTS } from '../../shared/constants/app.constants';
 
 // 类型定义
 interface PushStrategy {
@@ -235,7 +236,8 @@ export class MonitorSettingsComponent implements OnInit {
   constructor(
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
-    private http: HttpClient
+    private http: HttpClient,
+    private apiConfig: ApiConfigService
   ) {}
 
   ngOnInit(): void {
@@ -244,27 +246,98 @@ export class MonitorSettingsComponent implements OnInit {
 
   // 加载设置
   private loadSettings(): void {
+    // 1. 先尝试从 localStorage 加载
+    const savedSettings = this.loadFromStorage();
+    if (savedSettings) {
+      this.applySettings(savedSettings);
+      console.log('从本地存储加载监控设置');
+    }
+
+    // 2. 尝试从后端 API 加载（会覆盖本地设置）
+    this.http.get<any>(`${this.apiConfig.monitorUrl}/settings`).subscribe({
+      next: (response) => {
+        if (response && response.data) {
+          this.applySettings(response.data);
+          // 同步更新本地存储
+          this.saveToStorage();
+          console.log('从服务器加载监控设置');
+        }
+      },
+      error: (error) => {
+        console.warn('从服务器加载监控设置失败，使用本地设置:', error);
+        // 使用本地设置或默认设置（已在上面加载）
+      }
+    });
+  }
+
+  // 应用设置
+  private applySettings(settings: any): void {
+    if (settings.rules) {
+      this.monitorRules = settings.rules;
+    }
+    if (settings.notifications) {
+      this.notificationSettings = settings.notifications;
+    }
+    if (settings.frequency) {
+      this.monitoringFrequency = settings.frequency;
+    }
+    if (settings.global) {
+      this.globalSettings = settings.global;
+    }
+  }
+
+  // 从本地存储加载
+  private loadFromStorage(): any {
     try {
-      // 这里可以从后端API加载设置
-      console.log('加载监控设置...');
-      // 目前使用默认设置，后续可以替换为从API加载
-      // 如果API加载失败，会使用默认的monitorRules
+      const stored = localStorage.getItem(STORAGE_KEYS.MONITOR_SETTINGS);
+      if (stored) {
+        return JSON.parse(stored);
+      }
     } catch (error) {
-      console.error('加载监控设置失败:', error);
-      // 使用默认设置
-      this.snackBar.open('加载监控设置失败，使用默认设置', '关闭', { duration: 3000 });
+      console.error('解析本地监控设置失败:', error);
+    }
+    return null;
+  }
+
+  // 保存到本地存储
+  private saveToStorage(): void {
+    try {
+      const settings = {
+        rules: this.monitorRules,
+        notifications: this.notificationSettings,
+        frequency: this.monitoringFrequency,
+        global: this.globalSettings,
+        updatedAt: new Date().toISOString()
+      };
+      localStorage.setItem(STORAGE_KEYS.MONITOR_SETTINGS, JSON.stringify(settings));
+    } catch (error) {
+      console.error('保存监控设置到本地存储失败:', error);
     }
   }
 
   // 保存设置
   saveSettings(): void {
-    // 这里可以保存到后端API
-    this.snackBar.open('监控设置已保存', '关闭', { duration: 3000 });
-    console.log('保存监控设置:', {
+    const settings = {
       rules: this.monitorRules,
       notifications: this.notificationSettings,
       frequency: this.monitoringFrequency,
       global: this.globalSettings
+    };
+
+    // 1. 保存到本地存储（即时生效）
+    this.saveToStorage();
+
+    // 2. 保存到后端 API
+    this.http.post(`${this.apiConfig.monitorUrl}/settings`, settings).subscribe({
+      next: (response) => {
+        this.snackBar.open('监控设置已保存到服务器', '关闭', { duration: TIME_CONSTANTS.SNACKBAR_DURATION });
+        console.log('监控设置已保存到服务器:', response);
+      },
+      error: (error) => {
+        // API 保存失败，但本地已保存
+        console.error('保存监控设置到服务器失败:', error);
+        this.snackBar.open('设置已保存到本地（服务器同步失败）', '关闭', { duration: TIME_CONSTANTS.SNACKBAR_DURATION });
+      }
     });
   }
 
@@ -475,14 +548,74 @@ export class MonitorSettingsComponent implements OnInit {
 
   // 测试微信通知
   private testWechatNotification(): void {
-    // 微信通知测试逻辑
-    this.snackBar.open('微信通知测试功能待实现', '关闭', { duration: 3000 });
+    const wechatConfig = this.notificationSettings.wechat;
+    if (!wechatConfig.enabled || !wechatConfig.webhookUrl) {
+      this.snackBar.open('微信通知未启用或未配置 Webhook URL', '关闭', { duration: TIME_CONSTANTS.SNACKBAR_DURATION });
+      return;
+    }
+
+    // 通过后端代理发送微信通知（避免跨域）
+    const payload = {
+      type: 'wechat',
+      config: {
+        webhookUrl: wechatConfig.webhookUrl,
+        secret: wechatConfig.secret
+      },
+      message: {
+        msgtype: 'text',
+        text: {
+          content: '【基金监控测试】这是一条测试消息，请忽略。',
+          mentioned_list: wechatConfig.mentionUsers
+        }
+      }
+    };
+
+    this.http.post(`${this.apiConfig.notificationsUrl}/test`, payload).subscribe({
+      next: (response) => {
+        console.log('微信通知测试成功:', response);
+        this.snackBar.open('微信通知测试成功', '关闭', { duration: TIME_CONSTANTS.SNACKBAR_DURATION });
+      },
+      error: (error) => {
+        console.error('微信通知测试失败:', error);
+        this.snackBar.open('微信通知测试失败，请检查配置', '关闭', { duration: TIME_CONSTANTS.SNACKBAR_DURATION });
+      }
+    });
   }
 
   // 测试邮件通知
   private testEmailNotification(): void {
-    // 邮件通知测试逻辑
-    this.snackBar.open('邮件通知测试功能待实现', '关闭', { duration: 3000 });
+    const emailConfig = this.notificationSettings.email;
+    if (!emailConfig.enabled || !emailConfig.smtpHost || emailConfig.recipients.length === 0) {
+      this.snackBar.open('邮件通知未启用或配置不完整', '关闭', { duration: TIME_CONSTANTS.SNACKBAR_DURATION });
+      return;
+    }
+
+    // 通过后端发送测试邮件
+    const payload = {
+      type: 'email',
+      config: {
+        smtpHost: emailConfig.smtpHost,
+        smtpPort: emailConfig.smtpPort,
+        username: emailConfig.username,
+        password: emailConfig.password
+      },
+      message: {
+        to: emailConfig.recipients,
+        subject: '【基金监控】测试邮件',
+        body: '这是一封测试邮件，用于验证邮件通知配置是否正确。'
+      }
+    };
+
+    this.http.post(`${this.apiConfig.notificationsUrl}/test`, payload).subscribe({
+      next: (response) => {
+        console.log('邮件通知测试成功:', response);
+        this.snackBar.open('邮件通知测试成功，请检查收件箱', '关闭', { duration: TIME_CONSTANTS.SNACKBAR_DURATION });
+      },
+      error: (error) => {
+        console.error('邮件通知测试失败:', error);
+        this.snackBar.open('邮件通知测试失败，请检查 SMTP 配置', '关闭', { duration: TIME_CONSTANTS.SNACKBAR_DURATION });
+      }
+    });
   }
 
   // 获取通知类型名称
