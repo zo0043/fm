@@ -30,18 +30,18 @@ const menuItems = [
   { path: '/about', label: '关于', icon: <InfoIcon /> },
 ];
 
-export default function SideNav() {
+interface SideNavProps {
+  mobileOpen: boolean;
+  onDrawerToggle: () => void;
+}
+
+export default function SideNav({ mobileOpen, onDrawerToggle }: SideNavProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [mobileOpen, setMobileOpen] = useState(false);
-
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
 
   const handleNavigation = (path: string) => {
     router.push(path);
-    setMobileOpen(false);
+    onDrawerToggle();
   };
 
   // 渲染侧边栏内容
@@ -117,8 +117,31 @@ export default function SideNav() {
       <Drawer
         variant="permanent"
         sx={{
+          display: { xs: 'none', md: 'block' },
           width: DRAWER_WIDTH,
           flexShrink: 0,
+          [`& .MuiDrawer-paper`]: {
+            width: DRAWER_WIDTH,
+            boxSizing: 'border-box',
+            display: 'flex',
+            flexDirection: 'column',
+          },
+        }}
+        anchor="left"
+      >
+        {drawer}
+      </Drawer>
+
+      {/* 移动端侧边栏 */}
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={onDrawerToggle}
+        ModalProps={{
+          keepMounted: true, // 优化性能，保持侧边栏挂载
+        }}
+        sx={{
+          display: { xs: 'block', md: 'none' },
           [`& .MuiDrawer-paper`]: {
             width: DRAWER_WIDTH,
             boxSizing: 'border-box',
