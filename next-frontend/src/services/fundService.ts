@@ -354,7 +354,7 @@ export class FundService {
         shares: Math.floor(Math.random() * 10000000) + 1000000,
         marketValue: Math.floor(Math.random() * 100000000) + 10000000,
         weight: parseFloat((Math.random() * 8 + 1).toFixed(2)),
-        changePercent: parseFloat((Math.random() - 0.5) * 10).toFixed(2)
+        changePercent: parseFloat(((Math.random() - 0.5) * 10).toFixed(2))
       });
     }
     
@@ -372,7 +372,7 @@ export class FundService {
       mockIndustries.push({
         industryName: industries[i],
         weight: parseFloat((Math.random() * 20 + 5).toFixed(2)),
-        changePercent: parseFloat((Math.random() - 0.5) * 5).toFixed(2),
+        changePercent: parseFloat(((Math.random() - 0.5) * 5).toFixed(2)),
         description: `${industries[i]}行业的配置说明`
       });
     }
