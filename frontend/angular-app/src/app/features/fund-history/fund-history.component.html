@@ -1,0 +1,208 @@
+<div class="fund-history-container">
+  <!-- 页面标题 -->
+  <h1 class="page-title">
+    <mat-icon>show_chart</mat-icon>
+    基金历史净值查询
+  </h1>
+  
+  <!-- 查询表单 -->
+  <mat-card class="search-card">
+    <mat-card-content>
+      <form [formGroup]="historyForm" class="search-form">
+        <div class="form-row">
+          <!-- 基金代码输入 -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>基金代码</mat-label>
+            <input matInput formControlName="fundCode" placeholder="请输入基金代码，例如：110022">
+            <mat-icon matPrefix>account_balance</mat-icon>
+            <mat-error *ngIf="historyForm.get('fundCode')?.hasError('required')">
+              基金代码是必填项
+            </mat-error>
+          </mat-form-field>
+          
+          <!-- 时间周期选择 -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>时间周期</mat-label>
+            <mat-select formControlName="timePeriod">
+              <mat-option *ngFor="let period of timePeriods" [value]="period.value">
+                {{ period.label }}
+              </mat-option>
+            </mat-select>
+            <mat-icon matPrefix>schedule</mat-icon>
+          </mat-form-field>
+        </div>
+        
+        <div class="form-row">
+          <!-- 开始日期 -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>开始日期</mat-label>
+            <input matInput formControlName="startDate" [matDatepicker]="startDatePicker">
+            <mat-datepicker-toggle matIconSuffix [for]="startDatePicker"></mat-datepicker-toggle>
+            <mat-datepicker #startDatePicker></mat-datepicker>
+          </mat-form-field>
+          
+          <!-- 结束日期 -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>结束日期</mat-label>
+            <input matInput formControlName="endDate" [matDatepicker]="endDatePicker">
+            <mat-datepicker-toggle matIconSuffix [for]="endDatePicker"></mat-datepicker-toggle>
+            <mat-datepicker #endDatePicker></mat-datepicker>
+          </mat-form-field>
+        </div>
+        
+        <!-- 操作按钮 -->
+        <div class="form-actions">
+          <button mat-raised-button color="primary" (click)="loadFundHistory()" [disabled]="isLoading">
+            <mat-icon *ngIf="!isLoading">search</mat-icon>
+            <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+            {{ isLoading ? '查询中...' : '查询' }}
+          </button>
+          
+          <button mat-raised-button (click)="refreshData()" [disabled]="isLoading">
+            <mat-icon>refresh</mat-icon>
+            刷新
+          </button>
+          
+          <button mat-raised-button (click)="exportData()" [disabled]="isLoading || dataSource.length === 0">
+            <mat-icon>download</mat-icon>
+            导出数据
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+  
+  <!-- 错误信息 -->
+  <div *ngIf="error" class="error-message">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ error }}</span>
+  </div>
+  
+  <!-- 数据表格 -->
+  <mat-card class="data-card" *ngIf="!isLoading">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>table_chart</mat-icon>
+        基金历史净值数据
+      </mat-card-title>
+      <mat-card-subtitle *ngIf="dataSource.length > 0">
+        共 {{ totalItems }} 条记录
+      </mat-card-subtitle>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <div class="table-container">
+        <mat-table [dataSource]="filteredData.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize)" matSort (matSortChange)="handleSortChange($event)">
+          <!-- 日期列 -->
+          <ng-container matColumnDef="date">
+            <mat-header-cell *matHeaderCellDef mat-sort-header="date"> 日期 </mat-header-cell>
+            <mat-cell *matCellDef="let element"> {{ element.date }} </mat-cell>
+          </ng-container>
+          
+          <!-- 单位净值列 -->
+          <ng-container matColumnDef="nav">
+            <mat-header-cell *matHeaderCellDef mat-sort-header="nav"> 单位净值 </mat-header-cell>
+            <mat-cell *matCellDef="let element"> {{ element.nav.toFixed(4) }} </mat-cell>
+          </ng-container>
+          
+          <!-- 累计净值列 -->
+          <ng-container matColumnDef="totalNav">
+            <mat-header-cell *matHeaderCellDef mat-sort-header="totalNav"> 累计净值 </mat-header-cell>
+            <mat-cell *matCellDef="let element"> {{ element.totalNav.toFixed(4) }} </mat-cell>
+          </ng-container>
+          
+          <!-- 日涨跌幅列 -->
+          <ng-container matColumnDef="dailyChange">
+            <mat-header-cell *matHeaderCellDef mat-sort-header="dailyChange"> 日涨跌幅 </mat-header-cell>
+            <mat-cell *matCellDef="let element" [class]="getDailyChangeClass(element.dailyChange)">
+              {{ formatDailyChange(element.dailyChange) }}
+            </mat-cell>
+          </ng-container>
+          
+          <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        </mat-table>
+        
+        <!-- 空数据状态 -->
+        <div class="empty-state" *ngIf="filteredData.length === 0">
+          <mat-icon>info_outline</mat-icon>
+          <p>暂无数据，请尝试调整查询条件</p>
+        </div>
+        
+        <!-- 加载状态 -->
+        <div class="loading-overlay" *ngIf="isLoading">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>正在加载数据...</p>
+        </div>
+      </div>
+    </mat-card-content>
+    
+    <!-- 分页控件 -->
+    <mat-card-actions class="pagination-actions">
+      <mat-paginator
+        [length]="totalItems"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[10, 20, 50, 100]"
+        [showFirstLastButtons]="true"
+        (page)="handlePageEvent($event)"
+        aria-label="选择页面"
+      ></mat-paginator>
+    </mat-card-actions>
+  </mat-card>
+  
+  <!-- 数据可视化图表区域 -->
+  <mat-card class="chart-card" *ngIf="!isLoading">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>show_chart</mat-icon>
+        净值走势图表
+      </mat-card-title>
+      <mat-card-subtitle>
+        基金单位净值变化趋势
+      </mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <!-- 图表控制 -->
+      <div class="chart-controls" *ngIf="dataSource.length > 0">
+        <mat-chip-list class="chart-type-chips">
+          <mat-chip
+            *ngFor="let type of chartTypes"
+            [selected]="chartType === type.value"
+            (click)="changeChartType(type.value as ChartType)"
+            color="primary"
+            class="chart-type-chip">
+            {{ type.label }}
+          </mat-chip>
+        </mat-chip-list>
+      </div>
+      
+      <!-- 图表容器 -->
+      <div class="chart-container" *ngIf="dataSource.length > 0">
+        <canvas
+          baseChart
+          [data]="{ datasets: chartDatasets, labels: chartLabels }"
+          [options]="chartOptions"
+          [type]="chartType">
+        </canvas>
+        
+        <!-- 加载状态 -->
+        <div class="chart-loading" *ngIf="isChartLoading">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>正在绘制图表...</p>
+        </div>
+      </div>
+      
+      <!-- 空数据状态 -->
+      <div class="chart-placeholder" *ngIf="dataSource.length === 0">
+        <p>暂无数据，请先查询基金历史净值</p>
+        <mat-icon class="chart-icon">insert_chart_outlined</mat-icon>
+      </div>
+    </mat-card-content>
+  </mat-card>
+  
+  <!-- 加载状态 -->
+  <div class="global-loading" *ngIf="isLoading">
+    <mat-spinner diameter="60"></mat-spinner>
+    <p>正在获取基金历史数据...</p>
+  </div>
+</div>
