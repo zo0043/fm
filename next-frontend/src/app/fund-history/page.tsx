@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { FundHistoryData } from '../../types/fund';
 import { fundService } from '../../services/fundService';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Box,
   Card,
@@ -64,12 +65,6 @@ const FundHistoryPage: React.FC = () => {
   const [endDate, setEndDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [chartType, setChartType] = useState<'line' | 'bar'>('line');
   const [timePeriod, setTimePeriod] = useState<string>('1y');
-  
-  // 数据状态
-  const [historyData, setHistoryData] = useState<FundHistoryData[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isChartLoading, setIsChartLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
   // 时间周期选项
@@ -83,6 +78,9 @@ const FundHistoryPage: React.FC = () => {
     { value: '5y', label: '最近5年' },
     { value: 'custom', label: '自定义' }
   ];
+
+  // React Query客户端
+  const queryClient = useQueryClient();
 
   // 根据时间周期更新日期范围
   useEffect(() => {
@@ -119,37 +117,57 @@ const FundHistoryPage: React.FC = () => {
     }
   }, [timePeriod]);
 
-  // 获取历史净值数据
-  const fetchHistoryData = async () => {
-    setIsLoading(true);
-    setIsChartLoading(true);
-    setError(null);
-    
-    try {
-      const data = await fundService.getFundNavFromEastmoney(fundCode, 1, 1000, startDate, endDate);
-      setHistoryData(data);
+  // 使用React Query获取历史净值数据
+  const { data: historyData = [], isLoading, isError, error, refetch } = useQuery({
+    queryKey: ['fundHistory', fundCode, startDate, endDate],
+    queryFn: () => fundService.getFundNavFromEastmoney(fundCode, 1, 1000, startDate, endDate),
+    enabled: false, // 手动触发
+    staleTime: 30 * 60 * 1000, // 30分钟缓存
+  });
+
+  // 使用useEffect监听查询状态变化
+  useEffect(() => {
+    if (historyData.length > 0) {
       setSuccessMessage(`成功加载基金${fundCode}的历史净值数据`);
-    } catch (err) {
-      setError('获取基金历史数据失败，请检查基金代码或网络连接');
-      console.error('获取基金历史数据失败:', err);
-    } finally {
-      setIsLoading(false);
-      setIsChartLoading(false);
+    } else if (isError) {
+      setSuccessMessage(null);
     }
+  }, [historyData, isError, fundCode]);
+
+  // 刷新数据的mutation
+  const refreshMutation = useMutation({
+    mutationFn: () => {
+      // 清除缓存
+      fundService.clearNavDataCache(fundCode);
+      // 重新获取数据
+      return fundService.getFundNavFromEastmoney(fundCode, 1, 1000, startDate, endDate);
+    },
+    onSettled: (data, error) => {
+      if (data) {
+        // 更新缓存
+        queryClient.setQueryData(['fundHistory', fundCode, startDate, endDate], data);
+        setSuccessMessage(`成功刷新基金${fundCode}的历史净值数据`);
+      } else if (error) {
+        setSuccessMessage(null);
+      }
+    }
+  });
+
+  // 获取历史净值数据
+  const fetchHistoryData = () => {
+    refetch();
   };
 
   // 刷新数据
   const refreshData = () => {
-    // 清除缓存
-    fundService.clearNavDataCache(fundCode);
-    // 重新加载数据
-    fetchHistoryData();
+    refreshMutation.mutate();
   };
-
   // 导出数据
+  const [exportError, setExportError] = useState<string | null>(null);
+  
   const exportData = () => {
     if (historyData.length === 0) {
-      setError('没有数据可以导出');
+      setExportError('没有数据可以导出');
       return;
     }
     
@@ -181,6 +199,7 @@ const FundHistoryPage: React.FC = () => {
     document.body.removeChild(link);
     
     setSuccessMessage('数据导出成功');
+    setExportError(null);
   };
 
   // 格式化涨跌幅
@@ -207,74 +226,76 @@ const FundHistoryPage: React.FC = () => {
     }
 
     return (
-      <ResponsiveContainer width="100%" height={400}>
-        {chartType === 'line' ? (
-          <LineChart data={historyData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="date" 
-              tick={{ fontSize: 12 }}
-              tickFormatter={(value) => value.slice(5)} // 只显示月-日
-            />
-            <YAxis 
-              tick={{ fontSize: 12 }}
-              tickFormatter={(value) => value.toFixed(3)}
-              domain={['auto', 'auto']}
-            />
-            <Tooltip 
-              formatter={(value: number) => [value.toFixed(4), '']}
-              labelFormatter={(label) => `日期: ${label}`}
-            />
-            <Legend />
-            <Line 
-              type="monotone" 
-              dataKey="nav" 
-              name="单位净值" 
-              stroke="#3f51b5" 
-              strokeWidth={2}
-              dot={{ r: 2 }}
-              activeDot={{ r: 5 }}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="totalNav" 
-              name="累计净值" 
-              stroke="#4caf50" 
-              strokeWidth={2}
-              dot={{ r: 2 }}
-              activeDot={{ r: 5 }}
-            />
-          </LineChart>
-        ) : (
-          <BarChart data={historyData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="date" 
-              tick={{ fontSize: 12 }}
-              tickFormatter={(value) => value.slice(5)} // 只显示月-日
-            />
-            <YAxis 
-              tick={{ fontSize: 12 }}
-              tickFormatter={(value) => value.toFixed(3)}
-            />
-            <Tooltip 
-              formatter={(value: number) => [value.toFixed(4), '']}
-              labelFormatter={(label) => `日期: ${label}`}
-            />
-            <Legend />
-            <Bar 
-              dataKey="nav" 
-              name="单位净值" 
-              fill="#3f51b5" 
-            />
-            <Bar 
-              dataKey="totalNav" 
-              name="累计净值" 
-              fill="#4caf50" 
-            />
-          </BarChart>
-        )}
-      </ResponsiveContainer>
+      <Box sx={{ height: 400 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          {chartType === 'line' ? (
+            <LineChart data={historyData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis 
+                dataKey="date" 
+                tick={{ fontSize: 12 }}
+                tickFormatter={(value) => value.slice(5)} // 只显示月-日
+              />
+              <YAxis 
+                tick={{ fontSize: 12 }}
+                tickFormatter={(value) => value.toFixed(3)}
+                domain={['auto', 'auto']}
+              />
+              <Tooltip 
+                formatter={(value: number) => [value.toFixed(4), '']}
+                labelFormatter={(label) => `日期: ${label}`}
+              />
+              <Legend />
+              <Line 
+                type="monotone" 
+                dataKey="nav" 
+                name="单位净值" 
+                stroke="#3f51b5" 
+                strokeWidth={2}
+                dot={{ r: 2 }}
+                activeDot={{ r: 5 }}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="totalNav" 
+                name="累计净值" 
+                stroke="#4caf50" 
+                strokeWidth={2}
+                dot={{ r: 2 }}
+                activeDot={{ r: 5 }}
+              />
+            </LineChart>
+          ) : (
+            <BarChart data={historyData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis 
+                dataKey="date" 
+                tick={{ fontSize: 12 }}
+                tickFormatter={(value) => value.slice(5)} // 只显示月-日
+              />
+              <YAxis 
+                tick={{ fontSize: 12 }}
+                tickFormatter={(value) => value.toFixed(3)}
+              />
+              <Tooltip 
+                formatter={(value: number) => [value.toFixed(4), '']}
+                labelFormatter={(label) => `日期: ${label}`}
+              />
+              <Legend />
+              <Bar 
+                dataKey="nav" 
+                name="单位净值" 
+                fill="#3f51b5" 
+              />
+              <Bar 
+                dataKey="totalNav" 
+                name="累计净值" 
+                fill="#4caf50" 
+              />
+            </BarChart>
+          )}
+        </ResponsiveContainer>
+      </Box>
     );
   };
 
@@ -404,7 +425,7 @@ const FundHistoryPage: React.FC = () => {
           }
         />
         <CardContent>
-          {isChartLoading ? (
+          {isLoading ? (
             <Box sx={{ height: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <CircularProgress />
             </Box>
@@ -480,17 +501,17 @@ const FundHistoryPage: React.FC = () => {
 
       {/* 消息提示 */}
       <Snackbar
-        open={!!error || !!successMessage}
+        open={!!isError || !!exportError || !!successMessage}
         autoHideDuration={3000}
-        onClose={() => { setError(null); setSuccessMessage(null); }}
+        onClose={() => { setExportError(null); setSuccessMessage(null); }}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
         <Alert
-          onClose={() => { setError(null); setSuccessMessage(null); }}
-          severity={error ? 'error' : 'success'}
+          onClose={() => { setExportError(null); setSuccessMessage(null); }}
+          severity={isError || exportError ? 'error' : 'success'}
           sx={{ width: '100%' }}
         >
-          {error || successMessage}
+          {(error as Error)?.message || exportError || successMessage}
         </Alert>
       </Snackbar>
     </Box>
