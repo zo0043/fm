@@ -58,6 +58,11 @@ export class AppNavComponent {
       path: '/monitor',
       icon: 'notifications_active',
       label: '监控设置'
+    },
+    {
+      path: '/fund-history',
+      icon: 'account_balance_wallet',
+      label: '历史净值'
     }
   ];
 
