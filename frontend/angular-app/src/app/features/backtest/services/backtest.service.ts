@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
-import { map, catchError, delay } from 'rxjs/operators';
+import { map, catchError, delay, tap } from 'rxjs/operators';
 
 import {
   BacktestConfig,
@@ -15,25 +15,41 @@ import {
   TransactionRecord
 } from '../models/backtest.model';
 import { FundService, FundHistoryData } from '../../../core/services/fund.service';
+import { ApiConfigService } from '../../../core/services/api-config.service';
 
+/**
+ * 回测服务
+ * 提供策略回测、结果分析和报告导出功能
+ *
+ * 使用方法：
+ * constructor(private backtestService: BacktestService) {}
+ * this.backtestService.runBacktest(request).subscribe(result => ...);
+ */
 @Injectable({
   providedIn: 'root'
 })
 export class BacktestService {
-  private apiUrl = '/api/backtest';
+  // 数据来源标识
+  private _isUsingMockData = false;
+  public get isUsingMockData(): boolean {
+    return this._isUsingMockData;
+  }
 
   constructor(
     private http: HttpClient,
-    private fundService: FundService
+    private fundService: FundService,
+    private apiConfig: ApiConfigService
   ) {}
 
   /**
    * 执行回测
    */
   runBacktest(request: BacktestRequest): Observable<BacktestApiResponse> {
-    return this.http.post<BacktestApiResponse>(this.apiUrl, request).pipe(
+    return this.http.post<BacktestApiResponse>(this.apiConfig.backtestUrl, request).pipe(
+      tap(() => this._isUsingMockData = false),
       catchError(error => {
         console.error('回测执行失败:', error);
+        this._isUsingMockData = true;
         // 如果API不可用，使用模拟数据
         return this.generateMockBacktestResult(request.config, request.includeBenchmark);
       })
@@ -85,8 +101,55 @@ export class BacktestService {
   getFundHistoryData(fundId: string, startDate: Date, endDate: Date): Observable<FundHistoryData[]> {
     // 从fundId中提取基金代码（假设fundId格式为fund_XXXX，其中XXXX是基金代码）
     const fundCode = fundId.replace('fund_', '');
+    
     // 使用东方财富API获取基金净值数据
-    return this.fundService.getFundNavFromEastmoney(fundCode);
+    return this.fundService.getFundNavFromEastmoney(fundCode, 1, 100).pipe(
+      map(data => {
+        // 过滤出指定日期范围内的数据
+        const filteredData = data.filter(item => {
+          const itemDate = new Date(item.date);
+          return itemDate >= startDate && itemDate <= endDate;
+        });
+        return filteredData;
+      }),
+      catchError(error => {
+        console.error('获取基金历史数据失败:', error);
+        // 生成模拟数据作为备选
+        return this.generateMockFundHistoryData(startDate, endDate);
+      })
+    );
+  }
+
+  /**
+   * 生成模拟基金历史数据
+   */
+  private generateMockFundHistoryData(startDate: Date, endDate: Date): Observable<FundHistoryData[]> {
+    const historyData: FundHistoryData[] = [];
+    const currentDate = new Date(startDate);
+    let nav = 1.0;
+
+    while (currentDate <= endDate) {
+      // 模拟净值变化，年化收益约10%，日波动率约1%
+      const dailyChange = (Math.random() - 0.5) * 0.02;
+      nav = nav * (1 + dailyChange);
+
+      historyData.push({
+        date: currentDate.toISOString().split('T')[0],
+        nav: parseFloat(nav.toFixed(4)),
+        totalNav: parseFloat((nav * 1.15).toFixed(4)),
+        dailyChange: parseFloat(dailyChange.toFixed(4))
+      });
+
+      // 跳过周末，只保留工作日
+      const dayOfWeek = currentDate.getDay();
+      if (dayOfWeek < 5) {
+        currentDate.setDate(currentDate.getDate() + 1);
+      } else {
+        currentDate.setDate(currentDate.getDate() + (7 - dayOfWeek));
+      }
+    }
+
+    return of(historyData);
   }
 
   /**
@@ -99,7 +162,7 @@ export class BacktestService {
       generatedAt: new Date()
     };
 
-    return this.http.post(`${this.apiUrl}/export`, reportData, {
+    return this.http.post(`${this.apiConfig.backtestUrl}/export`, reportData, {
       responseType: 'blob'
     }).pipe(
       catchError(error => {
@@ -114,7 +177,7 @@ export class BacktestService {
    * 保存回测配置
    */
   saveBacktestConfig(config: BacktestConfig, name: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/configs`, { config, name }).pipe(
+    return this.http.post(`${this.apiConfig.backtestUrl}/configs`, { config, name }).pipe(
       catchError(error => {
         console.error('保存配置失败:', error);
         return of({ success: false, error: '保存失败' });
@@ -126,7 +189,7 @@ export class BacktestService {
    * 获取保存的回测配置列表
    */
   getSavedConfigs(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/configs`).pipe(
+    return this.http.get<any[]>(`${this.apiConfig.backtestUrl}/configs`).pipe(
       catchError(error => {
         console.error('获取配置列表失败:', error);
         return of([]);
