@@ -6,7 +6,11 @@ import { takeUntil, finalize, catchError } from 'rxjs/operators';
 
 import { FundDetailService } from './services/fund-detail.service';
 import { FundDetail, NavHistory, FundNews, FundAnnouncement } from './models/fund-detail.model';
-import { FundService } from '../../core/services/fund.service';
+import { FundService, FundHistoryData } from '../../core/services/fund.service';
+import { WatchlistService } from '../../core/services/watchlist.service';
+import { TIME_CONSTANTS } from '../../shared/constants/app.constants';
+import { FormatUtils } from '../../shared/utils/format.utils';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-fund-detail',
@@ -27,6 +31,7 @@ export class FundDetailComponent implements OnInit, OnDestroy {
   isLoading = true;
   isNewsLoading = false;
   isAnnouncementsLoading = false;
+  isHistoryLoading = false;
   error: string | null = null;
 
   // 标签页控制
@@ -35,14 +40,27 @@ export class FundDetailComponent implements OnInit, OnDestroy {
   // 图表相关
   chartPeriod: string = '1Y';
 
+  // 历史净值查询相关
+  historyStartDate: Date = new Date();
+  historyEndDate: Date = new Date();
+  historyData: FundHistoryData[] = [];
+  historyDisplayedColumns: string[] = ['date', 'nav', 'totalNav', 'dailyChange'];
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private fundDetailService: FundDetailService,
-    private fundService: FundService
+    private fundService: FundService,
+    private watchlistService: WatchlistService,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit() {
+    // 初始化历史净值查询日期范围（默认查询最近1年）
+    this.historyEndDate = new Date();
+    this.historyStartDate = new Date();
+    this.historyStartDate.setFullYear(this.historyEndDate.getFullYear() - 1);
+    
     this.route.params.subscribe(params => {
       this.fundId = params['id'];
       if (this.fundId) {
@@ -140,33 +158,53 @@ export class FundDetailComponent implements OnInit, OnDestroy {
   }
 
   onAddToWatchlist(fundId: string) {
-    this.fundService.addToWatchlist(fundId)
-      .pipe(takeUntil(this.destroy$))
+    if (!this.fund) return;
+
+    this.watchlistService.add({
+      id: fundId,
+      code: this.fund.code,
+      name: this.fund.name
+    }).pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response) => {
-          if (response.success) {
-            console.log('添加到关注列表成功');
-          }
+        next: () => {
+          this.snackBar.open(`已将 ${this.fund?.name} 添加到关注列表`, '关闭', {
+            duration: TIME_CONSTANTS.SNACKBAR_DURATION
+          });
         },
         error: (error) => {
           console.error('添加关注失败:', error);
+          this.snackBar.open('添加关注失败', '关闭', {
+            duration: TIME_CONSTANTS.SNACKBAR_DURATION
+          });
         }
       });
   }
 
   onRemoveFromWatchlist(fundId: string) {
-    this.fundService.removeFromWatchlist(fundId)
+    this.watchlistService.remove(fundId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response) => {
-          if (response.success) {
-            console.log('从关注列表移除成功');
-          }
+        next: () => {
+          this.snackBar.open(`已将 ${this.fund?.name} 从关注列表移除`, '关闭', {
+            duration: TIME_CONSTANTS.SNACKBAR_DURATION
+          });
         },
         error: (error) => {
           console.error('移除关注失败:', error);
+          this.snackBar.open('移除关注失败', '关闭', {
+            duration: TIME_CONSTANTS.SNACKBAR_DURATION
+          });
         }
       });
+  }
+
+  // 切换关注状态
+  toggleWatchlist() {
+    if (this.isWatchlisted) {
+      this.onRemoveFromWatchlist(this.fundId);
+    } else {
+      this.onAddToWatchlist(this.fundId);
+    }
   }
 
   onGoBack() {
@@ -285,9 +323,9 @@ export class FundDetailComponent implements OnInit, OnDestroy {
     return Math.sqrt(avgSquaredDiff);
   }
 
-  // 检查基金是否在关注列表中（这里应该从状态管理中获取）
+  // 检查基金是否在关注列表中
   get isWatchlisted(): boolean {
-    return false; // 临时实现
+    return this.watchlistService.isWatched(this.fundId);
   }
 
   // 获取基金评级颜色
@@ -304,5 +342,80 @@ export class FundDetailComponent implements OnInit, OnDestroy {
     if (rating >= 3.5) return '良好';
     if (rating >= 2.5) return '一般';
     return '较差';
+  }
+
+  // 加载基金历史净值数据
+  loadFundHistoryData(): void {
+    if (!this.fund || !this.fund.code) {
+      return;
+    }
+    
+    this.isHistoryLoading = true;
+    
+    // 格式化日期
+    const formattedStartDate = this.historyStartDate.toISOString().split('T')[0];
+    const formattedEndDate = this.historyEndDate.toISOString().split('T')[0];
+    
+    this.fundService.getFundNavFromEastmoney(
+      this.fund.code, 
+      1, 
+      1000, // 获取足够多的数据
+      formattedStartDate, 
+      formattedEndDate
+    ).pipe(
+      takeUntil(this.destroy$),
+      finalize(() => this.isHistoryLoading = false)
+    ).subscribe({
+      next: (data) => {
+        this.historyData = data;
+        this.snackBar.open('历史净值数据加载成功', '关闭', {
+          duration: TIME_CONSTANTS.SNACKBAR_DURATION
+        });
+      },
+      error: (error) => {
+        console.error('加载历史净值数据失败:', error);
+        this.snackBar.open('历史净值数据加载失败', '关闭', {
+          duration: TIME_CONSTANTS.SNACKBAR_DURATION
+        });
+      }
+    });
+  }
+
+  // 导出历史净值数据
+  exportHistoryData(): void {
+    if (this.historyData.length === 0) {
+      return;
+    }
+    
+    // 生成CSV内容
+    const headers = ['日期', '单位净值', '累计净值', '日涨跌幅(%)'];
+    const rows = this.historyData.map(item => [
+      item.date,
+      item.nav,
+      item.totalNav,
+      (item.dailyChange * 100).toFixed(2)
+    ]);
+    
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n');
+    
+    // 创建下载链接
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `fund_history_${this.fund?.code || this.fundId}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    this.snackBar.open('历史净值数据导出成功', '关闭', {
+      duration: TIME_CONSTANTS.SNACKBAR_DURATION
+    });
   }
 }
