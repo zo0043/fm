@@ -136,9 +136,9 @@
           <!-- 可添加基金标签页 -->
           <mat-tab label="可添加基金">
             <div class="tab-content">
-              <div class="fund-grid" *ngIf="availableFunds.length > 0">
+              <div class="fund-grid" *ngIf="filteredAvailableFunds.length > 0">
                 <app-fund-card
-                  *ngFor="let fund of availableFunds"
+                  *ngFor="let fund of filteredAvailableFunds"
                   [fund]="fund"
                   [showActions]="true"
                   (viewDetails)="onViewDetails($event)"
@@ -147,7 +147,7 @@
               </div>
 
               <!-- 空状态 -->
-              <div class="empty-state" *ngIf="availableFunds.length === 0">
+              <div class="empty-state" *ngIf="filteredAvailableFunds.length === 0">
                 <mat-icon class="empty-icon">search_off</mat-icon>
                 <h3>没有可添加的基金</h3>
                 <p>所有基金都已在您的关注列表中</p>
