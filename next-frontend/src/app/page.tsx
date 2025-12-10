@@ -1,10 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Box, Typography, Divider, CircularProgress } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { fundService } from '../services/fundService';
-import { Fund } from '../types/fund';
 
 // 仪表盘页面
 export default function DashboardPage() {
@@ -30,157 +28,124 @@ export default function DashboardPage() {
   const topLosers = [...funds].sort((a, b) => a.dailyChange - b.dailyChange).slice(0, 5);
 
   return (
-    <Box sx={{ maxWidth: 1400, margin: '0 auto', p: 2 }}>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* 页面标题和描述 */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
-          基金市场仪表盘
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          实时监控基金市场动态，把握投资机会
-        </Typography>
-        <Divider sx={{ mt: 2, mb: 3 }} />
-      </Box>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">基金市场仪表盘</h1>
+        <p className="text-gray-600 mb-4">实时监控基金市场动态，把握投资机会</p>
+        <hr className="border-gray-200" />
+      </div>
 
       {isLoading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}>
-          <CircularProgress />
-        </Box>
+        <div className="flex justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
       ) : error ? (
-        <Box sx={{ textAlign: 'center', py: 5, color: 'error.main' }}>
-          <Typography variant="h6">加载数据失败，请稍后重试</Typography>
-        </Box>
+        <div className="text-center py-12">
+          <div className="text-red-600">
+            <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">加载失败</h3>
+            <p className="mt-1 text-sm text-gray-500">加载数据失败，请稍后重试</p>
+          </div>
+        </div>
       ) : (
         <>
           {/* 市场概览卡片 */}
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 4 }}>
-            <Box sx={{ flex: { xs: '0 0 100%', sm: '0 0 calc(50% - 12px)', md: '0 0 calc(25% - 18px)' } }}>
-              <Box sx={{ p: 2, bgcolor: '#fff', borderRadius: 2, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                  总基金数
-                </Typography>
-                <Typography variant="h4" component="div" sx={{ fontWeight: 700 }}>
-                  {marketStats.total}
-                </Typography>
-              </Box>
-            </Box>
-            <Box sx={{ flex: { xs: '0 0 100%', sm: '0 0 calc(50% - 12px)', md: '0 0 calc(25% - 18px)' } }}>
-              <Box sx={{ p: 2, bgcolor: '#fff', borderRadius: 2, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                  上涨基金
-                </Typography>
-                <Typography variant="h4" component="div" sx={{ fontWeight: 700, color: '#43a047' }}>
-                  {marketStats.up}
-                </Typography>
-              </Box>
-            </Box>
-            <Box sx={{ flex: { xs: '0 0 100%', sm: '0 0 calc(50% - 12px)', md: '0 0 calc(25% - 18px)' } }}>
-              <Box sx={{ p: 2, bgcolor: '#fff', borderRadius: 2, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                  下跌基金
-                </Typography>
-                <Typography variant="h4" component="div" sx={{ fontWeight: 700, color: '#f44336' }}>
-                  {marketStats.down}
-                </Typography>
-              </Box>
-            </Box>
-            <Box sx={{ flex: { xs: '0 0 100%', sm: '0 0 calc(50% - 12px)', md: '0 0 calc(25% - 18px)' } }}>
-              <Box sx={{ p: 2, bgcolor: '#fff', borderRadius: 2, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                  平盘基金
-                </Typography>
-                <Typography variant="h4" component="div" sx={{ fontWeight: 700, color: '#9e9e9e' }}>
-                  {marketStats.flat}
-                </Typography>
-              </Box>
-            </Box>
-          </Box>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="text-sm font-medium text-gray-500 mb-1">总基金数</div>
+              <div className="text-2xl font-bold text-gray-900">{marketStats.total}</div>
+            </div>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="text-sm font-medium text-gray-500 mb-1">上涨基金</div>
+              <div className="text-2xl font-bold text-green-600">{marketStats.up}</div>
+            </div>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="text-sm font-medium text-gray-500 mb-1">下跌基金</div>
+              <div className="text-2xl font-bold text-red-600">{marketStats.down}</div>
+            </div>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="text-sm font-medium text-gray-500 mb-1">平盘基金</div>
+              <div className="text-2xl font-bold text-gray-500">{marketStats.flat}</div>
+            </div>
+          </div>
 
-          {/* 简单的内容区域 */}
-          <Box sx={{ p: 2, bgcolor: '#fff', borderRadius: 2, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', mb: 4 }}>
-            <Typography variant="h5" sx={{ fontWeight: 600, mb: 2 }}>
-              市场趋势
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              市场趋势数据将显示在这里
-            </Typography>
-          </Box>
+          {/* 市场趋势 */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">市场趋势</h2>
+            <p className="text-gray-600">市场趋势图表将显示在这里</p>
+          </div>
 
-          {/* 简单的基金列表 */}
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-            <Box sx={{ flex: { xs: '0 0 100%', md: '0 0 calc(50% - 12px)' } }}>
-              <Box sx={{ p: 2, bgcolor: '#fff', borderRadius: 2, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
-                <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-                  涨幅榜
-                </Typography>
-                {topGainers.length > 0 ? (
-                  <Box sx={{ maxHeight: 300, overflow: 'auto' }}>
-                    {topGainers.map((fund) => (
-                      <Box key={fund.id} sx={{ mb: 2, p: 1, borderBottom: '1px solid rgba(0, 0, 0, 0.08)' }}>
-                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                          {fund.name}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {fund.code} · {fund.type}
-                        </Typography>
-                        <Typography 
-                          variant="body2" 
-                          sx={{ 
-                            mt: 0.5, 
-                            fontWeight: 600, 
-                            color: fund.dailyChange > 0 ? '#43a047' : fund.dailyChange < 0 ? '#f44336' : '#9e9e9e'
-                          }}
-                        >
-                          {fund.dailyChange > 0 ? '+' : ''}{(fund.dailyChange * 100).toFixed(2)}%
-                        </Typography>
-                      </Box>
-                    ))}
-                  </Box>
-                ) : (
-                  <Typography variant="body2" color="text.secondary">
-                    暂无数据
-                  </Typography>
-                )}
-              </Box>
-            </Box>
-            <Box sx={{ flex: { xs: '0 0 100%', md: '0 0 calc(50% - 12px)' } }}>
-              <Box sx={{ p: 2, bgcolor: '#fff', borderRadius: 2, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
-                <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-                  跌幅榜
-                </Typography>
-                {topLosers.length > 0 ? (
-                  <Box sx={{ maxHeight: 300, overflow: 'auto' }}>
-                    {topLosers.map((fund) => (
-                      <Box key={fund.id} sx={{ mb: 2, p: 1, borderBottom: '1px solid rgba(0, 0, 0, 0.08)' }}>
-                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                          {fund.name}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {fund.code} · {fund.type}
-                        </Typography>
-                        <Typography 
-                          variant="body2" 
-                          sx={{ 
-                            mt: 0.5, 
-                            fontWeight: 600, 
-                            color: fund.dailyChange > 0 ? '#43a047' : fund.dailyChange < 0 ? '#f44336' : '#9e9e9e'
-                          }}
-                        >
-                          {fund.dailyChange > 0 ? '+' : ''}{(fund.dailyChange * 100).toFixed(2)}%
-                        </Typography>
-                      </Box>
-                    ))}
-                  </Box>
-                ) : (
-                  <Typography variant="body2" color="text.secondary">
-                    暂无数据
-                  </Typography>
-                )}
-              </Box>
-            </Box>
-          </Box>
+          {/* 基金排行榜 */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* 涨幅榜 */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <span className="text-green-500 mr-2">📈</span>
+                涨幅榜 Top 5
+              </h3>
+              {topGainers.length > 0 ? (
+                <div className="space-y-3">
+                  {topGainers.map((fund, index) => (
+                    <div key={fund.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center space-x-3">
+                        <div className="flex-shrink-0 w-6 h-6 bg-green-100 text-green-800 text-xs font-medium rounded-full flex items-center justify-center">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">{fund.name}</div>
+                          <div className="text-sm text-gray-500">{fund.code} · {fund.type}</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold text-green-600">
+                          +{(fund.dailyChange * 100).toFixed(2)}%
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-center py-4">暂无数据</p>
+              )}
+            </div>
+
+            {/* 跌幅榜 */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <span className="text-red-500 mr-2">📉</span>
+                跌幅榜 Top 5
+              </h3>
+              {topLosers.length > 0 ? (
+                <div className="space-y-3">
+                  {topLosers.map((fund, index) => (
+                    <div key={fund.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center space-x-3">
+                        <div className="flex-shrink-0 w-6 h-6 bg-red-100 text-red-800 text-xs font-medium rounded-full flex items-center justify-center">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">{fund.name}</div>
+                          <div className="text-sm text-gray-500">{fund.code} · {fund.type}</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold text-red-600">
+                          {(fund.dailyChange * 100).toFixed(2)}%
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-center py-4">暂无数据</p>
+              )}
+            </div>
+          </div>
         </>
       )}
-    </Box>
+    </div>
   );
 }

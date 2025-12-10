@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import ThemeWrapper from './_components/ThemeWrapper';
-import LayoutContent from './_components/LayoutContent';
 import QueryProvider from './_components/QueryProvider';
-import StructuredData from './_components/StructuredData';
+import LayoutContent from './_components/LayoutContent';
 
 export const metadata: Metadata = {
   title: "基金监控系统",
@@ -32,22 +30,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN">
-      <head>
-        {/* 结构化数据 */}
-        <StructuredData />
-      </head>
-      <body
-        className="antialiased"
-        style={{ margin: 0, padding: 0 }}
-      >
-        <ThemeWrapper>
-          <QueryProvider>
-            <LayoutContent>
-              {children}
-            </LayoutContent>
-          </QueryProvider>
-        </ThemeWrapper>
+    <html lang="zh-CN" className="h-full">
+      <body className="h-full bg-gray-50">
+        <QueryProvider>
+          <LayoutContent>
+            {children}
+          </LayoutContent>
+        </QueryProvider>
       </body>
     </html>
   );
