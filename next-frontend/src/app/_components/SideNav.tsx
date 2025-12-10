@@ -1,158 +1,142 @@
 'use client';
 
-import { useState } from 'react';
-import Drawer from '@mui/material/Drawer';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Divider from '@mui/material/Divider';
 import { usePathname, useRouter } from 'next/navigation';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import HistoryIcon from '@mui/icons-material/History';
-import PieChartIcon from '@mui/icons-material/PieChart';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import InfoIcon from '@mui/icons-material/Info';
-import ShowChartIcon from '@mui/icons-material/ShowChart';
-
-// 侧边栏宽度
-const DRAWER_WIDTH = 240;
+import { useState } from 'react';
 
 // 导航菜单项
 const menuItems = [
-  { path: '/', label: '仪表盘', icon: <DashboardIcon /> },
-  { path: '/fund-history', label: '基金历史净值', icon: <HistoryIcon /> },
-  { path: '/portfolio', label: '我的投资组合', icon: <PieChartIcon /> },
-  { path: '/analysis', label: '基金分析', icon: <TrendingUpIcon /> },
-  { path: '/about', label: '关于', icon: <InfoIcon /> },
+  { path: '/', label: '仪表盘', icon: '📊' },
+  { path: '/fund-history', label: '基金历史净值', icon: '📈' },
+  { path: '/portfolio', label: '我的投资组合', icon: '🥧' },
+  { path: '/analysis', label: '基金分析', icon: '📊' },
+  { path: '/about', label: '关于', icon: 'ℹ️' },
 ];
 
 interface SideNavProps {
-  mobileOpen: boolean;
-  onDrawerToggle: () => void;
+  sidebarOpen: boolean;
+  setSidebarOpen: (open: boolean) => void;
 }
 
-export default function SideNav({ mobileOpen, onDrawerToggle }: SideNavProps) {
+export default function SideNav({ sidebarOpen, setSidebarOpen }: SideNavProps) {
   const pathname = usePathname();
   const router = useRouter();
 
   const handleNavigation = (path: string) => {
     router.push(path);
-    onDrawerToggle();
+    setSidebarOpen(false);
   };
-
-  // 渲染侧边栏内容
-  const drawer = (
-    <div>
-      {/* 品牌标识和系统名称 */}
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
-          p: 2,
-          pt: 3,
-          pb: 2,
-          borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
-        }}
-      >
-        <ShowChartIcon sx={{ fontSize: 28, color: '#1976d2' }} />
-        <Box>
-          <Typography variant="h6" component="div" sx={{ fontWeight: 700, color: '#1976d2' }}>
-            基金监控系统
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Fund Monitor
-          </Typography>
-        </Box>
-      </Box>
-
-      <Divider sx={{ mb: 1 }} />
-
-      <List>
-        {menuItems.map((item) => (
-          <ListItem key={item.path} disablePadding>
-            <ListItemButton
-              selected={pathname === item.path}
-              onClick={() => handleNavigation(item.path)}
-            >
-              <ListItemIcon sx={{ color: pathname === item.path ? '#1976d2' : 'inherit' }}>
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText 
-                primary={item.label} 
-                primaryTypographyProps={{
-                  sx: {
-                    fontWeight: pathname === item.path ? 500 : 400,
-                    color: pathname === item.path ? '#1976d2' : 'inherit',
-                  }
-                }}
-              />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-
-      {/* 底部信息 */}
-      <Box
-        sx={{
-          mt: 'auto',
-          p: 2,
-          borderTop: '1px solid rgba(0, 0, 0, 0.1)',
-        }}
-      >
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center' }}>
-          © {new Date().getFullYear()} 基金监控系统
-        </Typography>
-      </Box>
-    </div>
-  );
 
   return (
     <>
       {/* 桌面端侧边栏 */}
-      <Drawer
-        variant="permanent"
-        sx={{
-          display: { xs: 'none', md: 'block' },
-          width: DRAWER_WIDTH,
-          flexShrink: 0,
-          [`& .MuiDrawer-paper`]: {
-            width: DRAWER_WIDTH,
-            boxSizing: 'border-box',
-            display: 'flex',
-            flexDirection: 'column',
-          },
-        }}
-        anchor="left"
-      >
-        {drawer}
-      </Drawer>
+      <aside className="hidden md:flex md:w-60 md:flex-col md:fixed md:inset-y-0 bg-white border-r border-gray-200">
+        <div className="flex flex-col h-full">
+          {/* 品牌标识 */}
+          <div className="flex items-center gap-3 p-4 border-b border-gray-200">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">📈</span>
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-blue-600">基金监控系统</h2>
+              <p className="text-xs text-gray-500">Fund Monitor</p>
+            </div>
+          </div>
+
+          {/* 导航菜单 */}
+          <nav className="flex-1 p-4">
+            <ul className="space-y-2">
+              {menuItems.map((item) => (
+                <li key={item.path}>
+                  <button
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                      pathname === item.path
+                        ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                    onClick={() => handleNavigation(item.path)}
+                  >
+                    <span className="text-lg">{item.icon}</span>
+                    <span className="font-medium">{item.label}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          {/* 底部信息 */}
+          <div className="p-4 border-t border-gray-200">
+            <p className="text-xs text-gray-500 text-center">
+              © {new Date().getFullYear()} 基金监控系统
+            </p>
+          </div>
+        </div>
+      </aside>
+
+      {/* 移动端遮罩层 */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
       {/* 移动端侧边栏 */}
-      <Drawer
-        variant="temporary"
-        open={mobileOpen}
-        onClose={onDrawerToggle}
-        ModalProps={{
-          keepMounted: true, // 优化性能，保持侧边栏挂载
-        }}
-        sx={{
-          display: { xs: 'block', md: 'none' },
-          [`& .MuiDrawer-paper`]: {
-            width: DRAWER_WIDTH,
-            boxSizing: 'border-box',
-            display: 'flex',
-            flexDirection: 'column',
-          },
-        }}
-        anchor="left"
-      >
-        {drawer}
-      </Drawer>
+      <aside className={`fixed inset-y-0 left-0 z-50 w-60 bg-white transform transition-transform duration-300 ease-in-out md:hidden ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        <div className="flex flex-col h-full">
+          {/* 关闭按钮 */}
+          <div className="flex justify-end p-4">
+            <button
+              className="p-2 text-gray-500 hover:text-gray-700"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* 品牌标识 */}
+          <div className="flex items-center gap-3 px-4 pb-4 border-b border-gray-200">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">📈</span>
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-blue-600">基金监控系统</h2>
+              <p className="text-xs text-gray-500">Fund Monitor</p>
+            </div>
+          </div>
+
+          {/* 导航菜单 */}
+          <nav className="flex-1 p-4">
+            <ul className="space-y-2">
+              {menuItems.map((item) => (
+                <li key={item.path}>
+                  <button
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                      pathname === item.path
+                        ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                    onClick={() => handleNavigation(item.path)}
+                  >
+                    <span className="text-lg">{item.icon}</span>
+                    <span className="font-medium">{item.label}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          {/* 底部信息 */}
+          <div className="p-4 border-t border-gray-200">
+            <p className="text-xs text-gray-500 text-center">
+              © {new Date().getFullYear()} 基金监控系统
+            </p>
+          </div>
+        </div>
+      </aside>
     </>
   );
 }

@@ -1,16 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Box from '@mui/material/Box';
-import Toolbar from '@mui/material/Toolbar';
-import AppBar from '@mui/material/AppBar';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import Avatar from '@mui/material/Avatar';
-import Badge from '@mui/material/Badge';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import MenuIcon from '@mui/icons-material/Menu';
 import SideNav from './SideNav';
 
 interface LayoutContentProps {
@@ -18,85 +8,67 @@ interface LayoutContentProps {
 }
 
 export default function LayoutContent({ children }: LayoutContentProps) {
-  const [mobileOpen, setMobileOpen] = useState(false);
-
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      {/* 顶部导航栏 */}
-      <AppBar
-        position="fixed"
-        sx={{ zIndex: 1201 }}
-      >
-        <Toolbar>
-          {/* 移动端汉堡菜单 */}
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { md: 'none' } }}
-          >
-            <MenuIcon />
-          </IconButton>
-
-          {/* 品牌标识 - 移动端显示 */}
-          <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center', gap: 1, mr: 2 }}>
-            <Avatar sx={{ bgcolor: '#1976d2', width: 32, height: 32 }}>
-              FM
-            </Avatar>
-            <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
-              基金监控
-            </Typography>
-          </Box>
-
-          <Box sx={{ flexGrow: 1 }} />
-
-          {/* 通知图标 */}
-          <IconButton
-            size="large"
-            edge="end"
-            color="inherit"
-            aria-label="notifications"
-            sx={{ mr: 1 }}
-          >
-            <Badge badgeContent={3} color="warning">
-              <NotificationsIcon />
-            </Badge>
-          </IconButton>
-
-          {/* 用户信息 */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 1 }}>
-            <Typography variant="body2" color="inherit" sx={{ display: { xs: 'none', sm: 'block' } }}>
-              管理员
-            </Typography>
-            <Avatar sx={{ bgcolor: '#43a047', width: 32, height: 32 }}>
-              <AccountCircleIcon />
-            </Avatar>
-          </Box>
-        </Toolbar>
-      </AppBar>
-
-      {/* 侧边栏 - 客户端组件 */}
-      <SideNav mobileOpen={mobileOpen} onDrawerToggle={handleDrawerToggle} />
-
+    <div className="flex h-screen bg-gray-50">
+      {/* 侧边栏 */}
+      <SideNav 
+        sidebarOpen={sidebarOpen} 
+        setSidebarOpen={setSidebarOpen} 
+      />
+      
       {/* 主内容区域 */}
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          bgcolor: 'background.default',
-          p: { xs: 2, sm: 3, md: 4 },
-          pt: 10,
-          minHeight: '100vh',
-          width: { xs: '100%', md: `calc(100% - 240px)` }, // 确保主内容区域在桌面端有正确的宽度
-        }}
-      >
-        {children}
-      </Box>
-    </Box>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* 顶部导航栏 */}
+        <header className="bg-white shadow-sm border-b border-gray-200">
+          <div className="flex items-center justify-between px-4 py-3">
+            {/* 移动端汉堡菜单按钮 */}
+            <button
+              className="md:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+
+            {/* 品牌标识 */}
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">FM</span>
+              </div>
+              <h1 className="text-xl font-semibold text-gray-900">基金监控系统</h1>
+            </div>
+
+            {/* 右侧操作区 */}
+            <div className="flex items-center gap-4">
+              {/* 通知按钮 */}
+              <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5-5 5-5H15m-6 0H4l5 5-5 5H9z" />
+                </svg>
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
+              </button>
+
+              {/* 用户信息 */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-700 hidden sm:block">管理员</span>
+                <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* 页面内容 */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+          {children}
+        </main>
+      </div>
+    </div>
   );
 }
