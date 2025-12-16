@@ -8,14 +8,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_
 from database import get_async_db, Fund, NavRecord
-from services.data_collector import DataCollectorService
-from utils import get_logger, cache_result
+from services.data_collector import DataCollector
+from utils import get_logger
 
 router = APIRouter()
 logger = get_logger(__name__)
 
 # 数据收集服务
-data_collector = DataCollectorService()
+data_collector = DataCollector()
 
 @router.get("/funds", response_model=Dict[str, Any])
 async def get_funds(
@@ -241,7 +241,6 @@ async def collect_fund_data(fund_code: str, db: AsyncSession = Depends(get_async
         raise HTTPException(status_code=500, detail=f"手动收集基金数据失败: {str(e)}")
 
 @router.get("/market/stats")
-@cache_result(expire=300)  # 缓存5分钟
 async def get_market_stats(db: AsyncSession = Depends(get_async_db)):
     """获取市场统计数据"""
     try:

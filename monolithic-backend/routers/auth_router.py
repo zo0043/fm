@@ -5,8 +5,9 @@
 from datetime import timedelta
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm, HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
@@ -17,9 +18,14 @@ from utils import get_logger
 
 router = APIRouter()
 logger = get_logger(__name__)
+security = HTTPBearer()
 
 # 密码哈希上下文
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# 获取Bearer令牌的依赖项
+async def get_bearer_token(security: HTTPAuthorizationCredentials = Depends(security)):
+    return security.credentials
 
 # 工具函数：验证密码
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -40,6 +46,11 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
+# 获取用户
+async def get_user_by_username(db: AsyncSession, username: str) -> User | None:
+    result = await db.execute(select(User).where(User.username == username))
+    return result.scalar_one_or_none()
+
 # 用户认证依赖项
 async def get_current_user(db: AsyncSession = Depends(get_async_db), token: str = Depends(get_bearer_token)):
     credentials_exception = HTTPException(
@@ -59,14 +70,7 @@ async def get_current_user(db: AsyncSession = Depends(get_async_db), token: str 
         raise credentials_exception
     return user
 
-# 获取Bearer令牌的依赖项
-async def get_bearer_token(security: HTTPAuthorizationCredentials = Depends(security)):
-    return security.credentials
 
-# 获取用户
-async def get_user_by_username(db: AsyncSession, username: str) -> User | None:
-    result = await db.execute(select(User).where(User.username == username))
-    return result.scalar_one_or_none()
 
 # 认证路由
 @router.post("/login")

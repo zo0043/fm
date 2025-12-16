@@ -7,6 +7,7 @@ import logging
 
 from database import get_async_db, NotificationSettings, NotificationLog
 from config import settings
+from routers.auth_router import get_current_user
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

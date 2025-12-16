@@ -17,12 +17,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8天
     
     # 数据库设置
-    POSTGRES_SERVER: str = "localhost"
-    POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = "postgres"
-    POSTGRES_DB: str = "fund_monitor"
-    POSTGRES_PORT: int = 5432
-    DATABASE_URL: Optional[str] = None
+    DATABASE_URL: str = "sqlite+aiosqlite:///./fund_monitor.db"
     
     # Redis 设置
     REDIS_HOST: str = "localhost"

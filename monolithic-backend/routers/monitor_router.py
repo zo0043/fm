@@ -7,6 +7,7 @@ import logging
 
 from database import get_async_db, MonitorRule, MonitorRuleItem, NavRecord, Fund
 from config import settings
+from routers.auth_router import get_current_user
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -336,12 +337,3 @@ async def check_monitor_rules(
         logger.error(f"启动监控检查失败: {str(e)}")
         raise HTTPException(status_code=500, detail=f"启动监控检查失败: {str(e)}")
 
-# 依赖注入函数
-async def get_current_user():
-    # 这里应该从 JWT token 中获取用户信息
-    # 目前返回模拟用户
-    return {
-        "user_id": 1,
-        "username": "test_user",
-        "is_superuser": False
-    }
