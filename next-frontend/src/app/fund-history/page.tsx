@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { FundHistoryData } from '../../types/fund';
 import { fundService } from '../../services/fundService';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { LineChart, XAxis, YAxis, Tooltip, Line } from 'recharts';
+
 
 const FundHistoryPage: React.FC = () => {
   // 表单状态
@@ -14,7 +16,7 @@ const FundHistoryPage: React.FC = () => {
     return date.toISOString().split('T')[0];
   });
   const [endDate, setEndDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [chartType, setChartType] = useState<'line' | 'bar'>('line');
+  const [chartType, setChartType] = useState<'line' | 'bar' | 'candle'>('line');
   const [timePeriod, setTimePeriod] = useState<string>('1y');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -352,8 +354,8 @@ const FundHistoryPage: React.FC = () => {
               <button
                 onClick={() => setChartType('line')}
                 className={`px-3 py-1 text-sm rounded-md ${
-                  chartType === 'line' 
-                    ? 'bg-blue-600 text-white' 
+                  chartType === 'line'
+                    ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -362,12 +364,22 @@ const FundHistoryPage: React.FC = () => {
               <button
                 onClick={() => setChartType('bar')}
                 className={`px-3 py-1 text-sm rounded-md ${
-                  chartType === 'bar' 
-                    ? 'bg-blue-600 text-white' 
+                  chartType === 'bar'
+                    ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
                 柱状图
+              </button>
+              <button
+                onClick={() => setChartType('candle')}
+                className={`px-3 py-1 text-sm rounded-md ${
+                  chartType === 'candle'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                蜡烛图
               </button>
             </div>
           </div>
@@ -381,6 +393,57 @@ const FundHistoryPage: React.FC = () => {
                 </svg>
                 <span className="text-gray-600">加载中...</span>
               </div>
+            </div>
+          ) : chartType === 'candle' ? (
+            <div className="h-96">
+              {historyData.length > 0 ? (
+                <LineChart
+                  data={historyData}
+                  margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                  }}
+                >
+                  <XAxis dataKey="date" type="category" interval="preserveStartEnd" />
+                  <YAxis />
+                  <Tooltip content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload;
+                      return (
+                        <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">
+                          <p className="text-sm font-medium text-gray-900 mb-2">{label}</p>
+                          <p className="text-xs text-gray-600 mb-1">单位净值: {data.nav.toFixed(4)}</p>
+                          <p className="text-xs text-gray-600 mb-1">累计净值: {data.totalNav.toFixed(4)}</p>
+                          <p className={`text-xs font-medium ${data.dailyChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            日涨跌幅: {data.dailyChange >= 0 ? '+' : ''}{(data.dailyChange * 100).toFixed(2)}%
+                          </p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }} />
+                  <Line
+                    type="monotone"
+                    dataKey="nav"
+                    stroke="#8884d8"
+                    strokeWidth={2}
+                    dot={{ r: 4, fill: '#8884d8' }}
+                    activeDot={{ r: 6, fill: '#82ca9d' }}
+                  />
+                </LineChart>
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  <div className="text-center">
+                    <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <h3 className="text-lg font-medium">暂无数据</h3>
+                    <p className="text-sm text-gray-400">无法生成蜡烛图</p>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             renderSimpleChart()
