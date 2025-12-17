@@ -32,10 +32,10 @@ source venv/bin/activate  # Linux/macOS
 # venv\Scripts\activate  # Windows
 
 # 3. 安装依赖
-pip install -r monolithic-backend/requirements.txt
+pip install -r monolithic_backend/requirements.txt
 
 # 4. 启动开发服务器
-uvicorn monolithic-backend.main:app --reload --port 8000
+uvicorn monolithic_backend.main:app --reload --port 8000
 
 # 5. 访问 API 文档
 # http://localhost:8000/docs (Swagger UI)
@@ -64,7 +64,7 @@ npm run start
 ### 运行测试
 ```bash
 # 后端测试
-cd monolithic-backend
+cd monolithic_backend
 pytest
 
 # 前端测试
@@ -77,9 +77,9 @@ npm run lint
 
 ## 代码架构
 
-### 后端 (monolithic-backend/)
+### 后端 (monolithic_backend/)
 ```
-monolithic-backend/
+monolithic_backend/
 ├── main.py                # FastAPI 应用入口
 ├── config.py              # 配置管理
 ├── database.py            # 数据库连接和初始化
@@ -183,7 +183,7 @@ git merge feature/new-feature
 
 ### 后端日志
 ```bash
-tail -f monolithic-backend/backend.log
+tail -f monolithic_backend/backend.log
 ```
 
 ### 前端日志
