@@ -7,7 +7,7 @@ import logging
 
 from database import get_async_db, NotificationSettings, NotificationLog
 from config import settings
-from routers.auth_router import get_current_user
+
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -15,12 +15,12 @@ logger = logging.getLogger(__name__)
 @router.get("/settings")
 async def get_notification_settings(
     db: AsyncSession = Depends(get_async_db),
-    current_user: dict = Depends(get_current_user)
+
 ):
     """获取用户的通知设置"""
     try:
         query = select(NotificationSettings).where(
-            NotificationSettings.user_id == current_user["user_id"]
+            
         )
         
         result = await db.execute(query)
@@ -64,13 +64,13 @@ async def get_notification_settings(
 async def update_notification_settings(
     settings_data: Dict[str, Any],
     db: AsyncSession = Depends(get_async_db),
-    current_user: dict = Depends(get_current_user)
+
 ):
     """更新用户的通知设置"""
     try:
         # 查询现有设置
         query = select(NotificationSettings).where(
-            NotificationSettings.user_id == current_user["user_id"]
+            
         )
         
         result = await db.execute(query)
@@ -127,13 +127,13 @@ async def update_notification_settings(
 async def send_test_notification(
     notification_type: str,
     db: AsyncSession = Depends(get_async_db),
-    current_user: dict = Depends(get_current_user)
+
 ):
     """发送测试通知"""
     try:
         # 获取用户通知设置
         settings_query = select(NotificationSettings).where(
-            NotificationSettings.user_id == current_user["user_id"]
+            
         )
         settings_result = await db.execute(settings_query)
         user_settings = settings_result.scalar_one_or_none()
@@ -197,7 +197,7 @@ async def get_notification_history(
     limit: int = 50,
     notification_type: Optional[str] = None,
     db: AsyncSession = Depends(get_async_db),
-    current_user: dict = Depends(get_current_user)
+
 ):
     """获取通知历史"""
     try:
@@ -236,7 +236,7 @@ async def get_notification_history(
 async def delete_notification_log(
     log_id: int,
     db: AsyncSession = Depends(get_async_db),
-    current_user: dict = Depends(get_current_user)
+
 ):
     """删除通知日志"""
     try:
@@ -278,11 +278,3 @@ async def send_wechat_notification(webhook_url: str, title: str, content: str):
     logger.info(f"发送微信通知到 {webhook_url}: {title}")
 
 # 依赖注入函数
-async def get_current_user():
-    # 这里应该从 JWT token 中获取用户信息
-    # 目前返回模拟用户
-    return {
-        "user_id": 1,
-        "username": "test_user",
-        "is_superuser": False
-    }

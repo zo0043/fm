@@ -5,18 +5,16 @@
 
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from contextlib import asynccontextmanager
 import uvicorn
 
 from config import settings
 from database import get_async_db, init_db
-from routers import auth_router, data_router, backtest_router, monitor_router, notification_router
+from routers import data_router, backtest_router, monitor_router, notification_router
 from utils import get_logger
 
 logger = get_logger(__name__)
-security = HTTPBearer()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -42,7 +40,6 @@ app.add_middleware(
 )
 
 # 注册路由
-app.include_router(auth_router, prefix="/api/auth", tags=["认证"])
 app.include_router(data_router, prefix="/api/data", tags=["数据"])
 app.include_router(backtest_router, prefix="/api/backtest", tags=["回测"])
 app.include_router(monitor_router, prefix="/api/monitor", tags=["监控"])

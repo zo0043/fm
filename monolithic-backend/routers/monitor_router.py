@@ -7,7 +7,6 @@ import logging
 
 from database import get_async_db, MonitorRule, MonitorRuleItem, NavRecord, Fund
 from config import settings
-from routers.auth_router import get_current_user
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -17,12 +16,12 @@ async def get_monitor_rules(
     skip: int = 0, 
     limit: int = 100,
     db: AsyncSession = Depends(get_async_db),
-    current_user: dict = Depends(get_current_user)
+
 ):
     """获取用户的监控规则列表"""
     try:
         query = select(MonitorRule).where(
-            MonitorRule.user_id == current_user["user_id"]
+            current_user["user_id"]
         ).offset(skip).limit(limit)
         
         result = await db.execute(query)
@@ -51,13 +50,13 @@ async def get_monitor_rules(
 async def create_monitor_rule(
     rule_data: Dict[str, Any],
     db: AsyncSession = Depends(get_async_db),
-    current_user: dict = Depends(get_current_user)
+
 ):
     """创建新的监控规则"""
     try:
         # 检查用户是否超过最大规则数
         count_query = select(MonitorRule).where(
-            MonitorRule.user_id == current_user["user_id"]
+            current_user["user_id"]
         )
         count_result = await db.execute(count_query)
         existing_rules = count_result.scalars().all()
@@ -113,7 +112,7 @@ async def create_monitor_rule(
 async def get_monitor_rule_detail(
     rule_id: int,
     db: AsyncSession = Depends(get_async_db),
-    current_user: dict = Depends(get_current_user)
+
 ):
     """获取监控规则详情"""
     try:
@@ -121,7 +120,7 @@ async def get_monitor_rule_detail(
         rule_query = select(MonitorRule).where(
             and_(
                 MonitorRule.id == rule_id,
-                MonitorRule.user_id == current_user["user_id"]
+                current_user["user_id"]
             )
         )
         rule_result = await db.execute(rule_query)
@@ -167,7 +166,7 @@ async def update_monitor_rule(
     rule_id: int,
     rule_data: Dict[str, Any],
     db: AsyncSession = Depends(get_async_db),
-    current_user: dict = Depends(get_current_user)
+
 ):
     """更新监控规则"""
     try:
@@ -175,7 +174,7 @@ async def update_monitor_rule(
         rule_query = select(MonitorRule).where(
             and_(
                 MonitorRule.id == rule_id,
-                MonitorRule.user_id == current_user["user_id"]
+                current_user["user_id"]
             )
         )
         rule_result = await db.execute(rule_query)
@@ -232,7 +231,7 @@ async def update_monitor_rule(
 async def delete_monitor_rule(
     rule_id: int,
     db: AsyncSession = Depends(get_async_db),
-    current_user: dict = Depends(get_current_user)
+
 ):
     """删除监控规则"""
     try:
@@ -240,7 +239,7 @@ async def delete_monitor_rule(
         rule_query = select(MonitorRule).where(
             and_(
                 MonitorRule.id == rule_id,
-                MonitorRule.user_id == current_user["user_id"]
+                current_user["user_id"]
             )
         )
         rule_result = await db.execute(rule_query)
@@ -265,7 +264,7 @@ async def delete_monitor_rule(
 async def toggle_monitor_rule(
     rule_id: int,
     db: AsyncSession = Depends(get_async_db),
-    current_user: dict = Depends(get_current_user)
+
 ):
     """切换监控规则启用/禁用状态"""
     try:
@@ -273,7 +272,7 @@ async def toggle_monitor_rule(
         rule_query = select(MonitorRule).where(
             and_(
                 MonitorRule.id == rule_id,
-                MonitorRule.user_id == current_user["user_id"]
+                current_user["user_id"]
             )
         )
         rule_result = await db.execute(rule_query)
@@ -302,7 +301,7 @@ async def get_monitor_alerts(
     skip: int = 0,
     limit: int = 50,
     db: AsyncSession = Depends(get_async_db),
-    current_user: dict = Depends(get_current_user)
+
 ):
     """获取监控告警历史"""
     try:
@@ -321,7 +320,7 @@ async def get_monitor_alerts(
 async def check_monitor_rules(
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_async_db),
-    current_user: dict = Depends(get_current_user)
+
 ):
     """手动触发监控规则检查"""
     try:
